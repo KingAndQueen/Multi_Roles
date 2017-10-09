@@ -15,7 +15,10 @@ class Vocab():
         self.add_vocab(word)
         return self.word2idx[word]
     def index_to_word(self,index):
-        return self.idx2word[index]
+        if self.idx2word.has_key(index):
+            return self.idx2word[index]
+        else:
+            return '<unk>'
     @property
     def vocab_size(self):
         return len(self.idx2word)
