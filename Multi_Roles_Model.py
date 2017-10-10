@@ -198,27 +198,27 @@ class MuliRolesModel():
             data_batch=data_raw[_:_+self._batch_size]
             Monica,Joey,Chandler,Phoebe,Rachel,Rose,answer,weight=[],[],[],[],[],[],[],[]
             for i in data_batch:
-                if i.has_key('Monica'):
+                if 'Monica' in i:
                     Monica.append(i.get('Monica'))
                 else:
                     Monica.append(self._sentence_size*[self._vocab.word_to_index('<pad>')])
-                if i.has_key('Joey'):
+                if 'Joey' in i:
                     Joey.append(i.get('Joey'))
                 else:
                     Joey.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
-                if i.has_key('Chandler'):
+                if 'Chandler' in i:
                     Chandler.append(i.get('Chandler'))
                 else:
                     Chandler.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
-                if i.has_key('Phoebe'):
+                if 'Phoebe' in i:
                     Phoebe.append(i.get('Phoebe'))
                 else:
                     Phoebe.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
-                if i.has_key('Rachel'):
+                if 'Rachel' in i:
                     Rachel.append(i.get('Rachel'))
                 else:
                     Rachel.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
-                if i.has_key('Rose'):
+                if 'Rose' in i:
                     Rose.append(i.get('Rose'))
                 else:
                     Rose.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])

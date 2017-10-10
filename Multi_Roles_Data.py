@@ -15,7 +15,7 @@ class Vocab():
         self.add_vocab(word)
         return self.word2idx[word]
     def index_to_word(self,index):
-        if self.idx2word.has_key(index):
+        if index in self.idx2word:
             return self.idx2word[index]
         else:
             return '<unk>'
@@ -40,7 +40,7 @@ def read_file(data_path,vocabulary,sentence_size):
             scene[name]=sentence_id
             last_speaker=name
         else:
-            if not scene.has_key(last_speaker):
+            if last_speaker not in scene:
                 continue
             scene['ans']=scene[last_speaker]
             weight=[]
