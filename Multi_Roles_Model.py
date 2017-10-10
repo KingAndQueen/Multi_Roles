@@ -71,7 +71,7 @@ class MuliRolesModel():
                 hidden_features = []
                 v = []
                 attention_vec_size = attn_size
-                for a in xrange(num_heads):
+                for a in range(num_heads):
                     k = tf.get_variable('AttnW_%d' % a, [1, 1, attn_size, attention_vec_size])
                     hidden_features.append(nn_ops.conv2d(hidden, k, [1, 1, 1, 1], 'SAME'))
                     v.append(tf.get_variable('AttnV_%d' % a, [attention_vec_size]))
@@ -85,7 +85,7 @@ class MuliRolesModel():
                             if ndims:
                                 assert ndims == 2
                         query = array_ops.concat(query_list, 1)
-                    for a in xrange(num_heads):
+                    for a in range(num_heads):
                         with tf.variable_scope('Attention_%d' % a):
                             y = linear(query, attention_vec_size, True)
                             y = array_ops.reshape(y, [-1, 1, 1, attention_vec_size])
@@ -104,7 +104,7 @@ class MuliRolesModel():
                 loop_function = extract_argmax_and_embed
                 linear = rnn_cell_impl._linear
                 batch_attn_size = array_ops.stack([batch_size, attn_size])
-                attns = [array_ops.zeros(batch_attn_size, dtype=tf.float32) for _ in xrange(num_heads)]
+                attns = [array_ops.zeros(batch_attn_size, dtype=tf.float32) for _ in range(num_heads)]
                 for a in attns:
                     a.set_shape([None, attn_size])
 
@@ -193,7 +193,7 @@ class MuliRolesModel():
         list_all_batch=[]
 
     #    pdb.set_trace()
-        for _ in xrange(0,len(data_raw),self._batch_size):
+        for _ in range(0,len(data_raw),self._batch_size):
             if _+self._batch_size>len(data_raw):continue
             data_batch=data_raw[_:_+self._batch_size]
             Monica,Joey,Chandler,Phoebe,Rachel,Rose,answer,weight=[],[],[],[],[],[],[],[]
