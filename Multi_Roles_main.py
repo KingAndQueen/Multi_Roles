@@ -89,7 +89,7 @@ def main(_):
         print('Initial model with fresh parameters....')
         sess.run(tf.global_variables_initializer())
         train_model(sess, model,train_data)
-    else:
+    if config.model_type == 'testing' or config.model_type == 'test':
         print('Reload model from checkpoints.....')
         ckpt = tf.train.get_checkpoint_state(config.checkpoints_dir)
         model.saver.restore(sess, ckpt.model_checkpoint_path)
