@@ -6,7 +6,7 @@ import os
 from sklearn import model_selection
 #set parameters of model
 flags=tf.app.flags
-flags.DEFINE_string('model_type','test','whether model initial from checkpoints')
+flags.DEFINE_string('model_type','training','whether model initial from checkpoints')
 flags.DEFINE_string('data_dir','data/','data path for model')
 flags.DEFINE_string('checkpoints_dir','checkpoints/','path for save checkpoints')
 flags.DEFINE_string('device_type','gpu','device for computing')
@@ -85,7 +85,7 @@ def main(_):
     # initiall model from new parameters or checkpoints
     sess = tf.Session()
     model = Multi_Roles_Model.MuliRolesModel(config,vocab)
-    if config.model_type == 'training':
+    if config.model_type == 'training' or config.model_type == 'train' :
         print('Initial model with fresh parameters....')
         sess.run(tf.global_variables_initializer())
         train_model(sess, model,train_data)
