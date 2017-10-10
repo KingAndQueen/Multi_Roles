@@ -155,10 +155,10 @@ class MuliRolesModel():
             response=speaker(context_state_fw,attention_states_speaker,Monica_emb)
        #     else:
        #         response=[]
-            self.response=response
+
 
         with tf.variable_scope('loss_function'):
-            cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.response,
+            cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=response,
                                                                         labels = self._answers,
                                                                         name = "cross_entropy")
             cross_entropy = cross_entropy * self._weight
@@ -172,6 +172,7 @@ class MuliRolesModel():
 
         self.saver = tf.train.Saver(tf.global_variables())
 
+        self.response = tf.argmax(response, axis=2)
     def _build_inputs(self):
         self._Monica = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Monica')
         self._Joey = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Joey')

@@ -21,7 +21,6 @@ flags.DEFINE_integer('sentence_size',20,'length of sentence')
 flags.DEFINE_float('interpose',0.5,'value for gru gate to decide interpose')
 flags.DEFINE_float('learn_rate',0.001,'value for gru gate to decide interpose')
 
-
 config=flags.FLAGS
 
 
@@ -29,7 +28,10 @@ def show_result(seq, vocab):
     words = []
     if isinstance(seq, (list, np.ndarray)):
         for idx in seq:
-            words.append(vocab.index_to_word(idx))
+            if isinstance(idx,(list,np.ndarray)):
+                show_result(idx,vocab)
+            else:
+                words.append(vocab.index_to_word(idx))
         print (words)
     if isinstance(seq, (str, int)):
         print (vocab.idx_to_word(seq))
@@ -71,11 +73,11 @@ def test_model(sess,model,test_data,vocab):
     loss_test=0.0
     predicts=[]
     for data_test in data_input_test:
-        loss,predict=model.step(sess,data_test)
+        loss,predict=model.step(sess,data_test,step_type='test')
         loss_test+=loss
         predicts.append(predict)
+        show_result(predict, vocab)
     print('test total loss:',loss_test)
-    show_result(predicts,vocab)
 
 #testing model
 def main(_):
