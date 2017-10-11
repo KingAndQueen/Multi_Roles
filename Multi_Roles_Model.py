@@ -232,8 +232,6 @@ class MuliRolesModel():
         return  list_all_batch
 
 
-
-
     def step(self, sess, data_dict,step_type='train'):
 
         feed_dict = {self._Ross:data_dict['Rose'],self._Rachel:data_dict['Rachel'],self._Phoebe:data_dict['Phoebe'],

@@ -1,16 +1,23 @@
 import os
 import pdb
+import numpy as np
 class Vocab():
     def __init__(self,word2vec=None,embed_size=0):
         self.word2idx={'<eos>':0,'<go>':1,'<pad>':2,'<unk>':3}
         self.idx2word={0:'<eos>',1:'<go>',2:'<pad>',3:'<unk>'}
         self.embed_size=embed_size
-    def add_vocab(self,*words):
-        for word in words:
-            if word not in self.word2idx:
-                index=len(self.word2idx)
-                self.word2idx[word]=index
-                self.idx2word[index]=word
+    def add_vocab(self,words):
+        if isinstance(words, (list, np.ndarray)):
+            for word in words:
+                if word not in self.word2idx:
+                    index=len(self.word2idx)
+                    self.word2idx[word]=index
+                    self.idx2word[index]=word
+        else:
+            if words not in self.word2idx:
+                index = len(self.word2idx)
+                self.word2idx[words] = index
+                self.idx2word[index] = words
     def word_to_index(self,word):
         self.add_vocab(word)
         return self.word2idx[word]
