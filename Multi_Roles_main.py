@@ -12,9 +12,9 @@ flags.DEFINE_string('checkpoints_dir','checkpoints/','path for save checkpoints'
 flags.DEFINE_string('device_type','gpu','device for computing')
 
 flags.DEFINE_integer('layers',3,'levels of rnn or cnn')
-flags.DEFINE_integer('neuros',128,'neuros number of one level')
-flags.DEFINE_integer('batch_size',128, 'batch_size')
-flags.DEFINE_integer('roles_number',6,'number of roles in the data')
+flags.DEFINE_integer('neuros',50,'neuros number of one level')
+flags.DEFINE_integer('batch_size',32, 'batch_size')
+flags.DEFINE_integer('roles_number',5,'number of roles in the data')
 flags.DEFINE_integer('epoch',500,'training times' )
 flags.DEFINE_integer('check_epoch',50,'training times' )
 flags.DEFINE_integer('sentence_size',20,'length of sentence')
@@ -73,10 +73,13 @@ def test_model(sess,model,test_data,vocab):
     data_input_test=model.get_batch(test_data)
     loss_test=0.0
     predicts=[]
-    for data_test in data_input_test:
+    for batch_id,data_test in enumerate(data_input_test):
         loss,predict=model.step(sess,data_test,step_type='test')
         loss_test+=loss
+        print('labels: Id:',batch_id)
+        show_result(data_test.get('answer'),vocab)
         predicts.append(predict)
+        print ('predicts: Id:',batch_id)
         show_result(predict, vocab)
     print('test total loss:',loss_test)
 
