@@ -22,6 +22,8 @@ class MuliRolesModel():
         self._layers=config.layers
         self._build_vars()
         self._build_inputs()
+        self.model_type=config.model_type
+
         with tf.variable_scope('embedding'):
             self._word_embedding = tf.get_variable('embedding_word', [self._vocab.vocab_size, config.neuros])
             _Monica = tf.unstack(self._Monica, axis=1)
@@ -36,6 +38,8 @@ class MuliRolesModel():
             Rachel_emb = [tf.nn.embedding_lookup(self._word_embedding,word) for word in _Rachel]
             _Ross =tf.unstack(self._Ross, axis=1)
             Ross_emb = [tf.nn.embedding_lookup(self._word_embedding, word) for word in _Ross]
+            _answer=tf.unstack(self._answers,axis=1)
+            answer_emb=[tf.nn.embedding_lookup(self._word_embedding, word) for word in _answer]
 
         def _encoding_roles( person_emb):
             with tf.variable_scope('encoding_role'):
@@ -61,7 +65,7 @@ class MuliRolesModel():
             attention_states = array_ops.concat(top_output_context, 1)
 
 
-        def speaker( encoder_state, attention_states, q_emb, logits_MemKG=None):
+        def speaker( encoder_state, attention_states, q_emb, model_type='train'):
             with tf.variable_scope('speaker'):
                 num_heads = 1
                 batch_size = q_emb[0].get_shape()[0]
@@ -100,8 +104,11 @@ class MuliRolesModel():
                     prev_symbol = array_ops.stop_gradient(math_ops.argmax(prev, 1))
                     return embedding_ops.embedding_lookup(self._word_embedding, prev_symbol)
 
+                if model_type=='train':
+                    loop_function = None
+                if model_type=='test':
+                    loop_function= extract_argmax_and_embed
 
-                loop_function = extract_argmax_and_embed
                 linear = rnn_cell_impl._linear
                 batch_attn_size = array_ops.stack([batch_size, attn_size])
                 attns = [array_ops.zeros(batch_attn_size, dtype=tf.float32) for _ in range(num_heads)]
@@ -152,7 +159,8 @@ class MuliRolesModel():
         #    if decision > self._interpose:
 
             attention_states_speaker=tf.split(attention_states,[-1,len(Monica_emb)],axis=1)[-1]
-            response=speaker(context_state_fw,attention_states_speaker,Monica_emb)
+
+            response=speaker(context_state_fw,attention_states_speaker,answer_emb,self.model_type)
        #     else:
        #         response=[]
 
@@ -233,7 +241,7 @@ class MuliRolesModel():
 
 
     def step(self, sess, data_dict,step_type='train'):
-
+        self.model_type=step_type
         feed_dict = {self._Ross:data_dict['Rose'],self._Rachel:data_dict['Rachel'],self._Phoebe:data_dict['Phoebe'],
                      self._Chandler:data_dict['Chandler'],self._Monica:data_dict['Monica'],self._Joey:data_dict['Joey'],
                      self._answers:data_dict['answer'],self._weight:data_dict['weight']}

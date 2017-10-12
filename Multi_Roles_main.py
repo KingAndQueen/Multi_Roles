@@ -6,7 +6,7 @@ import os
 from sklearn import model_selection
 #set parameters of model
 flags=tf.app.flags
-flags.DEFINE_string('model_type','training','whether model initial from checkpoints')
+flags.DEFINE_string('model_type','train','whether model initial from checkpoints')
 flags.DEFINE_string('data_dir','data/','data path for model')
 flags.DEFINE_string('checkpoints_dir','checkpoints/','path for save checkpoints')
 flags.DEFINE_string('device_type','gpu','device for computing')
