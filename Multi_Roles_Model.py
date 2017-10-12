@@ -166,8 +166,13 @@ class MuliRolesModel():
 
 
         with tf.variable_scope('loss_function'):
+            # Our targets are decoder inputs shifted by one.
+           # targets = [self.decoder_inputs[i + 1]
+            #           for i in xrange(len(self.decoder_inputs) - 1)]
+            _,labels=tf.split(self._answers,[1,-1],1)
+            labels=tf.concat([labels,_],axis=1)
             cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=response,
-                                                                        labels = self._answers,
+                                                                        labels = labels,
                                                                         name = "cross_entropy")
             cross_entropy = cross_entropy * self._weight
             weight_sum = tf.reduce_sum(self._weight, axis=1)

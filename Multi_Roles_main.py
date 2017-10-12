@@ -6,15 +6,15 @@ import os
 from sklearn import model_selection
 #set parameters of model
 flags=tf.app.flags
-flags.DEFINE_string('model_type','train','whether model initial from checkpoints')
+flags.DEFINE_string('model_type','test','whether model initial from checkpoints')
 flags.DEFINE_string('data_dir','data/','data path for model')
 flags.DEFINE_string('checkpoints_dir','checkpoints/','path for save checkpoints')
 flags.DEFINE_string('device_type','gpu','device for computing')
 
 flags.DEFINE_integer('layers',3,'levels of rnn or cnn')
-flags.DEFINE_integer('neuros',50,'neuros number of one level')
-flags.DEFINE_integer('batch_size',32, 'batch_size')
-flags.DEFINE_integer('roles_number',5,'number of roles in the data')
+flags.DEFINE_integer('neuros',128,'neuros number of one level')
+flags.DEFINE_integer('batch_size',128, 'batch_size')
+flags.DEFINE_integer('roles_number',6,'number of roles in the data')
 flags.DEFINE_integer('epoch',500,'training times' )
 flags.DEFINE_integer('check_epoch',50,'training times' )
 flags.DEFINE_integer('sentence_size',20,'length of sentence')
@@ -57,6 +57,7 @@ def train_model(sess,model,train_data):
             loss,_=model.step(sess,data_input_train[i])
             total_loss+=loss
         if current_step%config.check_epoch==0:
+            print ('current_step:', current_step)
             print ('training total loss:',total_loss)
             loss_eval=0.0
             for i in range(len(data_input_eval)):

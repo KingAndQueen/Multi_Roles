@@ -39,8 +39,9 @@ def read_file(data_path,vocabulary,sentence_size):
         if len(lines)>2:
             name=lines[:lines.index(':')]
             #name_id=vocabulary.word_to_index(name)#for word in name.split()]
-            sentence=lines[lines.index(':')+1:lines.index(':')+1+sentence_size]
+            sentence=lines[lines.index(':')+1:lines.index(':')+1+sentence_size-1] #sub 1 for eos
             sentence_id=[vocabulary.word_to_index(word)for word in sentence.split()]
+            sentence_id.append(vocabulary.word_to_index('<eos>'))
             padding_len=max(sentence_size-len(sentence_id),0)
             for i in range(padding_len):
                 sentence_id.append(vocabulary.word_to_index('<pad>'))
@@ -49,7 +50,10 @@ def read_file(data_path,vocabulary,sentence_size):
         else:
             if last_speaker not in scene:
                 continue
-            scene['ans']=scene[last_speaker]
+            ans=scene[last_speaker]
+            ans.pop()
+            ans.insert(0,vocabulary.word_to_index('<go>'))
+            scene['ans']=ans
             weight=[]
             for id in scene[last_speaker]:
                 if id==vocabulary.word_to_index('<pad>'):
