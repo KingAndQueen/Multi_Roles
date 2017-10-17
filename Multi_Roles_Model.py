@@ -16,14 +16,13 @@ class MuliRolesModel():
         self._batch_size = config.batch_size
         self._sentence_size = config.sentence_size
         self._opt = tf.train.GradientDescentOptimizer(learning_rate=config.learn_rate)
-        self._build_inputs()
         self._interpose = config.interpose
         self._embedding_size=config.neuros
         self._layers=config.layers
         self._build_vars()
-        self._build_inputs()
         self.model_type=config.model_type
-
+        self._roles_number=config.roles_number
+        self._build_inputs()
         with tf.variable_scope('embedding'):
             self._word_embedding = tf.get_variable('embedding_word', [self._vocab.vocab_size, config.neuros])
             _Monica = tf.unstack(self._Monica, axis=1)
@@ -40,10 +39,14 @@ class MuliRolesModel():
             Ross_emb = [tf.nn.embedding_lookup(self._word_embedding, word) for word in _Ross]
             _answer=tf.unstack(self._answers,axis=1)
             answer_emb=[tf.nn.embedding_lookup(self._word_embedding, word) for word in _answer]
+            _name_list=tf.unstack(self._name_list,axis=1)
+            # word_embedding may be too big for name
+            name_list_emb=[tf.nn.embedding_lookup(self._word_embedding,word)for word in _name_list]
 
-        def _encoding_roles( person_emb):
-            with tf.variable_scope('encoding_role'):
-                encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neuros)
+
+        def _encoding_roles( person_emb,name=''):
+            with tf.variable_scope('encoding_role_'+name):
+                encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neuros,reuse=tf.get_variable_scope().reuse)
                 encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
                 # for future test
                 #output, state_fw,state_bw = rnn.static_bidirectional_rnn(cell_fw=encoding_cell, cell_bw=encoding_cell,
@@ -52,7 +55,15 @@ class MuliRolesModel():
                 return output, state_fw
 
         # encoder different roles
-        monica_encoder, monica_state = _encoding_roles(Monica_emb)
+        encoding_roles_functions={
+            'Monica':  _encoding_roles(Monica_emb,'monica')
+
+        }
+        monica_encoder, monica_state = encoding_roles_functions['Monica']
+        next_speaker,_=_encoding_roles(name_list_emb,'name_seq')
+        linear = rnn_cell_impl._linear
+        next_speaker = linear(next_speaker, self._roles_number, True)
+        next_speaker=tf.nn.softmax(next_speaker)
 
         with tf.variable_scope('encoding_context'):
             encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neuros)
@@ -159,6 +170,8 @@ class MuliRolesModel():
         #    if decision > self._interpose:
 
             attention_states_speaker=tf.split(attention_states,[-1,len(Monica_emb)],axis=1)[-1]
+            next_speakers=tf.argmax(next_speaker,1)
+
 
             response=speaker(context_state_fw,attention_states_speaker,answer_emb,self.model_type)
        #     else:
@@ -195,6 +208,7 @@ class MuliRolesModel():
         self._Ross = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Ross')
         self._weight=tf.placeholder(tf.float32,[self._batch_size,self._sentence_size],name='weight')
         self._answers=tf.placeholder(tf.int32,[self._batch_size,self._sentence_size],name='answer')
+        self._name_list=tf.placeholder(tf.int32,[self._batch_size,self._roles_number],name='name_list')
     def _build_vars(self):
         init=tf.random_normal_initializer(stddev=0.1)
         self._w_context=init([1,self._batch_size])
@@ -209,7 +223,7 @@ class MuliRolesModel():
         for _ in range(0,len(data_raw),self._batch_size):
             if _+self._batch_size>len(data_raw):continue
             data_batch=data_raw[_:_+self._batch_size]
-            Monica,Joey,Chandler,Phoebe,Rachel,Rose,answer,weight=[],[],[],[],[],[],[],[]
+            Monica,Joey,Chandler,Phoebe,Rachel,Ross,answer,weight,name=[],[],[],[],[],[],[],[],[]
             for i in data_batch:
                 if 'Monica' in i:
                     Monica.append(i.get('Monica'))
@@ -231,25 +245,28 @@ class MuliRolesModel():
                     Rachel.append(i.get('Rachel'))
                 else:
                     Rachel.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
-                if 'Rose' in i:
-                    Rose.append(i.get('Rose'))
+                if 'Ross' in i:
+                    Ross.append(i.get('Ross'))
                 else:
-                    Rose.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
-
+                    Ross.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
+                if 'name' in i:
+                    name.append(i.get('name'))
+                else:
+                    name.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
                 answer.append(i.get('ans'))
                 weight.append(i.get('weight'))
 
             list_all_batch.append({'Monica':Monica,'Joey':Joey,'Chandler':Chandler,'Phoebe':Phoebe,
-                 'Rachel':Rachel,'Rose':Rose,'answer':answer,'weight':weight})
+                 'Rachel':Rachel,'Ross':Ross,'answer':answer,'weight':weight,'name_list':name})
        # pdb.set_trace()
         return  list_all_batch
 
 
     def step(self, sess, data_dict,step_type='train'):
         self.model_type=step_type
-        feed_dict = {self._Ross:data_dict['Rose'],self._Rachel:data_dict['Rachel'],self._Phoebe:data_dict['Phoebe'],
+        feed_dict = {self._Ross:data_dict['Ross'],self._Rachel:data_dict['Rachel'],self._Phoebe:data_dict['Phoebe'],
                      self._Chandler:data_dict['Chandler'],self._Monica:data_dict['Monica'],self._Joey:data_dict['Joey'],
-                     self._answers:data_dict['answer'],self._weight:data_dict['weight']}
+                     self._answers:data_dict['answer'],self._weight:data_dict['weight'],self._name_list:data_dict['name_list']}
         if step_type=='train':
             output_list=[self.loss,self.train_op]
         else:

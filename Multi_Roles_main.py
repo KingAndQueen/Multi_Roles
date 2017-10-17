@@ -6,16 +6,16 @@ import os
 from sklearn import model_selection
 #set parameters of model
 flags=tf.app.flags
-flags.DEFINE_string('model_type','test','whether model initial from checkpoints')
+flags.DEFINE_string('model_type','train','whether model initial from checkpoints')
 flags.DEFINE_string('data_dir','data/','data path for model')
 flags.DEFINE_string('checkpoints_dir','checkpoints/','path for save checkpoints')
 flags.DEFINE_string('device_type','gpu','device for computing')
 
 flags.DEFINE_integer('layers',3,'levels of rnn or cnn')
 flags.DEFINE_integer('neuros',50,'neuros number of one level')
-flags.DEFINE_integer('batch_size',32, 'batch_size')
-flags.DEFINE_integer('roles_number',5,'number of roles in the data')
-flags.DEFINE_integer('epoch',500,'training times' )
+flags.DEFINE_integer('batch_size',128, 'batch_size')
+flags.DEFINE_integer('roles_number',6,'number of roles in the data')
+flags.DEFINE_integer('epoch',100,'training times' )
 flags.DEFINE_integer('check_epoch',50,'training times' )
 flags.DEFINE_integer('sentence_size',20,'length of sentence')
 flags.DEFINE_float('interpose',0.5,'value for gru gate to decide interpose')
@@ -38,18 +38,19 @@ def show_result(seq, vocab):
 
 def data_process(config):
 #read data from file and normalized
+
     vocabulary=Multi_Roles_Data.Vocab()
     train_data,test_data=Multi_Roles_Data.get_data(config.data_dir,vocabulary,config.sentence_size)
-    print('vocab size:',vocabulary.vocab_size)
+    print('data processed,vocab size:',vocabulary.vocab_size)
     return train_data,test_data,vocabulary
 
 #training model
 def train_model(sess,model,train_data):
     train_data,eval_data=model_selection.train_test_split(train_data,test_size=0.2)
-
     current_step=1
     data_input_train = model.get_batch(train_data)
     data_input_eval=model.get_batch(eval_data)
+    print('training....')
     while current_step<config.epoch:
       #  print ('current_step:',current_step)
         total_loss = 0.0
@@ -88,11 +89,13 @@ def main(_):
     train_data,test_data,vocab=data_process(config)
     # initiall model from new parameters or checkpoints
     sess = tf.Session()
+    print('establish the model...')
     model = Multi_Roles_Model.MuliRolesModel(config,vocab)
     if config.model_type == 'training' or config.model_type == 'train' :
         print('Initial model with fresh parameters....')
         sess.run(tf.global_variables_initializer())
         train_model(sess, model,train_data)
+        test_model(sess,model,test_data,vocab)
     if config.model_type == 'testing' or config.model_type == 'test':
         print('Reload model from checkpoints.....')
         ckpt = tf.train.get_checkpoint_state(config.checkpoints_dir)

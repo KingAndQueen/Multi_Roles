@@ -35,6 +35,7 @@ def read_file(data_path,vocabulary,sentence_size):
     scene={}
     scenes = []
     last_speaker=''
+    name_list=[]
     for lines in f:
         if len(lines)>2:
             name=lines[:lines.index(':')]
@@ -47,6 +48,8 @@ def read_file(data_path,vocabulary,sentence_size):
                 sentence_id.append(vocabulary.word_to_index('<pad>'))
             scene[name]=sentence_id
             last_speaker=name
+            if name in ['Monica','Joey','Chandler','Phoebe', 'Rachel','Ross']:
+                name_list.append(vocabulary.word_to_index(name))
         else:
             if last_speaker not in scene:
                 continue
@@ -61,13 +64,15 @@ def read_file(data_path,vocabulary,sentence_size):
                 else:
                     weight.append(1.0)
             scene['weight']=weight
+            scene['name']=name_list
             scene[last_speaker]=sentence_size*[vocabulary.word_to_index('<pad>')]
             scenes.append(scene)
             scene={}
+            name_list=[]
     f.close()
     return scenes
 
 def get_data(data_path,vocabulary,sentence_size):
-    train_data_path = os.path.join(data_path, 'friends_train_data.txt')
-    test_data_path = os.path.join(data_path, 'friends_test_data.txt')
+    train_data_path = os.path.join(data_path, 'Test_processed.txt')
+    test_data_path = os.path.join(data_path, 'Test_processed.txt')
     return read_file(train_data_path,vocabulary,sentence_size),read_file(test_data_path,vocabulary,sentence_size)
