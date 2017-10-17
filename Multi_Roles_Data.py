@@ -30,7 +30,7 @@ class Vocab():
     def vocab_size(self):
         return len(self.idx2word)
 
-def read_file(data_path,vocabulary,sentence_size):
+def read_file(data_path,vocabulary,sentence_size,roles_number):
     f=open(data_path,'r')
     scene={}
     scenes = []
@@ -64,6 +64,8 @@ def read_file(data_path,vocabulary,sentence_size):
                 else:
                     weight.append(1.0)
             scene['weight']=weight
+            name_pad=max(roles_number-len(name_list),0)
+            for i in range(name_pad):name_list.append(vocabulary.word_to_index('<pad>'))
             scene['name']=name_list
             scene[last_speaker]=sentence_size*[vocabulary.word_to_index('<pad>')]
             scenes.append(scene)
@@ -72,7 +74,7 @@ def read_file(data_path,vocabulary,sentence_size):
     f.close()
     return scenes
 
-def get_data(data_path,vocabulary,sentence_size):
+def get_data(data_path,vocabulary,sentence_size,roles_number):
     train_data_path = os.path.join(data_path, 'Test_processed.txt')
     test_data_path = os.path.join(data_path, 'Test_processed.txt')
-    return read_file(train_data_path,vocabulary,sentence_size),read_file(test_data_path,vocabulary,sentence_size)
+    return read_file(train_data_path,vocabulary,sentence_size,roles_number),read_file(test_data_path,vocabulary,sentence_size,roles_number)

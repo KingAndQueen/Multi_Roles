@@ -40,7 +40,7 @@ def data_process(config):
 #read data from file and normalized
 
     vocabulary=Multi_Roles_Data.Vocab()
-    train_data,test_data=Multi_Roles_Data.get_data(config.data_dir,vocabulary,config.sentence_size)
+    train_data,test_data=Multi_Roles_Data.get_data(config.data_dir,vocabulary,config.sentence_size,config.roles_number)
     print('data processed,vocab size:',vocabulary.vocab_size)
     return train_data,test_data,vocabulary
 
