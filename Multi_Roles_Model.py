@@ -292,7 +292,7 @@ class MuliRolesModel():
         if step_type=='train':
             output_list=[self.loss,self.train_op,self.loss_summary]
             loss, _ ,summary= sess.run(output_list, feed_dict=feed_dict)
-            return loss,summary
+            return loss,_,summary
         else:
             output_list=[self.loss,self.response,self.loss_summary]
             loss, response, summary = sess.run(output_list, feed_dict=feed_dict)
