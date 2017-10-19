@@ -220,6 +220,7 @@ class MuliRolesModel():
         self.saver = tf.train.Saver(tf.global_variables())
 
         self.response = tf.argmax(response, axis=2)
+        self.loss_summary = tf.summary.scalar("loss", cross_entropy_sum)
     def _build_inputs(self):
         self._Monica = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Monica')
         self._Joey = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Joey')
@@ -289,11 +290,15 @@ class MuliRolesModel():
                      self._Chandler:data_dict['Chandler'],self._Monica:data_dict['Monica'],self._Joey:data_dict['Joey'],
                      self._answers:data_dict['answer'],self._weight:data_dict['weight'],self._name_list:data_dict['name_list']}
         if step_type=='train':
-            output_list=[self.loss,self.train_op]
+            output_list=[self.loss,self.train_op,self.loss_summary]
+            loss, _ ,summary= sess.run(output_list, feed_dict=feed_dict)
+            return loss,summary
         else:
-            output_list=[self.loss,self.response]
-        try:
-            loss,_=sess.run(output_list, feed_dict=feed_dict)
-        except:
-            pdb.set_trace()
-        return loss, _
+            output_list=[self.loss,self.response,self.loss_summary]
+            loss, response, summary = sess.run(output_list, feed_dict=feed_dict)
+            return loss,response, summary
+        # try:
+        #     loss,_=sess.run(output_list, feed_dict=feed_dict)
+        # except:
+        #     pdb.set_trace()
+

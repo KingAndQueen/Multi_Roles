@@ -9,6 +9,7 @@ flags=tf.app.flags
 flags.DEFINE_string('model_type','train','whether model initial from checkpoints')
 flags.DEFINE_string('data_dir','data/','data path for model')
 flags.DEFINE_string('checkpoints_dir','checkpoints/','path for save checkpoints')
+flags.DEFINE_string('summary_path','./summary','path of summary for tensorboard')
 flags.DEFINE_string('device_type','gpu','device for computing')
 
 flags.DEFINE_integer('layers',3,'levels of rnn or cnn')
@@ -50,19 +51,21 @@ def train_model(sess,model,train_data):
     current_step=1
     data_input_train = model.get_batch(train_data)
     data_input_eval=model.get_batch(eval_data)
+    train_summary_writer = tf.summary.FileWriter(config.summary_path, sess.graph)
     print('training....')
     while current_step<config.epoch:
       #  print ('current_step:',current_step)
 
         for i in range(len(data_input_train)):
-            loss,_=model.step(sess,data_input_train[i])
+            loss,_,summary=model.step(sess,data_input_train[i])
 
         if current_step%config.check_epoch==0:
             print ('current_step:', current_step)
             print ('training total loss:',loss)
+            train_summary_writer.add_summary(summary, t)
             loss_eval=0.0
             for i in range(len(data_input_eval)):
-                loss,_=model.step(sess,data_input_eval[i])
+                loss,_,_=model.step(sess,data_input_eval[i])
                 loss_eval+=loss
             print ('evaluation total loss:',loss_eval/len(data_input_eval))
 
@@ -75,7 +78,7 @@ def test_model(sess,model,test_data,vocab):
     loss_test=0.0
     predicts=[]
     for batch_id,data_test in enumerate(data_input_test):
-        loss,predict=model.step(sess,data_test,step_type='test')
+        loss,predict,_=model.step(sess,data_test,step_type='test')
         loss_test+=loss
         print('labels: Id:',batch_id)
         show_result(data_test.get('answer'),vocab)
