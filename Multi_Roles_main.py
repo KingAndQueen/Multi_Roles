@@ -12,7 +12,7 @@ flags.DEFINE_string('checkpoints_dir','checkpoints/','path for save checkpoints'
 flags.DEFINE_string('device_type','gpu','device for computing')
 
 flags.DEFINE_integer('layers',3,'levels of rnn or cnn')
-flags.DEFINE_integer('neuros',50,'neuros number of one level')
+flags.DEFINE_integer('neurons',50,'neuron number of one level')
 flags.DEFINE_integer('batch_size',128, 'batch_size')
 flags.DEFINE_integer('roles_number',6,'number of roles in the data')
 flags.DEFINE_integer('epoch',100,'training times' )
@@ -53,18 +53,18 @@ def train_model(sess,model,train_data):
     print('training....')
     while current_step<config.epoch:
       #  print ('current_step:',current_step)
-        total_loss = 0.0
+
         for i in range(len(data_input_train)):
             loss,_=model.step(sess,data_input_train[i])
-            total_loss+=loss
+
         if current_step%config.check_epoch==0:
             print ('current_step:', current_step)
-            print ('training total loss:',total_loss)
+            print ('training total loss:',loss)
             loss_eval=0.0
             for i in range(len(data_input_eval)):
                 loss,_=model.step(sess,data_input_eval[i])
                 loss_eval+=loss
-            print ('evaluation total loss:',loss_eval)
+            print ('evaluation total loss:',loss_eval/len(data_input_eval))
 
         current_step+=1
     checkpoint_path=os.path.join(config.checkpoints_dir,'MultiRoles.ckpt')
@@ -78,11 +78,11 @@ def test_model(sess,model,test_data,vocab):
         loss,predict=model.step(sess,data_test,step_type='test')
         loss_test+=loss
         print('labels: Id:',batch_id)
-        show_result(data_test.get('answer'),vocab)
+      #  show_result(data_test.get('answer'),vocab)
         predicts.append(predict)
         print ('predicts: Id:',batch_id)
-        show_result(predict, vocab)
-    print('test total loss:',loss_test)
+      #  show_result(predict, vocab)
+    print('test total loss:',loss_test/len(data_input_test))
 
 #testing model
 def main(_):

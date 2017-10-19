@@ -17,14 +17,14 @@ class MuliRolesModel():
         self._sentence_size = config.sentence_size
         self._opt = tf.train.GradientDescentOptimizer(learning_rate=config.learn_rate)
         self._interpose = config.interpose
-        self._embedding_size=config.neuros
+        self._embedding_size=config.neurons
         self._layers=config.layers
         self._build_vars()
         self.model_type=config.model_type
         self._roles_number=config.roles_number
         self._build_inputs()
         with tf.variable_scope('embedding'):
-            self._word_embedding = tf.get_variable('embedding_word', [self._vocab.vocab_size, config.neuros])
+            self._word_embedding = tf.get_variable('embedding_word', [self._vocab.vocab_size, config.neurons])
             _Monica = tf.unstack(self._Monica, axis=1)
             Monica_emb = [tf.nn.embedding_lookup(self._word_embedding, word) for word in _Monica]
             _Joey = tf.unstack(self._Joey, axis=1)
@@ -46,7 +46,7 @@ class MuliRolesModel():
 
         def _encoding_roles( person_emb,name=''):
             with tf.variable_scope('encoding_role_'+name):
-                encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neuros,reuse=tf.get_variable_scope().reuse)
+                encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons,reuse=tf.get_variable_scope().reuse)
                 encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
                 # for future test
                 #output, state_fw,state_bw = rnn.static_bidirectional_rnn(cell_fw=encoding_cell, cell_bw=encoding_cell,
@@ -55,18 +55,35 @@ class MuliRolesModel():
                 return output, state_fw
 
         # encoder different roles
-        encoding_roles_functions={
-            'Monica':  _encoding_roles(Monica_emb,'monica')
+        # encoding_roles_functions={
+        #     'Monica':  _encoding_roles(Monica_emb,'monica')
+        #
+        # }
+        monica_encoder,   monica_state = _encoding_roles(Monica_emb,'Monica')  #monica_sate.shape=layers*[batch_size,neurons]
+        joey_encoder,     joey_state   = _encoding_roles(Joey_emb,'Joey')
+        chandler_encoder, chandler_state = _encoding_roles(Chandler_emb, 'Chandler')
+        phoebe_encoder,   phoebe_state = _encoding_roles(Phoebe_emb, 'Phoebe')
+        rachel_encoder,   rachel_state = _encoding_roles(Rachel_emb, 'Rachel')
+        ross_encoder,     ross_state   = _encoding_roles(Ross_emb, 'Ross')
 
-        }
-        monica_encoder, monica_state = encoding_roles_functions['Monica']
-        next_speaker,_=_encoding_roles(name_list_emb,'name_seq')
+        monica_state=tf.expand_dims(tf.stack(monica_state),2) #monica_sate.shape=[layers,batch_size,1,neurons]
+        joey_state=tf.expand_dims(tf.stack(joey_state),2)
+        chandler_state = tf.expand_dims(tf.stack(chandler_state), 2)
+        phoebe_state = tf.expand_dims(tf.stack(phoebe_state), 2)
+        rachel_state = tf.expand_dims(tf.stack(rachel_state), 2)
+        ross_state = tf.expand_dims(tf.stack(ross_state), 2)
+
+        state_all_roles=tf.concat([monica_state,joey_state,chandler_state,phoebe_state,rachel_state,ross_state],2) #all_roles_sate.shape=[layers,batch_size,roles_number,neurons]
+
+        next_speaker,_=_encoding_roles(name_list_emb,'name_seq') #next_speaker.shape=roles_number*[batch_size,neurons]
         linear = rnn_cell_impl._linear
-        next_speaker = linear(next_speaker, self._roles_number, True)
-        next_speaker=tf.nn.softmax(next_speaker)
+        next_speaker = linear(next_speaker[-1], self._roles_number, True) #next_speaker.shape=[batch_size,roles_number]
+        next_speaker=tf.nn.softmax(next_speaker)  #next_speaker.shape=[batch_size,roles_number]
+        next_speaker=tf.expand_dims(next_speaker,0) #next_speaker.shape=[1,batch_size,roles_number]
+        next_speaker = tf.expand_dims(next_speaker, -1) #next_speaker.shape=[1,batch_size,roles_number,1]
 
         with tf.variable_scope('encoding_context'):
-            encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neuros)
+            encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons)
             encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
             context = tf.concat(values=[Monica_emb, Joey_emb, Chandler_emb, Phoebe_emb, Rachel_emb, Ross_emb], axis=0)
             context=tf.unstack(context,axis=0)
@@ -158,6 +175,7 @@ class MuliRolesModel():
                 return outputs  # ,outputs_original
 
         with tf.variable_scope('interaction'):
+            #first decide wheter to speake,then choose the speaker
             gate_decision_lastSpeaker=tf.tanh(tf.matmul(self._w_context,tf.matmul(monica_encoder[-1],tf.transpose(context_encoder[-1]))))
             gate_GRU = tf.nn.rnn_cell.GRUCell(1)
             temp1=tf.squeeze(top_output_context[-1])
@@ -170,10 +188,13 @@ class MuliRolesModel():
         #    if decision > self._interpose:
 
             attention_states_speaker=tf.split(attention_states,[-1,len(Monica_emb)],axis=1)[-1]
-            next_speakers=tf.argmax(next_speaker,1)
 
+            state_all_roles_speaker=tf.multiply(state_all_roles,next_speaker) #state_all_roles_speaker.shape=[layers,batch_size,roles_number,neurons]
+            state_all_roles_speaker=tf.reduce_sum(state_all_roles_speaker,2)
+            state_all_roles_speaker=tf.unstack(state_all_roles_speaker)
+            # next_speakers=tf.argmax(next_speaker,1)
 
-            response=speaker(context_state_fw,attention_states_speaker,answer_emb,self.model_type)
+            response=speaker(state_all_roles_speaker,attention_states_speaker,answer_emb,self.model_type)
        #     else:
        #         response=[]
 
@@ -271,5 +292,8 @@ class MuliRolesModel():
             output_list=[self.loss,self.train_op]
         else:
             output_list=[self.loss,self.response]
-        loss,_=sess.run(output_list, feed_dict=feed_dict)
+        try:
+            loss,_=sess.run(output_list, feed_dict=feed_dict)
+        except:
+            pdb.set_trace()
         return loss, _

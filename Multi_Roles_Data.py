@@ -64,7 +64,8 @@ def read_file(data_path,vocabulary,sentence_size,roles_number):
                 else:
                     weight.append(1.0)
             scene['weight']=weight
-            name_pad=max(roles_number-len(name_list),0)
+            name_pad=roles_number-len(name_list)
+            if name_pad<0:pdb.set_trace()
             for i in range(name_pad):name_list.append(vocabulary.word_to_index('<pad>'))
             scene['name']=name_list
             scene[last_speaker]=sentence_size*[vocabulary.word_to_index('<pad>')]
