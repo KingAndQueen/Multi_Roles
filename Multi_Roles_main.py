@@ -78,10 +78,10 @@ def test_model(sess,model,test_data,vocab):
         loss,predict=model.step(sess,data_test,step_type='test')
         loss_test+=loss
         print('labels: Id:',batch_id)
-      #  show_result(data_test.get('answer'),vocab)
+        show_result(data_test.get('answer'),vocab)
         predicts.append(predict)
         print ('predicts: Id:',batch_id)
-      #  show_result(predict, vocab)
+        show_result(predict, vocab)
     print('test total loss:',loss_test/len(data_input_test))
 
 #testing model
