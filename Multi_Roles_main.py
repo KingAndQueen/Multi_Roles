@@ -54,6 +54,7 @@ def train_model(sess,model,train_data):
     data_input_eval=model.get_batch(eval_data)
     train_summary_writer = tf.summary.FileWriter(config.summary_path, sess.graph)
     print('training....')
+    checkpoint_path = os.path.join(config.checkpoints_dir, 'MultiRoles.ckpt')
     while current_step<config.epoch:
       #  print ('current_step:',current_step)
         previous_losses=[]
@@ -71,10 +72,10 @@ def train_model(sess,model,train_data):
                 loss,_,_=model.step(sess,data_input_eval[i])
                 loss_eval+=loss
             print ('evaluation total loss:',loss_eval/len(data_input_eval))
+            print ('saving current step %d checkpoints....',current_step)
+            model.saver.save(sess, checkpoint_path, global_step=current_step)
 
         current_step+=1
-    checkpoint_path=os.path.join(config.checkpoints_dir,'MultiRoles.ckpt')
-    model.saver.save(sess,checkpoint_path,global_step=current_step)
 
 def test_model(sess,model,test_data,vocab):
     data_input_test=model.get_batch(test_data)
@@ -98,8 +99,13 @@ def main(_):
     print('establish the model...')
     model = Multi_Roles_Model.MuliRolesModel(config,vocab)
     if config.model_type == 'train' :
-        print('Initial model with fresh parameters....')
-        sess.run(tf.global_variables_initializer())
+        ckpt = tf.train.get_checkpoint_state(config.checkpoints_dir)
+        if ckpt and tf.train.checkpoint_exists(ckpt.model_checkpoint_path):
+            print("Reading model parameters from %s" % ckpt.model_checkpoint_path)
+            model.saver.restore(sess, ckpt.model_checkpoint_path)
+        else:
+            print("Created model with fresh parameters....")
+            sess.run(tf.global_variables_initializer())
         train_model(sess, model,train_data)
         test_model(sess,model,test_data,vocab)
     if config.model_type == 'test':
