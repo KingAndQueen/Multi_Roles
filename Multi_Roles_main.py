@@ -16,12 +16,13 @@ flags.DEFINE_integer('layers',3,'levels of rnn or cnn')
 flags.DEFINE_integer('neurons',50,'neuron number of one level')
 flags.DEFINE_integer('batch_size',128, 'batch_size')
 flags.DEFINE_integer('roles_number',6,'number of roles in the data')
-flags.DEFINE_integer('epoch',100,'training times' )
-flags.DEFINE_integer('check_epoch',50,'training times' )
+flags.DEFINE_integer('epoch',10,'training times' )
+flags.DEFINE_integer('check_epoch',5,'training times' )
 flags.DEFINE_integer('sentence_size',20,'length of sentence')
 flags.DEFINE_float('interpose',0.5,'value for gru gate to decide interpose')
-flags.DEFINE_float('learn_rate',0.001,'value for gru gate to decide interpose')
-
+flags.DEFINE_float('learn_rate',0.5,'value for gru gate to decide interpose')
+flags.DEFINE_float("learning_rate_decay_factor", 0.99,'if loss not decrease, multiple the lr with factor')
+flags.DEFINE_float("max_grad_norm",5,'Clip gradients to this norm')
 config=flags.FLAGS
 
 
@@ -55,14 +56,16 @@ def train_model(sess,model,train_data):
     print('training....')
     while current_step<config.epoch:
       #  print ('current_step:',current_step)
-
+        previous_losses=[]
         for i in range(len(data_input_train)):
             loss,_,summary=model.step(sess,data_input_train[i])
-
+            previous_losses.append(loss)
         if current_step%config.check_epoch==0:
+            if len(previous_losses) > 2 and loss > max(previous_losses[-3:]):
+                sess.run(model.learning_rate_decay_op)
             print ('current_step:', current_step)
             print ('training total loss:',loss)
-            train_summary_writer.add_summary(summary, t)
+            train_summary_writer.add_summary(summary, current_step)
             loss_eval=0.0
             for i in range(len(data_input_eval)):
                 loss,_,_=model.step(sess,data_input_eval[i])
@@ -94,12 +97,12 @@ def main(_):
     sess = tf.Session()
     print('establish the model...')
     model = Multi_Roles_Model.MuliRolesModel(config,vocab)
-    if config.model_type == 'training' or config.model_type == 'train' :
+    if config.model_type == 'train' :
         print('Initial model with fresh parameters....')
         sess.run(tf.global_variables_initializer())
         train_model(sess, model,train_data)
         test_model(sess,model,test_data,vocab)
-    if config.model_type == 'testing' or config.model_type == 'test':
+    if config.model_type == 'test':
         print('Reload model from checkpoints.....')
         ckpt = tf.train.get_checkpoint_state(config.checkpoints_dir)
         model.saver.restore(sess, ckpt.model_checkpoint_path)

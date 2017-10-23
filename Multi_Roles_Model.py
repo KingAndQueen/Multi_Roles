@@ -10,18 +10,30 @@ from tensorflow.python.ops import embedding_ops
 from tensorflow.python.util import nest
 import pdb
 
+def add_gradient_noise(t, stddev=1e-3, name=None):
+    """
+    Adds gradient noise as described in http://arxiv.org/abs/1511.06807 [2]..
+    """
+    with tf.name_scope("add_gradient_noise") as name:
+        t = tf.convert_to_tensor(t, name="t")
+        gn = tf.random_normal(tf.shape(t), stddev=stddev)
+        return tf.add(t, gn, name=name)
+
 class MuliRolesModel():
     def __init__(self, config, vocab):
         self._vocab = vocab
         self._batch_size = config.batch_size
         self._sentence_size = config.sentence_size
-        self._opt = tf.train.GradientDescentOptimizer(learning_rate=config.learn_rate)
+        self._learn_rate=tf.Variable(float(config.learn_rate), trainable=False, dtype=tf.float32)
+        self.learning_rate_decay_op = tf.assign(self._learn_rate, self._learn_rate * config.learning_rate_decay_factor)
+        self._opt = tf.train.GradientDescentOptimizer(learning_rate=self._learn_rate)
         self._interpose = config.interpose
         self._embedding_size=config.neurons
         self._layers=config.layers
         self._build_vars()
         self.model_type=config.model_type
         self._roles_number=config.roles_number
+        self._max_grad_norm = config.max_grad_norm
         self._build_inputs()
         with tf.variable_scope('embedding'):
             self._word_embedding = tf.get_variable('embedding_word', [self._vocab.vocab_size, config.neurons])
@@ -176,15 +188,15 @@ class MuliRolesModel():
 
         with tf.variable_scope('interaction'):
             #first decide wheter to speake,then choose the speaker
-            gate_decision_lastSpeaker=tf.tanh(tf.matmul(self._w_context,tf.matmul(monica_encoder[-1],tf.transpose(context_encoder[-1]))))
-            gate_GRU = tf.nn.rnn_cell.GRUCell(1)
-            temp1=tf.squeeze(top_output_context[-1])
-            temp2=tf.transpose(monica_encoder[-1])
-            gate_input=tf.matmul(self._w_attention,tf.matmul(temp1,temp2))
-            #gate_input=tf.unstack(gate_input,axis=1)
-            gate_input=tf.transpose(gate_input)
-            decision_contest, state_gate = rnn.static_rnn(cell=gate_GRU,inputs=[gate_input],dtype=tf.float32)
-            decision=tf.sigmoid(tf.add(tf.squeeze(decision_contest),tf.squeeze(gate_decision_lastSpeaker)))
+            # gate_decision_lastSpeaker=tf.tanh(tf.matmul(self._w_context,tf.matmul(monica_encoder[-1],tf.transpose(context_encoder[-1]))))
+            # gate_GRU = tf.nn.rnn_cell.GRUCell(1)
+            # temp1=tf.squeeze(top_output_context[-1])
+            # temp2=tf.transpose(monica_encoder[-1])
+            # gate_input=tf.matmul(self._w_attention,tf.matmul(temp1,temp2))
+            # #gate_input=tf.unstack(gate_input,axis=1)
+            # gate_input=tf.transpose(gate_input)
+            # decision_contest, state_gate = rnn.static_rnn(cell=gate_GRU,inputs=[gate_input],dtype=tf.float32)
+            # decision=tf.sigmoid(tf.add(tf.squeeze(decision_contest),tf.squeeze(gate_decision_lastSpeaker)))
         #    if decision > self._interpose:
 
             attention_states_speaker=tf.split(attention_states,[-1,len(Monica_emb)],axis=1)[-1]
@@ -208,13 +220,16 @@ class MuliRolesModel():
             cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=response,
                                                                         labels = labels,
                                                                         name = "cross_entropy")
-            cross_entropy = cross_entropy * self._weight
+            cross_entropy = tf.multiply(cross_entropy, self._weight)
             weight_sum = tf.reduce_sum(self._weight, axis=1)
             cross_entropy = tf.reduce_sum(cross_entropy, axis=1)
             cross_entropy = cross_entropy / weight_sum
             cross_entropy_sum = tf.reduce_sum(cross_entropy, name="cross_entropy_sum")
             self.loss=cross_entropy_sum
         grads_and_vars = self._opt.compute_gradients(cross_entropy_sum)
+        grads_and_vars = [(tf.clip_by_norm(g, self._max_grad_norm), v) for g, v in grads_and_vars]
+        grads_and_vars = [(add_gradient_noise(g), v) for g, v in grads_and_vars]
+
         self.train_op = self._opt.apply_gradients(grads_and_vars=grads_and_vars, name='train_op')
 
         self.saver = tf.train.Saver(tf.global_variables())

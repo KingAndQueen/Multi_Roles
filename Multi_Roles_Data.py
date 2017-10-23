@@ -76,6 +76,6 @@ def read_file(data_path,vocabulary,sentence_size,roles_number):
     return scenes
 
 def get_data(data_path,vocabulary,sentence_size,roles_number):
-    train_data_path = os.path.join(data_path, 'Test_processed.txt')
-    test_data_path = os.path.join(data_path, 'Test_processed.txt')
+    train_data_path = os.path.join(data_path, 'Train.txt')
+    test_data_path = os.path.join(data_path, 'Test.txt')
     return read_file(train_data_path,vocabulary,sentence_size,roles_number),read_file(test_data_path,vocabulary,sentence_size,roles_number)
