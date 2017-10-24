@@ -157,9 +157,9 @@ class MuliRolesModel():
 
                 with tf.variable_scope("rnn_decoder"):
                     single_cell_de = tf.nn.rnn_cell.GRUCell(self._embedding_size)
-                    cell_de = single_cell_de
-                    if self._layers > 1:
-                        cell_de = tf.nn.rnn_cell.MultiRNNCell([single_cell_de] * self._layers)
+                   #$ cell_de = single_cell_de
+                   # if self._layers > 1:
+                    cell_de = tf.nn.rnn_cell.MultiRNNCell([single_cell_de] * self._layers)
                         # cell_de = core_rnn_cell.OutputProjectionWrapper(cell_de, self._vocab_size)
                     outputs = []
                     prev = None
