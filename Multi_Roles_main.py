@@ -33,6 +33,7 @@ def show_result(seq, vocab):
             if isinstance(idx,(list,np.ndarray)):
                 show_result(idx,vocab)
             else:
+                if vocab.index_to_word(idx) == '<eos>': break
                 words.append(vocab.index_to_word(idx))
         print (words)
     if isinstance(seq, (str, int)):
@@ -72,7 +73,7 @@ def train_model(sess,model,train_data):
                 loss,_,_=model.step(sess,data_input_eval[i])
                 loss_eval+=loss
             print ('evaluation total loss:',loss_eval/len(data_input_eval))
-            print ('saving current step %d checkpoints....',current_step)
+            print ('saving current step %d checkpoints....' % current_step)
             model.saver.save(sess, checkpoint_path, global_step=current_step)
 
         current_step+=1
