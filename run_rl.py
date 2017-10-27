@@ -1,22 +1,40 @@
-#import gym
+import Drama_Env
 from RL_Brain import PolicyGradient
+from Multi_Roles_main import data_process
 import matplotlib.pyplot as plt
+import tensorflow as tf
+
+flags=tf.app.flags
+flags.DEFINE_string('model_type','train','whether model initial from checkpoints')
+flags.DEFINE_string('data_dir','data/','data path for model')
+flags.DEFINE_string('checkpoints_dir','checkpoints/','path for save checkpoints')
+flags.DEFINE_string('summary_path','./summary','path of summary for tensorboard')
+flags.DEFINE_string('device_type','gpu','device for computing')
+
+flags.DEFINE_integer('layers',1,'levels of rnn or cnn')
+flags.DEFINE_integer('neurons',50,'neuron number of one level')
+flags.DEFINE_integer('batch_size',128, 'batch_size')
+flags.DEFINE_integer('roles_number',6,'number of roles in the data')
+flags.DEFINE_integer('epoch',10,'training times' )
+flags.DEFINE_integer('check_epoch',5,'training times' )
+flags.DEFINE_integer('sentence_size',20,'length of sentence')
+flags.DEFINE_float('interpose',0.5,'value for gru gate to decide interpose')
+flags.DEFINE_float('learn_rate',0.5,'value for gru gate to decide interpose')
+flags.DEFINE_float("learning_rate_decay_factor", 0.99,'if loss not decrease, multiple the lr with factor')
+flags.DEFINE_float("max_grad_norm",5,'Clip gradients to this norm')
+config=flags.FLAGS
+
+
 
 DISPLAY_REWARD_THRESHOLD = 400  # renders environment if total episode reward is greater then this threshold
 RENDER = False  # rendering wastes time
 
-env = gym.make('CartPole-v0')
-env.seed(1)     # reproducible, general Policy gradient has high variance
-env = env.unwrapped
-
-print(env.action_space)
-print(env.observation_space)
-print(env.observation_space.high)
-print(env.observation_space.low)
-
+env = Drama_Env.make('Drama')
+#env.seed(1)     # reproducible, general Policy gradient has high variance
+train_data,test_data,vocab=data_process(config)
 RL = PolicyGradient(
-    n_actions=env.action_space.n,
-    n_features=env.observation_space.shape[0],
+    config,
+    vocab,
     learning_rate=0.02,
     reward_decay=0.99,
     # output_graph=True,
@@ -29,11 +47,11 @@ for i_episode in range(3000):
     while True:
         if RENDER: env.render()
 
-        action = RL.choose_action(observation)
+        sentence = RL.choose_action(observation)
 
-        observation_, reward, done, info = env.step(action)
+        observation_, reward, done = env.step(sentence)
 
-        RL.store_transition(observation, action, reward)
+        RL.store_transition(observation, sentence, reward)
 
         if done:
             ep_rs_sum = sum(RL.ep_rs)
