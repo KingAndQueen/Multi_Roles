@@ -13,7 +13,7 @@ flags.DEFINE_string('device_type','gpu','device for computing')
 
 flags.DEFINE_integer('layers',1,'levels of rnn or cnn')
 flags.DEFINE_integer('neurons',50,'neuron number of one level')
-flags.DEFINE_integer('batch_size',128, 'batch_size')
+flags.DEFINE_integer('batch_size',1, 'batch_size should be 1 in RL process')
 flags.DEFINE_integer('roles_number',6,'number of roles in the data')
 flags.DEFINE_integer('epoch',10,'training times' )
 flags.DEFINE_integer('check_epoch',5,'training times' )
@@ -31,16 +31,14 @@ RENDER = False  # rendering wastes time
 
 env = Drama_Env.make('Drama')
 #env.seed(1)     # reproducible, general Policy gradient has high variance
-train_data,test_data,vocab=data_process(config)
+vocab=data_process(config)
 RL = PolicyGradient(
     config,
     vocab,
-    learning_rate=0.02,
-    reward_decay=0.99,
     # output_graph=True,
 )
 
-for i_episode in range(3000):
+for i_episode in range(300):
 
     observation = env.reset()
 

@@ -248,8 +248,8 @@ class MuliRolesModel():
         self._name_list=tf.placeholder(tf.int32,[self._batch_size,self._roles_number],name='name_list')
     def _build_vars(self):
         init=tf.random_normal_initializer(stddev=0.1)
-        self._w_context=init([1,self._batch_size])
-        self._w_attention=init([1,self._batch_size])
+        # self._w_context=init([1,self._batch_size])
+        # self._w_attention=init([1,self._batch_size])
      #   self._w_transt=init([self._embedding_size,2*self._embedding_size])
 
     def get_batch(self,data_raw):

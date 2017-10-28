@@ -1,6 +1,7 @@
 import os
 import pdb
 import numpy as np
+import pickle
 class Vocab():
     def __init__(self,word2vec=None,embed_size=0):
         self.word2idx={'<eos>':0,'<go>':1,'<pad>':2,'<unk>':3}
@@ -79,3 +80,19 @@ def get_data(data_path,vocabulary,sentence_size,roles_number):
     train_data_path = os.path.join(data_path, 'Train.txt')
     test_data_path = os.path.join(data_path, 'Test.txt')
     return read_file(train_data_path,vocabulary,sentence_size,roles_number),read_file(test_data_path,vocabulary,sentence_size,roles_number)
+
+def store_vocab(vocab,data_path):
+    data_path=data_path+'vocab.pkl'
+    f=open(data_path,'w')
+    pickle.dump(vocab,f)
+    f.close()
+def get_vocab(data_path):
+    data_path = data_path + 'vocab.pkl'
+    if os.path.exists(data_path):
+        f=open(data_path,'r')
+        vocab=pickle.load(f)
+        f.close()
+    else:
+        print('<<<<<<< vocab is not exist >>>>>>>')
+        vocab=None
+    return  vocab

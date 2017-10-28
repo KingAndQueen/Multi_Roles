@@ -3,10 +3,11 @@ import numpy as np
 import Multi_Roles_Model
 import Multi_Roles_Data
 import os
+import random
 from sklearn import model_selection
 #set parameters of model
 flags=tf.app.flags
-flags.DEFINE_string('model_type','train','whether model initial from checkpoints')
+flags.DEFINE_string('model_type','test','whether model initial from checkpoints')
 flags.DEFINE_string('data_dir','data/','data path for model')
 flags.DEFINE_string('checkpoints_dir','checkpoints/','path for save checkpoints')
 flags.DEFINE_string('summary_path','./summary','path of summary for tensorboard')
@@ -27,8 +28,8 @@ config=flags.FLAGS
 
 
 def show_result(seq, vocab):
-    words = []
     if isinstance(seq, (list, np.ndarray)):
+        words = []
         for idx in seq:
             if isinstance(idx,(list,np.ndarray)):
                 show_result(idx,vocab)
@@ -45,6 +46,7 @@ def data_process(config):
     vocabulary=Multi_Roles_Data.Vocab()
     train_data,test_data=Multi_Roles_Data.get_data(config.data_dir,vocabulary,config.sentence_size,config.roles_number)
     print('data processed,vocab size:',vocabulary.vocab_size)
+    Multi_Roles_Data.store_vocab(vocabulary,config.data_dir)
     return train_data,test_data,vocabulary
 
 #training model
@@ -92,14 +94,22 @@ def test_model(sess,model,test_data,vocab):
         show_result(predict, vocab)
     print('test total loss:',loss_test/len(data_input_test))
 
+
+    # data_input_test = model.get_batch(test_data)
+    # test_sample=random.choice(data_input_test)
+    # loss,predict,_=model.step(sess,test_sample,step_type='test')
+    # show_result(test_sample.get('answer'),vocab)
+    # show_result(predict,vocab)
+
 #testing model
 def main(_):
     train_data,test_data,vocab=data_process(config)
     # initiall model from new parameters or checkpoints
     sess = tf.Session()
-    print('establish the model...')
-    model = Multi_Roles_Model.MuliRolesModel(config,vocab)
+
     if config.model_type == 'train' :
+        print('establish the model...')
+        model = Multi_Roles_Model.MuliRolesModel(config, vocab)
         ckpt = tf.train.get_checkpoint_state(config.checkpoints_dir)
         if ckpt and tf.train.checkpoint_exists(ckpt.model_checkpoint_path):
             print("Reading model parameters from %s" % ckpt.model_checkpoint_path)
@@ -110,6 +120,9 @@ def main(_):
         train_model(sess, model,train_data)
         test_model(sess,model,test_data,vocab)
     if config.model_type == 'test':
+        print('establish the model...')
+        # config.batch_size = 1
+        model = Multi_Roles_Model.MuliRolesModel(config, vocab)
         print('Reload model from checkpoints.....')
         ckpt = tf.train.get_checkpoint_state(config.checkpoints_dir)
         model.saver.restore(sess, ckpt.model_checkpoint_path)
