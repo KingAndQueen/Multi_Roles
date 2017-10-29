@@ -27,7 +27,7 @@ class Drama():
 
     def step(self,sentence):
         conversation=self.script[-1]
-        speaker=conversation.get('name')[-1]
+        speaker=conversation.get('name_list')[-1]
         conversation[speaker]=sentence
         self.script.append(conversation)
         observation_=self.script[-1]

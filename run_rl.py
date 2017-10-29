@@ -30,7 +30,7 @@ config=flags.FLAGS
 
 DISPLAY_REWARD_THRESHOLD = 400  # renders environment if total episode reward is greater then this threshold
 RENDER = False  # rendering wastes time
-
+config.batch_size=1
 #env.seed(1)     # reproducible, general Policy gradient has high variance
 vocab=get_vocab(config.data_dir)
 env = Drama_Env.make('Drama')
@@ -46,16 +46,12 @@ data_input_test = RL.model.get_batch(test_data)
 
 
 for i_episode in range(300):
-
     observation = env.reset(data_input_test)
 
     while True:
         if RENDER: env.render()
-
         sentence = RL.choose_action(observation)
-
         observation_, reward, done = env.step(sentence)
-
         RL.store_transition(observation, sentence, reward)
 
         if done:

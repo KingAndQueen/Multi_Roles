@@ -308,10 +308,12 @@ class MuliRolesModel():
             output_list=[self.loss,self.train_op,self.loss_summary]
             loss, _ ,summary= sess.run(output_list, feed_dict=feed_dict)
             return loss,_,summary
-        else:
+        if step_type=='test':
             output_list=[self.loss,self.response,self.loss_summary]
             loss, response, summary = sess.run(output_list, feed_dict=feed_dict)
             return loss,response, summary
+        print('step_type is wrong!>>>')
+        return None
         # try:
         #     loss,_=sess.run(output_list, feed_dict=feed_dict)
         # except:
