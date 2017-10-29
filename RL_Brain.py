@@ -17,14 +17,14 @@ class PolicyGradient:
     ):
         self.config=config
         self.vocab=vocab
-        self.lr = config.learning_rate
+        self.lr = config.learn_rate
         self.gamma = config.reward_decay
 
         self.ep_obs, self.ep_as, self.ep_rs = [], [], []
-
+        self.sess = tf.Session()
         self._build_net()
 
-        self.sess = tf.Session()
+
 
         if output_graph:
             # $ tensorboard --logdir=logs
@@ -57,7 +57,7 @@ class PolicyGradient:
         discounted_ep_rs_norm = self._discount_and_norm_rewards()
 
         # train on episode
-        loss, _, _ = self.model.step(self.sess, [self.ep_obs,self.ep_as,self.ep_rs],step_type='train')
+        loss, _, _ = self.model.step(self.sess, [self.ep_obs,self.ep_as,self.ep_rs],step_type='rl')
 
         self.ep_obs, self.ep_as, self.ep_rs = [], [], []    # empty episode data
         return discounted_ep_rs_norm

@@ -40,10 +40,10 @@ def show_result(seq, vocab):
     if isinstance(seq, (str, int)):
         print (vocab.idx_to_word(seq))
 
-def data_process(config):
+def data_process(config,vocabulary=None):
 #read data from file and normalized
-
-    vocabulary=Multi_Roles_Data.Vocab()
+    if vocabulary==None:
+        vocabulary=Multi_Roles_Data.Vocab()
     train_data,test_data=Multi_Roles_Data.get_data(config.data_dir,vocabulary,config.sentence_size,config.roles_number)
     print('data processed,vocab size:',vocabulary.vocab_size)
     Multi_Roles_Data.store_vocab(vocabulary,config.data_dir)
