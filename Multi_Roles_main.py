@@ -15,7 +15,7 @@ flags.DEFINE_string('summary_path', './summary', 'path of summary for tensorboar
 flags.DEFINE_string('device_type', 'gpu', 'device for computing')
 flags.DEFINE_boolean('rl',False,'rl sign for model')
 
-flags.DEFINE_integer('layers', 1, 'levels of rnn or cnn')
+flags.DEFINE_integer('layers', 3, 'levels of rnn or cnn')
 flags.DEFINE_integer('neurons', 50, 'neuron number of one level')
 flags.DEFINE_integer('batch_size', 128, 'batch_size')
 flags.DEFINE_integer('roles_number', 6, 'number of roles in the data')
