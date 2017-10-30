@@ -47,11 +47,13 @@ data_input_test = RL.model.get_batch(test_data)
 
 for i_episode in range(300):
     observation = env.reset(data_input_test)
-
+    index=1
     while True:
+        print('try ',index)
+        index+=1
         if RENDER: env.render()
         sentence = RL.choose_action(observation)
-        observation_, reward, done = env.step(sentence)
+        observation_, reward, done = env.step(sentence,vocab)
         RL.store_transition(observation, sentence, reward)
 
         if done:
@@ -66,11 +68,11 @@ for i_episode in range(300):
 
             vt = RL.learn()
 
-            if i_episode == 0:
-                plt.plot(vt)    # plot the episode vt
-                plt.xlabel('episode steps')
-                plt.ylabel('normalized state-action value')
-                plt.show()
+            # if i_episode == 0:
+            #     plt.plot(vt)    # plot the episode vt
+            #     plt.xlabel('episode steps')
+            #     plt.ylabel('normalized state-action value')
+            #     plt.show()
             break
 
         observation = observation_

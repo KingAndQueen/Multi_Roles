@@ -226,6 +226,7 @@ class MuliRolesModel():
             cross_entropy = cross_entropy / weight_sum
             cross_entropy_sum = tf.reduce_sum(cross_entropy, name="cross_entropy_sum")
             self.loss=cross_entropy_sum
+
         grads_and_vars = self._opt.compute_gradients(cross_entropy_sum)
         grads_and_vars = [(tf.clip_by_norm(g, self._max_grad_norm), v) for g, v in grads_and_vars]
         grads_and_vars = [(add_gradient_noise(g), v) for g, v in grads_and_vars]
@@ -247,6 +248,7 @@ class MuliRolesModel():
         self._answers=tf.placeholder(tf.int32,[self._batch_size,self._sentence_size],name='answer')
         self._name_list=tf.placeholder(tf.int32,[self._batch_size,self._roles_number],name='name_list')
     def _build_vars(self):
+       # self.rl_reward=tf.get_variable('rl_reward',[self._batch_size],dtype=tf.float32,trainable=False)
         init=tf.random_normal_initializer(stddev=0.1)
         # self._w_context=init([1,self._batch_size])
         # self._w_attention=init([1,self._batch_size])
