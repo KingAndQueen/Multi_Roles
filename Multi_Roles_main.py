@@ -1,10 +1,13 @@
-import tensorflow as tf
-import numpy as np
-import Multi_Roles_Model
-import Multi_Roles_Data
 import os
 import random
+
+import numpy as np
+import tensorflow as tf
 from sklearn import model_selection
+
+import Multi_Roles_Data
+import Multi_Roles_Model
+
 
 # set parameters of model
 flags = tf.app.flags
@@ -13,6 +16,7 @@ flags.DEFINE_string('data_dir', 'data/', 'data path for model')
 flags.DEFINE_string('checkpoints_dir', 'checkpoints/', 'path for save checkpoints')
 flags.DEFINE_string('summary_path', './summary', 'path of summary for tensorboard')
 flags.DEFINE_string('device_type', 'gpu', 'device for computing')
+
 flags.DEFINE_boolean('rl',False,'rl sign for model')
 
 flags.DEFINE_integer('layers', 3, 'levels of rnn or cnn')
@@ -39,9 +43,11 @@ def show_result(seq, vocab):
             else:
                 if vocab.index_to_word(idx) == '<eos>': break
                 words.append(vocab.index_to_word(idx))
-        print (words)
+        print(words)
     if isinstance(seq, (str, int)):
+
         print (vocab.idx_to_word(seq))
+
 
 
 def data_process(config, vocabulary=None):
@@ -61,6 +67,8 @@ def train_model(sess, model, train_data):
     current_step = 1
     data_input_train = model.get_batch(train_data)
     data_input_eval = model.get_batch(eval_data)
+
+
     train_summary_writer = tf.summary.FileWriter(config.summary_path, sess.graph)
     test_summary_writer=tf.summary.FileWriter(config.summary_path)
     print('training....')
@@ -70,10 +78,12 @@ def train_model(sess, model, train_data):
         previous_losses = []
         for i in range(len(data_input_train)):
             loss, _, summary_train = model.step(sess, data_input_train[i])
+
             previous_losses.append(loss)
         if current_step % config.check_epoch == 0:
             if len(previous_losses) > 2 and loss > max(previous_losses[-3:]):
                 sess.run(model.learning_rate_decay_op)
+
             print ('current_step:', current_step)
             print ('training total loss:', loss)
             train_summary_writer.add_summary(summary_train, current_step)
@@ -83,6 +93,7 @@ def train_model(sess, model, train_data):
             test_summary_writer.add_summary(summary_eval)
             print ('evaluation total loss:', loss_eval )
             print ('saving current step %d checkpoints....' % current_step)
+
             model.saver.save(sess, checkpoint_path, global_step=current_step)
 
         current_step += 1
@@ -98,6 +109,7 @@ def test_model(sess, model, test_data, vocab):
         print('labels: Id:', batch_id)
         show_result(data_test.get('answer'), vocab)
         predicts.append(predict)
+
         print ('predicts: Id:', batch_id)
         show_result(predict, vocab)
     print('test total loss:', loss_test / len(data_input_test))
