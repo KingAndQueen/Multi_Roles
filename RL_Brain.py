@@ -1,11 +1,11 @@
 import numpy as np
 import tensorflow as tf
+import pdb
 import Multi_Roles_Model
+
 # reproducible
 np.random.seed(1)
 tf.set_random_seed(1)
-
-
 
 
 class PolicyGradient:
@@ -15,8 +15,8 @@ class PolicyGradient:
             vocab,
             output_graph=False,
     ):
-        self.config=config
-        self.vocab=vocab
+        self.config = config
+        self.vocab = vocab
         self.lr = config.learn_rate
         self.gamma = config.reward_decay
 
@@ -24,14 +24,11 @@ class PolicyGradient:
         self.sess = tf.Session()
         self._build_net()
 
-
-
         if output_graph:
             # $ tensorboard --logdir=logs
             # http://0.0.0.0:6006/
             # tf.train.SummaryWriter soon be deprecated, use following
             tf.summary.FileWriter("logs/", self.sess.graph)
-
 
     def _build_net(self):
         print('establish the model...')
@@ -41,25 +38,26 @@ class PolicyGradient:
         ckpt = tf.train.get_checkpoint_state(self.config.checkpoints_dir)
         self.model.saver.restore(self.sess, ckpt.model_checkpoint_path)
 
-
     def choose_action(self, observation):
         loss, predict, _ = self.model.step(self.sess, observation, step_type='test')
 
         return predict
 
     def store_transition(self, s, a, r):
-        self.ep_obs.append(s)
-        self.ep_as.append(a)
-        self.ep_rs.append(r)
+        self.ep_obs.append(s)  # observations
+        self.ep_as.append(a)  # actions
+        self.ep_rs.append(r)  # rewards
 
     def learn(self):
         # discount and normalize episode reward
         discounted_ep_rs_norm = self._discount_and_norm_rewards()
 
         # train on episode
-        loss, _, _ = self.model.step(self.sess, [self.ep_obs,self.ep_as,self.ep_rs],step_type='rl')
+        for index,conversation in enumerate(self.ep_obs):
+            conversation['answer']=self.ep_as[index]
+            loss, _, _ = self.model.step(self.sess, conversation, self.ep_rs[index], step_type='rl')
 
-        self.ep_obs, self.ep_as, self.ep_rs = [], [], []    # empty episode data
+        self.ep_obs, self.ep_as, self.ep_rs = [], [], []  # empty episode data
         return discounted_ep_rs_norm
 
     def _discount_and_norm_rewards(self):
@@ -71,6 +69,7 @@ class PolicyGradient:
             discounted_ep_rs[t] = running_add
 
         # normalize episode rewards
+        # pdb.set_trace()
         discounted_ep_rs -= np.mean(discounted_ep_rs)
         discounted_ep_rs /= np.std(discounted_ep_rs)
         return discounted_ep_rs
