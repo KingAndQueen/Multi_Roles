@@ -17,23 +17,29 @@ class Drama():
 
     def check_state(self,vocab):
         def score(conversation):
-            score_number = 0.0
-            for sent in conversation.values():
-                sent=list(sent[-1])
-                if vocab.word_to_index('<eos>') in sent:
-                    words = sent[:sent.index(vocab.word_to_index('<eos>'))]
-                else:
-                    words=sent
-                score_number = len(words) - len(set(words))
+
+            speaker_list=conversation.get('name_list')[-1]
+            speaker=''
+            for spk in reversed(speaker_list):
+                if spk!=vocab.word_to_index('<pad>'):
+                    speaker=spk
+            sent=conversation.get(vocab.index_to_word(speaker))
+            sent=(sent[-1])
+            if vocab.word_to_index('<eos>') in sent:
+                words = sent[:sent.index(vocab.word_to_index('<eos>'))]
+            else:
+                words=sent
+            score_number = len(words)-(len(words) - len(set(words)))
+            # pdb.set_trace()
             return score_number
 
         scores = 0.0
         for conversation in self.script:
             scores += score(conversation)
-        if scores > 2:
-            return True #too many useless words th
-        else:
+        if scores < 2*len(self.script):
             return False
+        else:
+            return True
 
     def step(self, sentence, vocab):
         conversation = self.script[-1]

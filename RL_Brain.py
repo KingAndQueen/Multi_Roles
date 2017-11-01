@@ -55,7 +55,10 @@ class PolicyGradient:
         # train on episode
         for index,conversation in enumerate(self.ep_obs):
             conversation['answer']=self.ep_as[index]
-            loss, _, _ = self.model.step(self.sess, conversation, self.ep_rs[index], step_type='rl')
+            # conversation['weight']=[]
+            conversation['reward']=discounted_ep_rs_norm[index]
+            pdb.set_trace()
+            loss, _, _ = self.model.step(self.sess, conversation, step_type='rl')
 
         self.ep_obs, self.ep_as, self.ep_rs = [], [], []  # empty episode data
         return discounted_ep_rs_norm
