@@ -18,7 +18,7 @@ config.rl=True
 #env.seed(1)     # reproducible, general Policy gradient has high variance
 vocab=get_vocab(config.data_dir)
 env = Drama_Env.make('Drama')
-_,test_data,vocab=data_process(config,vocabulary=vocab)
+_,_,test_data,vocab=data_process(config,vocabulary=vocab)
 
 RL = PolicyGradient(
     config,

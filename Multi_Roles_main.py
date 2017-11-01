@@ -27,8 +27,8 @@ flags.DEFINE_integer('epoch', 6, 'training times')
 flags.DEFINE_integer('check_epoch', 3, 'training times')
 flags.DEFINE_integer('sentence_size', 20, 'length of sentence')
 flags.DEFINE_float('interpose', 0.5, 'value for gru gate to decide interpose')
-flags.DEFINE_float('learn_rate', 0.5, 'value for gru gate to decide interpose')
-flags.DEFINE_float("learning_rate_decay_factor", 0.99, 'if loss not decrease, multiple the lr with factor')
+flags.DEFINE_float('learn_rate', 0.01, 'value for gru gate to decide interpose')
+flags.DEFINE_float("learning_rate_decay_factor", 0.1, 'if loss not decrease, multiple the lr with factor')
 flags.DEFINE_float("max_grad_norm", 5, 'Clip gradients to this norm')
 
 config = flags.FLAGS
@@ -54,19 +54,19 @@ def data_process(config, vocabulary=None):
     # read data from file and normalized
     if vocabulary == None:
         vocabulary = Multi_Roles_Data.Vocab()
-    train_data, test_data = Multi_Roles_Data.get_data(config.data_dir, vocabulary, config.sentence_size,
+    train_data,valid_data, test_data = Multi_Roles_Data.get_data(config.data_dir, vocabulary, config.sentence_size,
                                                       config.roles_number)
     print('data processed,vocab size:', vocabulary.vocab_size)
     Multi_Roles_Data.store_vocab(vocabulary, config.data_dir)
-    return train_data, test_data, vocabulary
+    return train_data,valid_data, test_data, vocabulary
 
 
 # training model
-def train_model(sess, model, train_data):
-    train_data, eval_data = model_selection.train_test_split(train_data, test_size=0.2)
+def train_model(sess, model, train_data,valid_data):
+    # train_data, eval_data = model_selection.train_test_split(train_data, test_size=0.2)
     current_step = 1
     data_input_train = model.get_batch(train_data)
-    data_input_eval = model.get_batch(eval_data)
+    data_input_eval = model.get_batch(valid_data)
 
 
     train_summary_writer = tf.summary.FileWriter(config.summary_path, sess.graph)
@@ -124,7 +124,7 @@ def test_model(sess, model, test_data, vocab):
 
 # testing model
 def main(_):
-    train_data, test_data, vocab = data_process(config)
+    train_data,valid_data, test_data, vocab = data_process(config)
     # initiall model from new parameters or checkpoints
     sess = tf.Session()
 
@@ -138,7 +138,7 @@ def main(_):
         else:
             print("Created model with fresh parameters....")
             sess.run(tf.global_variables_initializer())
-        train_model(sess, model, train_data)
+        train_model(sess, model, train_data,valid_data)
         test_model(sess, model, test_data, vocab)
     if config.model_type == 'test':
         print('establish the model...')
