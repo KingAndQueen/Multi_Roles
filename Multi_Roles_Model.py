@@ -34,7 +34,7 @@ class MuliRolesModel():
         self._roles_number = config.roles_number
         self._max_grad_norm = config.max_grad_norm
         self._build_inputs()
-        self.rl=config.rl
+        self.rl = config.rl
         with tf.variable_scope('embedding'):
             self._word_embedding = tf.get_variable('embedding_word', [self._vocab.vocab_size, config.neurons])
             _Monica = tf.unstack(self._Monica, axis=1)
@@ -227,11 +227,10 @@ class MuliRolesModel():
             cross_entropy = tf.reduce_sum(cross_entropy, axis=1)
             cross_entropy = cross_entropy / weight_sum
             if self.rl:
-                cross_entropy=cross_entropy*self.rl_reward
+                cross_entropy = cross_entropy * self.rl_reward
             cross_entropy_sum = tf.reduce_sum(cross_entropy, name="cross_entropy_sum")
 
-            self.loss=cross_entropy_sum
-
+            self.loss = cross_entropy_sum
 
         grads_and_vars = self._opt.compute_gradients(cross_entropy_sum)
         grads_and_vars = [(tf.clip_by_norm(g, self._max_grad_norm), v) for g, v in grads_and_vars]
@@ -260,12 +259,11 @@ class MuliRolesModel():
 
     def _build_vars(self):
 
-        self.rl_reward=tf.get_variable('rl_reward',[1],dtype=tf.float32,trainable=False)
+        self.rl_reward = tf.get_variable('rl_reward', [1], dtype=tf.float32, trainable=False)
         # init=tf.random_normal_initializer(stddev=0.1)
         # self._w_context=init([1,self._batch_size])
         # self._w_attention=init([1,self._batch_size])
-      #   self._w_transt=init([self._embedding_size,2*self._embedding_size])
-
+        #   self._w_transt=init([self._embedding_size,2*self._embedding_size])
 
     def get_batch(self, data_raw):
         # return a list of batches
@@ -326,13 +324,13 @@ class MuliRolesModel():
             output_list = [self.loss, self.train_op, self.merged]
             loss, _, summary = sess.run(output_list, feed_dict=feed_dict)
             return loss, _, summary
-        else:
+        if step_type=='test':
             output_list = [self.loss, self.response, self.merged]
             loss, response, summary = sess.run(output_list, feed_dict=feed_dict)
 
-            return loss,response, summary
-        if step_type=='rl':
-            self.rl_reward=data_dict['reward']
+            return loss, response, summary
+        if step_type == 'rl':
+            self.rl_reward = data_dict['reward']
             output_list = [self.loss, self.train_op, self.loss_summary]
             loss, _, summary = sess.run(output_list, feed_dict=feed_dict)
             return loss, _, summary
@@ -342,4 +340,3 @@ class MuliRolesModel():
         #     loss,_=sess.run(output_list, feed_dict=feed_dict)
         # except:
         #     pdb.set_trace()
-

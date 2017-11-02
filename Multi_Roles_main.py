@@ -11,7 +11,7 @@ import Multi_Roles_Model
 
 # set parameters of model
 flags = tf.app.flags
-flags.DEFINE_string('model_type', 'train', 'whether model initial from checkpoints')
+flags.DEFINE_string('model_type', 'test', 'whether model initial from checkpoints')
 flags.DEFINE_string('data_dir', 'data/', 'data path for model')
 flags.DEFINE_string('checkpoints_dir', 'checkpoints/', 'path for save checkpoints')
 flags.DEFINE_string('summary_path', './summary', 'path of summary for tensorboard')
@@ -108,7 +108,7 @@ def test_model(sess, model, test_data, vocab):
         loss_test += loss
         print('labels: Id:', batch_id)
         show_result(data_test.get('answer'), vocab)
-        predicts.append(predict)
+        # predicts.append(predict)
 
         print ('predicts: Id:', batch_id)
         show_result(predict, vocab)
@@ -142,7 +142,7 @@ def main(_):
         test_model(sess, model, test_data, vocab)
     if config.model_type == 'test':
         print('establish the model...')
-        # config.batch_size = 1
+        config.batch_size = len(test_data)
         model = Multi_Roles_Model.MuliRolesModel(config, vocab)
         print('Reload model from checkpoints.....')
         ckpt = tf.train.get_checkpoint_state(config.checkpoints_dir)
