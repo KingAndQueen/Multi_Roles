@@ -41,6 +41,7 @@ class Vocab():
 
 def read_file(data_path, vocabulary, sentence_size, roles_number):
     f = open(data_path, 'r')
+    # f = open(data_path, 'r', encoding='utf-8', errors='surrogateescape')
     scene = {}
     scenes = []
     last_speaker = ''
