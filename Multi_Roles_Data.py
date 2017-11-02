@@ -64,8 +64,8 @@ def read_file(data_path, vocabulary, sentence_size, roles_number):
             if last_speaker not in scene:
                 continue
             ans = scene[last_speaker]
-            ans.pop()
-            ans.insert(0, vocabulary.word_to_index('<go>'))
+            ans.pop() #pop out the last word IN answer
+            ans.insert(0, vocabulary.word_to_index('<go>')) #padding <go>
             scene['ans'] = ans
             weight = []
             for id in scene[last_speaker]:
@@ -74,6 +74,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number):
                 else:
                     weight.append(1.0)
             scene['weight'] = weight
+            name_list.pop()# pop the last speaker to hidden the true speaker
             name_pad = roles_number - len(name_list)
             if name_pad < 0: pdb.set_trace()
             for i in range(name_pad): name_list.append(vocabulary.word_to_index('<pad>'))

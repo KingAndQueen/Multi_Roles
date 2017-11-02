@@ -95,7 +95,7 @@ class MuliRolesModel():
                               True)  # next_speaker.shape=[batch_size,roles_number]
         next_speaker = tf.nn.softmax(next_speaker)  # next_speaker.shape=[batch_size,roles_number]
         next_speaker = tf.expand_dims(next_speaker, 0)  # next_speaker.shape=[1,batch_size,roles_number]
-        next_speaker = tf.expand_dims(next_speaker, -1)  # next_speaker.shape=[1,batch_size,roles_number,1]
+        next_speaker = tf.expland_dims(next_speaker, -1)  # next_speaker.shape=[1,batch_size,roles_number,1]
 
         with tf.variable_scope('encoding_context'):
             encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons)
