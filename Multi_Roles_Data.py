@@ -49,6 +49,8 @@ def read_file(data_path, vocabulary, sentence_size, roles_number):
     for lines in f:
         if len(lines) > 2:
             name = lines[:lines.index(':')]
+            if name not in ['Monica', 'Joey', 'Chandler', 'Phoebe', 'Rachel', 'Ross']:
+                continue
             # name_id=vocabulary.word_to_index(name)#for word in name.split()]
             sentence = lines[lines.index(':') + 1:lines.index(':') + 1 + sentence_size - 1]  # sub 1 for eos
             sentence_id = [vocabulary.word_to_index(word) for word in sentence.split()]
@@ -58,9 +60,9 @@ def read_file(data_path, vocabulary, sentence_size, roles_number):
                 sentence_id.append(vocabulary.word_to_index('<pad>'))
             scene[name] = sentence_id
             last_speaker = name
-            if name in ['Monica', 'Joey', 'Chandler', 'Phoebe', 'Rachel', 'Ross']:
-                name_list.append(vocabulary.word_to_index(name))
+            name_list.append(vocabulary.word_to_index(name))
         else:
+
             if last_speaker not in scene:
                 continue
             ans = scene[last_speaker]
