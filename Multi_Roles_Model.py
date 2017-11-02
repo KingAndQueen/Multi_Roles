@@ -85,7 +85,7 @@ class MuliRolesModel():
         rachel_state = tf.expand_dims(tf.stack(rachel_state), 2)
         ross_state = tf.expand_dims(tf.stack(ross_state), 2)
 
-        state_all_roles = tf.concat([monica_state, joey_state, chandler_state, phoebe_state, rachel_state, ross_state],
+        state_all_roles = tf.concat([chandler_state, joey_state,monica_state, phoebe_state, rachel_state, ross_state],
                                     2)  # all_roles_sate.shape=[layers,batch_size,roles_number,neurons]
 
         next_speaker, _ = _encoding_roles(name_list_emb,
@@ -95,12 +95,12 @@ class MuliRolesModel():
                               True)  # next_speaker.shape=[batch_size,roles_number]
         next_speaker = tf.nn.softmax(next_speaker)  # next_speaker.shape=[batch_size,roles_number]
         next_speaker = tf.expand_dims(next_speaker, 0)  # next_speaker.shape=[1,batch_size,roles_number]
-        next_speaker = tf.expland_dims(next_speaker, -1)  # next_speaker.shape=[1,batch_size,roles_number,1]
+        next_speaker = tf.expand_dims(next_speaker, -1)  # next_speaker.shape=[1,batch_size,roles_number,1]
 
         with tf.variable_scope('encoding_context'):
             encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons)
             encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
-            context = tf.concat(values=[Monica_emb, Joey_emb, Chandler_emb, Phoebe_emb, Rachel_emb, Ross_emb], axis=0)
+            context = tf.concat(values=[ Chandler_emb,Joey_emb,Monica_emb, Phoebe_emb, Rachel_emb, Ross_emb], axis=0)
             context = tf.unstack(context, axis=0)
             # context_encoder, state_fw,state_bw = rnn.static_bidirectional_rnn(encoding_cell, encoding_cell, context,dtype=tf.float32)
             context_encoder, context_state_fw = rnn.static_rnn(encoding_cell, context, dtype=tf.float32)

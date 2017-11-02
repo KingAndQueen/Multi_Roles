@@ -45,11 +45,11 @@ def read_file(data_path, vocabulary, sentence_size, roles_number):
     scene = {}
     scenes = []
     last_speaker = ''
-    name_list = []
+    name_list_ = []
     for lines in f:
         if len(lines) > 2:
             name = lines[:lines.index(':')]
-            if name not in ['Monica', 'Joey', 'Chandler', 'Phoebe', 'Rachel', 'Ross']:
+            if name not in [ 'Chandler','Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross']:
                 continue
             # name_id=vocabulary.word_to_index(name)#for word in name.split()]
             sentence = lines[lines.index(':') + 1:lines.index(':') + 1 + sentence_size - 1]  # sub 1 for eos
@@ -60,7 +60,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number):
                 sentence_id.append(vocabulary.word_to_index('<pad>'))
             scene[name] = sentence_id
             last_speaker = name
-            name_list.append(vocabulary.word_to_index(name))
+            name_list_.append(name)
         else:
 
             if last_speaker not in scene:
@@ -70,13 +70,19 @@ def read_file(data_path, vocabulary, sentence_size, roles_number):
             ans.insert(0, vocabulary.word_to_index('<go>')) #padding <go>
             scene['ans'] = ans
             weight = []
+            name_list=[]
             for id in scene[last_speaker]:
                 if id == vocabulary.word_to_index('<pad>'):
                     weight.append(0.0)
                 else:
                     weight.append(1.0)
             scene['weight'] = weight
-            name_list.pop()# pop the last speaker to hidden the true speaker
+            name_list_.pop()  # pop the last speaker to hidden the true speaker
+            for name_ in [ 'Chandler','Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross']:
+                if name_ in name_list_:
+                    name_list.append(vocabulary.word_to_index(name_))
+                else:
+                    name_list.append(vocabulary.word_to_index('<pad>'))
             name_pad = roles_number - len(name_list)
             if name_pad < 0: pdb.set_trace()
             for i in range(name_pad): name_list.append(vocabulary.word_to_index('<pad>'))
@@ -84,7 +90,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number):
             scene[last_speaker] = sentence_size * [vocabulary.word_to_index('<pad>')]
             scenes.append(scene)
             scene = {}
-            name_list = []
+            name_list_ = []
     f.close()
     return scenes
 

@@ -11,7 +11,7 @@ import Multi_Roles_Model
 
 # set parameters of model
 flags = tf.app.flags
-flags.DEFINE_string('model_type', 'test', 'whether model initial from checkpoints')
+flags.DEFINE_string('model_type', 'train', 'whether model initial from checkpoints')
 flags.DEFINE_string('data_dir', 'data/', 'data path for model')
 flags.DEFINE_string('checkpoints_dir', 'checkpoints/', 'path for save checkpoints')
 flags.DEFINE_string('summary_path', './summary', 'path of summary for tensorboard')
@@ -69,8 +69,8 @@ def train_model(sess, model, train_data,valid_data):
     data_input_eval = model.get_batch(valid_data)
 
 
-    train_summary_writer = tf.summary.FileWriter(config.summary_path, sess.graph)
-    test_summary_writer=tf.summary.FileWriter(config.summary_path)
+    train_summary_writer = tf.summary.FileWriter(config.summary_path+'/train', sess.graph)
+    test_summary_writer=tf.summary.FileWriter(config.summary_path+'/test')
     print('training....')
     checkpoint_path = os.path.join(config.checkpoints_dir, 'MultiRoles.ckpt')
     while current_step < config.epoch:
