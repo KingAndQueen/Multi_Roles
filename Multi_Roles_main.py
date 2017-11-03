@@ -73,28 +73,34 @@ def train_model(sess, model, train_data,valid_data):
     test_summary_writer=tf.summary.FileWriter(config.summary_path+'/test')
     print('training....')
     checkpoint_path = os.path.join(config.checkpoints_dir, 'MultiRoles.ckpt')
+    train_losses = []
+    eval_losses=[]
     while current_step < config.epoch:
         #  print ('current_step:',current_step)
-        previous_losses = []
+
         for i in range(len(data_input_train)):
             loss, _, summary_train = model.step(sess, data_input_train[i])
 
-            previous_losses.append(loss)
         if current_step % config.check_epoch == 0:
-            if len(previous_losses) > 2 and loss > max(previous_losses[-3:]):
+            train_losses.append(loss)
+            if len(train_losses) > 2 and loss > max(train_losses[-3:]):
                 sess.run(model.learning_rate_decay_op)
-
+            print ('-------------------------------')
             print ('current_step:', current_step)
             print ('training total loss:', loss)
             train_summary_writer.add_summary(summary_train, current_step)
 
             eval_data = random.choice(data_input_eval)
-            loss_eval, _, summary_eval = model.step(sess, eval_data)
+            eval_loss, _, summary_eval = model.step(sess, eval_data)
+            eval_losses.append(eval_loss)
             test_summary_writer.add_summary(summary_eval)
-            print ('evaluation total loss:', loss_eval )
+            print ('evaluation total loss:', eval_loss)
             print ('saving current step %d checkpoints....' % current_step)
-
             model.saver.save(sess, checkpoint_path, global_step=current_step)
+            if len(eval_losses)>4 and eval_loss>max(eval_losses[-5:]):
+                print('----End training for evaluation increase----')
+                break
+
 
         current_step += 1
 
