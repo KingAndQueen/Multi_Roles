@@ -238,7 +238,7 @@ class MuliRolesModel():
 
         self.train_op = self._opt.apply_gradients(grads_and_vars=grads_and_vars, name='train_op')
 
-        self.saver = tf.train.Saver(tf.global_variables())
+        self.saver = tf.train.Saver(tf.global_variables(),max_to_keep=1)
 
         self.response = tf.argmax(response, axis=2)
         self.loss_summary = tf.summary.scalar("loss", cross_entropy_sum)
