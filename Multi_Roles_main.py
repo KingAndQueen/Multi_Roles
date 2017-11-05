@@ -22,8 +22,8 @@ flags.DEFINE_integer('layers', 3, 'levels of rnn or cnn')
 flags.DEFINE_integer('neurons', 50, 'neuron number of one level')
 flags.DEFINE_integer('batch_size', 128, 'batch_size')
 flags.DEFINE_integer('roles_number', 6, 'number of roles in the data')
-flags.DEFINE_integer('epoch', 3, 'training times')
-flags.DEFINE_integer('check_epoch', 1, 'training times')
+flags.DEFINE_integer('epoch', 5, 'training times')
+flags.DEFINE_integer('check_epoch', 50, 'training times')
 flags.DEFINE_integer('sentence_size', 20, 'length of sentence')
 flags.DEFINE_float('interpose', 0.5, 'value for gru gate to decide interpose')
 flags.DEFINE_float('learn_rate', 0.01, 'value for gru gate to decide interpose')
@@ -33,25 +33,28 @@ flags.DEFINE_float("max_grad_norm", 5, 'Clip gradients to this norm')
 config = flags.FLAGS
 
 
-def record_result(current_step=-1):
+def record_result(current_step=-1, eval_loss=-1, loss=-1):
     if not os.path.isfile('./result_data.txt'):
         result_file = open('./result_data.txt', 'a+')
-        result_file.write("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % ('layers',
-                                                                  'neurons',
-                                                                  'batch_size',
-                                                                  'epoch',
-                                                                  'interpose',
-                                                                  'learn_rate',
-                                                                  'learning_rate_decay_factor',
-                                                                  'max_grad_norm',
-                                                                  'stop_limit',
-                                                                  'stop_step',
-                                                                  'checkpoints_dir'))
+        result_file.write("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % ('layers',
+                                                                        'neurons',
+                                                                        'batch_size',
+                                                                        'epoch',
+                                                                        'interpose',
+                                                                        'learn_rate',
+                                                                        'learning_rate_decay_factor',
+                                                                        'max_grad_norm',
+                                                                        'stop_limit',
+                                                                        'stop_step',
+                                                                        'eval_loss',
+                                                                        'train_loss',
+                                                                        'checkpoints_dir'))
+        result_file.flush()
     else:
         if current_step == -1:
             return
         result_file = open('./result_data.txt', 'a+')
-        result_file.write("%d,%d,%d,%d,%f,%f,%f,%d,%d,%d,%s\n" % (config.layers,
+        result_file.write("%d,%d,%d,%d,%f,%f,%f,%d,%d,%d,%d,%d,%s\n" % (config.layers,
                                                                   config.neurons,
                                                                   config.batch_size,
                                                                   config.epoch,
@@ -61,7 +64,10 @@ def record_result(current_step=-1):
                                                                   config.max_grad_norm,
                                                                   config.stop_limit,
                                                                   current_step,
+                                                                  eval_loss ,
+                                                                  loss ,
                                                                   config.checkpoints_dir))
+        result_file.flush()
     result_file.close()
 
 
@@ -134,7 +140,7 @@ def train_model(sess, model, train_data, valid_data):
                 break
 
         current_step += 1
-    record_result(current_step)
+    record_result(current_step, eval_loss, loss)
 
 
 def test_model(sess, model, test_data, vocab):
