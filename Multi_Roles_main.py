@@ -49,7 +49,7 @@ def record_result(current_step=-1, eval_loss=-1, loss=-1):
                                                                         'eval_loss',
                                                                         'train_loss',
                                                                         'checkpoints_dir'))
-        result_file.flush()
+        result_file.flush() 
     else:
         if current_step == -1:
             return
