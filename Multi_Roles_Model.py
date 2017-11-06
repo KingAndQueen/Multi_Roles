@@ -36,7 +36,8 @@ class MuliRolesModel():
         self._build_inputs()
         self.rl = config.rl
         with tf.variable_scope('embedding'):
-            self._word_embedding = tf.get_variable('embedding_word', [self._vocab.vocab_size, config.neurons])
+            self._word_embedding = tf.get_variable(name='embedding_word',
+                                                   shape=[self._vocab.vocab_size, config.neurons])
             _Monica = tf.unstack(self._Monica, axis=1)
             Monica_emb = [tf.nn.embedding_lookup(self._word_embedding, word) for word in _Monica]
             _Joey = tf.unstack(self._Joey, axis=1)
@@ -85,7 +86,7 @@ class MuliRolesModel():
         rachel_state = tf.expand_dims(tf.stack(rachel_state), 2)
         ross_state = tf.expand_dims(tf.stack(ross_state), 2)
 
-        state_all_roles = tf.concat([chandler_state, joey_state,monica_state, phoebe_state, rachel_state, ross_state],
+        state_all_roles = tf.concat([chandler_state, joey_state, monica_state, phoebe_state, rachel_state, ross_state],
                                     2)  # all_roles_sate.shape=[layers,batch_size,roles_number,neurons]
 
         next_speaker, _ = _encoding_roles(name_list_emb,
@@ -100,7 +101,7 @@ class MuliRolesModel():
         with tf.variable_scope('encoding_context'):
             encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons)
             encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
-            context = tf.concat(values=[ Chandler_emb,Joey_emb,Monica_emb, Phoebe_emb, Rachel_emb, Ross_emb], axis=0)
+            context = tf.concat(values=[Chandler_emb, Joey_emb, Monica_emb, Phoebe_emb, Rachel_emb, Ross_emb], axis=0)
             context = tf.unstack(context, axis=0)
             # context_encoder, state_fw,state_bw = rnn.static_bidirectional_rnn(encoding_cell, encoding_cell, context,dtype=tf.float32)
             context_encoder, context_state_fw = rnn.static_rnn(encoding_cell, context, dtype=tf.float32)
@@ -238,7 +239,7 @@ class MuliRolesModel():
 
         self.train_op = self._opt.apply_gradients(grads_and_vars=grads_and_vars, name='train_op')
 
-        self.saver = tf.train.Saver(tf.global_variables())
+        self.saver = tf.train.Saver(tf.global_variables(), max_to_keep=1) 
 
         self.response = tf.argmax(response, axis=2)
         self.loss_summary = tf.summary.scalar("loss", cross_entropy_sum)
@@ -314,17 +315,20 @@ class MuliRolesModel():
 
     def step(self, sess, data_dict, step_type='train'):
         self.model_type = step_type
-        feed_dict = {self._Ross: data_dict['Ross'], self._Rachel: data_dict['Rachel'],
+        feed_dict = {self._Ross: data_dict['Ross'],
+                     self._Rachel: data_dict['Rachel'],
                      self._Phoebe: data_dict['Phoebe'],
-                     self._Chandler: data_dict['Chandler'], self._Monica: data_dict['Monica'],
+                     self._Chandler: data_dict['Chandler'],
+                     self._Monica: data_dict['Monica'],
                      self._Joey: data_dict['Joey'],
-                     self._answers: data_dict['answer'], self._weight: data_dict['weight'],
+                     self._answers: data_dict['answer'],
+                     self._weight: data_dict['weight'],
                      self._name_list: data_dict['name_list']}
         if step_type == 'train':
             output_list = [self.loss, self.train_op, self.merged]
             loss, _, summary = sess.run(output_list, feed_dict=feed_dict)
             return loss, _, summary
-        if step_type=='test':
+        if step_type == 'test':
             output_list = [self.loss, self.response, self.merged]
             loss, response, summary = sess.run(output_list, feed_dict=feed_dict)
 
