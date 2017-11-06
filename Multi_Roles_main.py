@@ -49,7 +49,7 @@ def record_result(current_step=-1, eval_loss=-1, loss=-1):
                                                                         'eval_loss',
                                                                         'train_loss',
                                                                         'checkpoints_dir'))
-        result_file.flush() 
+        result_file.flush()
     else:
         if current_step == -1:
             return
@@ -113,6 +113,8 @@ def train_model(sess, model, train_data, valid_data):
     train_losses = []
     eval_losses = []
     record_result()
+    loss = float()
+    eval_loss = float()
     while current_step < config.epoch:
         #  print ('current_step:',current_step)
 
