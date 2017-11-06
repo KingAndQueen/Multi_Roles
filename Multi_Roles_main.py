@@ -79,7 +79,7 @@ def train_model(sess, model, train_data,valid_data):
         #  print ('current_step:',current_step)
 
         for i in range(len(data_input_train)):
-            loss, _, summary_train = model.step(sess, data_input_train[i])
+            loss, _, summary_train = model.step(sess, random.choice(data_input_train))
 
         if current_step % config.check_epoch == 0:
             train_losses.append(loss)

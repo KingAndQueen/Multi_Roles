@@ -83,9 +83,9 @@ def read_file(data_path, vocabulary, sentence_size, roles_number):
                     name_list.append(vocabulary.word_to_index(name_))
                 else:
                     name_list.append(vocabulary.word_to_index('<pad>'))
-            name_pad = roles_number - len(name_list)
-            if name_pad < 0: pdb.set_trace()
-            for i in range(name_pad): name_list.append(vocabulary.word_to_index('<pad>'))
+            # name_pad = roles_number - len(name_list)
+            if len(name_list) != roles_number: pdb.set_trace()
+            # for i in range(name_pad): name_list.append(vocabulary.word_to_index('<pad>'))
             scene['name'] = name_list
             scene[last_speaker] = sentence_size * [vocabulary.word_to_index('<pad>')]
             scenes.append(scene)
