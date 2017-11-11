@@ -2,7 +2,6 @@ import Drama_Env
 from RL_Brain import PolicyGradient
 from Multi_Roles_main import data_process
 from Multi_Roles_Data import get_vocab
-import matplotlib.pyplot as plt
 import tensorflow as tf
 
 flags=tf.app.flags
