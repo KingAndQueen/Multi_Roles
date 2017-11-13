@@ -9,7 +9,7 @@ class Drama():
     def reset(self, data_input_test):
         self.script = []
         test_sample = random.choice(data_input_test)
-        test_sample.pop('answer')
+        # test_sample.pop('answer')
         self.script.append(test_sample)
         return test_sample
 
@@ -33,7 +33,7 @@ class Drama():
             score_number1 = len(words)-(len(words) - len(set(words)))
             score_=[]
             for key,value in conversation:
-                if key !='name_list' and key !='weight':
+                if key !='name_list' and key !='weight' and key!='answer':
                     pdb.set_trace()
                     r2 = sum(words * value) / sum(abs(words) * abs( value))
                     score_.append(-math.log(r2))
