@@ -1,6 +1,8 @@
 import random
 import pdb
 import math
+import nltk
+import numpy as np
 class Drama():
     def __init__(self, name):
         self.name = name
@@ -25,7 +27,7 @@ class Drama():
                 if spk!=vocab.word_to_index('<pad>'):
                     speaker=spk
             sent=conversation.get(vocab.index_to_word(speaker))
-            pdb.set_trace()
+            # pdb.set_trace()
             sent=(sent[-1])
             if vocab.word_to_index('<eos>') in sent:
                 words = sent[:sent.index(vocab.word_to_index('<eos>'))]
@@ -35,11 +37,12 @@ class Drama():
             score_=[]
             for key,value in conversation.iteritems():
                 if key !='name_list' and key !='weight' and key!='answer':
-                    pdb.set_trace()
-                    r2 = sum(words * value) / sum(abs(words) * abs( value))
-                    score_.append(-math.log(r2))
+                    # pdb.set_trace()
+                    bleu =nltk.translate.bleu(value, words)
+                    score_.append(bleu)
             score_number2=max(score_)
-            score_number=score_number2
+            pdb.set_trace()
+            score_number=score_number2+score_number1
             # pdb.set_trace()
             return score_number
 
