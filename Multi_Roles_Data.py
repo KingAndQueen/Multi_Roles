@@ -63,7 +63,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number):
             name_list_.append(name)
         else:
 
-            if last_speaker not in scene:
+            if last_speaker not in scene or last_speaker=='':
                 continue
             ans = scene[last_speaker]
             ans.pop() #pop out the last word IN answer
