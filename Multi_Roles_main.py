@@ -21,7 +21,7 @@ flags.DEFINE_integer('stop_limit', 5, 'number of evaluation loss is greater than
 flags.DEFINE_integer('layers', 3, 'levels of rnn or cnn')
 flags.DEFINE_integer('neurons', 50, 'neuron number of one level')
 flags.DEFINE_integer('batch_size', 128, 'batch_size')
-flags.DEFINE_integer('roles_number', 6, 'number of roles in the data')
+flags.DEFINE_integer('roles_number', 7, 'number of roles in the data')
 flags.DEFINE_integer('epoch', 2, 'training times')
 flags.DEFINE_integer('check_epoch', 1, 'training times')
 flags.DEFINE_integer('sentence_size', 20, 'length of sentence')

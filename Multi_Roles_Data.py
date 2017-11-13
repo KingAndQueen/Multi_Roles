@@ -1,7 +1,7 @@
 import os
 import pdb
 import pickle
-
+import nltk
 import numpy as np
 
 
@@ -50,10 +50,12 @@ def read_file(data_path, vocabulary, sentence_size, roles_number,rl=False):
         if len(lines) > 2:
             name = lines[:lines.index(':')]
             if name not in [ 'Chandler','Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross']:
-                continue
+                name='others'
             # name_id=vocabulary.word_to_index(name)#for word in name.split()]
-            sentence = lines[lines.index(':') + 1:lines.index(':') + 1 + sentence_size - 1]  # sub 1 for eos
-            sentence_id = [vocabulary.word_to_index(word) for word in sentence.split()]
+            sentence = lines[lines.index(':') + 1:]
+            sentence=nltk.word_tokenize(sentence)
+            sentence_id = [vocabulary.word_to_index(word) for word in sentence]
+            sentence_id=sentence_id[:sentence_size - 1]
             sentence_id.append(vocabulary.word_to_index('<eos>'))
             padding_len = max(sentence_size - len(sentence_id), 0)
             for i in range(padding_len):
@@ -79,7 +81,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number,rl=False):
             scene['weight'] = weight
             if not rl:
                 name_list_.pop()  # pop the last speaker to hidden the true speaker for none-rl
-            for name_ in [ 'Chandler','Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross']:
+            for name_ in [ 'Chandler','Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross','others']:
                 if name_ in name_list_:
                     name_list.append(vocabulary.word_to_index(name_))
                 else:
