@@ -9,7 +9,7 @@ class Drama():
     def reset(self, data_input_test):
         self.script = []
         test_sample = random.choice(data_input_test)
-        # test_sample.pop('answer')
+        pdb.set_trace()
         self.script.append(test_sample)
         return test_sample
 
@@ -25,6 +25,7 @@ class Drama():
                 if spk!=vocab.word_to_index('<pad>'):
                     speaker=spk
             sent=conversation.get(vocab.index_to_word(speaker))
+            pdb.set_trace()
             sent=(sent[-1])
             if vocab.word_to_index('<eos>') in sent:
                 words = sent[:sent.index(vocab.word_to_index('<eos>'))]
@@ -32,7 +33,7 @@ class Drama():
                 words=sent
             score_number1 = len(words)-(len(words) - len(set(words)))
             score_=[]
-            for key,value in conversation:
+            for key,value in conversation.iteritems():
                 if key !='name_list' and key !='weight' and key!='answer':
                     pdb.set_trace()
                     r2 = sum(words * value) / sum(abs(words) * abs( value))
@@ -52,7 +53,7 @@ class Drama():
 
     def step(self, sentence, vocab):
         conversation = self.script[-1]
-        name_list = conversation.get('name_list')# the last true speaker already be deleted need a new way
+        name_list = conversation.get('name_list')
         speaker=''
         for name in reversed(name_list[-1]):
             if name!=vocab.word_to_index('<pad>'):

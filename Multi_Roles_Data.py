@@ -39,7 +39,7 @@ class Vocab():
         return len(self.idx2word)
 
 
-def read_file(data_path, vocabulary, sentence_size, roles_number):
+def read_file(data_path, vocabulary, sentence_size, roles_number,rl=False):
     f = open(data_path, 'r')
     # f = open(data_path, 'r', encoding='utf-8', errors='surrogateescape')
     scene = {}
@@ -77,7 +77,8 @@ def read_file(data_path, vocabulary, sentence_size, roles_number):
                 else:
                     weight.append(1.0)
             scene['weight'] = weight
-            name_list_.pop()  # pop the last speaker to hidden the true speaker
+            if not rl:
+                name_list_.pop()  # pop the last speaker to hidden the true speaker for none-rl
             for name_ in [ 'Chandler','Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross']:
                 if name_ in name_list_:
                     name_list.append(vocabulary.word_to_index(name_))
@@ -95,13 +96,13 @@ def read_file(data_path, vocabulary, sentence_size, roles_number):
     return scenes
 
 
-def get_data(data_path, vocabulary, sentence_size, roles_number):
+def get_data(data_path, vocabulary, sentence_size, roles_number,rl=False):
     train_data_path = os.path.join(data_path, 'Train.txt')
     test_data_path = os.path.join(data_path, 'Test.txt')
     valid_data_path=os.path.join(data_path,'Validation.txt')
     return read_file(train_data_path, vocabulary, sentence_size, roles_number), \
            read_file(valid_data_path,vocabulary,sentence_size,roles_number), \
-           read_file(test_data_path, vocabulary, sentence_size, roles_number)
+           read_file(test_data_path, vocabulary, sentence_size, roles_number,rl)
 
 
 def store_vocab(vocab, data_path):
