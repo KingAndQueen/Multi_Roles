@@ -50,6 +50,8 @@ class MuliRolesModel():
             Rachel_emb = [tf.nn.embedding_lookup(self._word_embedding, word) for word in _Rachel]
             _Ross = tf.unstack(self._Ross, axis=1)
             Ross_emb = [tf.nn.embedding_lookup(self._word_embedding, word) for word in _Ross]
+            _others=tf.unstack(self._others,axis=1)
+            others_emb=[tf.nn.embedding_lookup(self._word_embedding, word) for word in _others]
             _answer = tf.unstack(self._answers, axis=1)
             answer_emb = [tf.nn.embedding_lookup(self._word_embedding, word) for word in _answer]
             _name_list = tf.unstack(self._name_list, axis=1)
@@ -78,6 +80,7 @@ class MuliRolesModel():
         phoebe_encoder, phoebe_state = _encoding_roles(Phoebe_emb, 'Phoebe')
         rachel_encoder, rachel_state = _encoding_roles(Rachel_emb, 'Rachel')
         ross_encoder, ross_state = _encoding_roles(Ross_emb, 'Ross')
+        others_encoder,others_state=_encoding_roles(others_emb,'others')
 
         monica_state = tf.expand_dims(tf.stack(monica_state), 2)  # monica_sate.shape=[layers,batch_size,1,neurons]
         joey_state = tf.expand_dims(tf.stack(joey_state), 2)
@@ -85,8 +88,8 @@ class MuliRolesModel():
         phoebe_state = tf.expand_dims(tf.stack(phoebe_state), 2)
         rachel_state = tf.expand_dims(tf.stack(rachel_state), 2)
         ross_state = tf.expand_dims(tf.stack(ross_state), 2)
-
-        state_all_roles = tf.concat([chandler_state, joey_state, monica_state, phoebe_state, rachel_state, ross_state],
+        others_state=tf.expand_dims(tf.stack(others_state),2)
+        state_all_roles = tf.concat([chandler_state, joey_state, monica_state, phoebe_state, rachel_state, ross_state,others_state],
                                     2)  # all_roles_sate.shape=[layers,batch_size,roles_number,neurons]
 
         next_speaker, _ = _encoding_roles(name_list_emb,
@@ -254,6 +257,7 @@ class MuliRolesModel():
         self._Phoebe = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Phoebe')
         self._Rachel = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Rachel')
         self._Ross = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Ross')
+        self._others = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='others')
         self._weight = tf.placeholder(tf.float32, [self._batch_size, self._sentence_size], name='weight')
         self._answers = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='answer')
         self._name_list = tf.placeholder(tf.int32, [self._batch_size, self._roles_number], name='name_list')
@@ -274,7 +278,7 @@ class MuliRolesModel():
         for _ in range(0, len(data_raw), self._batch_size):
             if _ + self._batch_size > len(data_raw): continue
             data_batch = data_raw[_:_ + self._batch_size]
-            Monica, Joey, Chandler, Phoebe, Rachel, Ross, answer, weight, name = [], [], [], [], [], [], [], [], []
+            Monica, Joey, Chandler, Phoebe, Rachel, Ross,others, answer, weight, name = [], [], [], [], [], [], [], [], [],[]
             for i in data_batch:
                 if 'Monica' in i:
                     Monica.append(i.get('Monica'))
@@ -300,15 +304,16 @@ class MuliRolesModel():
                     Ross.append(i.get('Ross'))
                 else:
                     Ross.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
-                if 'name' in i:
-                    name.append(i.get('name'))
+                if 'others' in i:
+                    others.append(i.get('others'))
                 else:
-                    name.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
+                    others.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
+                name.append(i.get('name'))
                 answer.append(i.get('ans'))
                 weight.append(i.get('weight'))
 
             list_all_batch.append({'Monica': Monica, 'Joey': Joey, 'Chandler': Chandler, 'Phoebe': Phoebe,
-                                   'Rachel': Rachel, 'Ross': Ross, 'answer': answer, 'weight': weight,
+                                   'Rachel': Rachel, 'Ross': Ross,'others':others, 'answer': answer, 'weight': weight,
                                    'name_list': name})
             # pdb.set_trace()
         return list_all_batch
@@ -321,6 +326,7 @@ class MuliRolesModel():
                      self._Chandler: data_dict['Chandler'],
                      self._Monica: data_dict['Monica'],
                      self._Joey: data_dict['Joey'],
+                     self._others:data_dict['others'],
                      self._answers: data_dict['answer'],
                      self._weight: data_dict['weight'],
                      self._name_list: data_dict['name_list']}

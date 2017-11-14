@@ -32,7 +32,6 @@ flags.DEFINE_float("max_grad_norm", 5, 'Clip gradients to this norm')
 
 config = flags.FLAGS
 
-
 def record_result(current_step=-1, eval_loss=-1, loss=-1):
     if not os.path.isfile('./result_data.txt'):
         result_file = open('./result_data.txt', 'a+')
