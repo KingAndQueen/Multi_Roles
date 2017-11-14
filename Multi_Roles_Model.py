@@ -18,7 +18,7 @@ def add_gradient_noise(t, stddev=1e-3, name=None):
         return tf.add(t, gn, name=name)
 
 
-class MuliRolesModel():
+class MultiRolesModel():
     def __init__(self, config, vocab):
         self._vocab = vocab
         self._batch_size = config.batch_size

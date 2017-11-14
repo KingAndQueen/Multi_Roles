@@ -32,7 +32,7 @@ class PolicyGradient:
 
     def _build_net(self):
         print('establish the model...')
-        self.model = Multi_Roles_Model.MuliRolesModel(self.config, self.vocab)
+        self.model = Multi_Roles_Model.MultiRolesModel(self.config, self.vocab)
 
         print('Reload model from checkpoints.....')
         ckpt = tf.train.get_checkpoint_state(self.config.checkpoints_dir)

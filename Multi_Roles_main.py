@@ -175,7 +175,7 @@ def main(_):
 
     if config.model_type == 'train':
         print('establish the model...')
-        model = Multi_Roles_Model.MuliRolesModel(config, vocab)
+        model = Multi_Roles_Model.MultiRolesModel(config, vocab)
         ckpt = tf.train.get_checkpoint_state(config.checkpoints_dir)
         if ckpt and tf.train.checkpoint_exists(ckpt.model_checkpoint_path):
             print("Reading model parameters from %s" % ckpt.model_checkpoint_path)
@@ -188,7 +188,7 @@ def main(_):
     if config.model_type == 'test':
         print('establish the model...')
         config.batch_size = len(test_data)
-        model = Multi_Roles_Model.MuliRolesModel(config, vocab)
+        model = Multi_Roles_Model.MultiRolesModel(config, vocab)
         print('Reload model from checkpoints.....')
         ckpt = tf.train.get_checkpoint_state(config.checkpoints_dir)
         model.saver.restore(sess, ckpt.model_checkpoint_path)
