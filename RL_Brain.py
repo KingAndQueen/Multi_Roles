@@ -58,7 +58,7 @@ class PolicyGradient:
             # conversation['weight']=[]
             if len(self.ep_rs)>3:
                 conversation['reward']=discounted_ep_rs_norm[index]
-            pdb.set_trace()
+            # pdb.set_trace()
             loss, _, _ = self.model.step(self.sess, conversation, step_type='rl')
 
         self.ep_obs, self.ep_as, self.ep_rs = [], [], []  # empty episode data

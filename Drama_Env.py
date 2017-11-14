@@ -63,7 +63,7 @@ class Drama():
         if scores < 10*len(self.script):
             return False
         else:
-            pdb.set_trace()
+            # pdb.set_trace()
             return True
 
     def step(self, sentence, vocab):

@@ -38,8 +38,9 @@ for i_episode in range(300):
         sentence = RL.choose_action(observation)
         observation_, reward, done = env.step(sentence,vocab)
         RL.store_transition(observation, sentence, reward)
-
+        print (sentence)
         if done:
+            print('------positive sentence!----')
             ep_rs_sum = sum(RL.ep_rs)
 
             if 'running_reward' not in globals():
