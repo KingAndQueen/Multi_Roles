@@ -46,11 +46,13 @@ class Drama():
                     if vocab.word_to_index('<eos>') in value:
                         value_ = value[:sent.index(vocab.word_to_index('<eos>'))]
                     else:
-                        value_ = value
+                        if vocab.word_to_index('<pad>') in value:
+                            value_ = value[:sent.index(vocab.word_to_index('<pad>'))]
+                        else: value_=value
                     bleu = nltk.translate.bleu(value_, words)
                     score_.append(bleu)
             score_number2 = max(score_)
-            pdb.set_trace()
+            # pdb.set_trace()
             score_number = score_number2 + score_number1
             # pdb.set_trace()
             return score_number
@@ -58,9 +60,10 @@ class Drama():
         scores = 0.0
         for conversation in self.script:
             scores += score(conversation)
-        if scores < len(self.script):
+        if scores < 10*len(self.script):
             return False
         else:
+            pdb.set_trace()
             return True
 
     def step(self, sentence, vocab):
