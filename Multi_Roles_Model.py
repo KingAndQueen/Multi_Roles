@@ -259,7 +259,6 @@ class MultiRolesModel():
         self.merged = tf.summary.merge_all()
 
     def _combine_gradients(self,tower_grads):
-        pdb.set_trace()
         combine_grads = []
         for grad_and_vars in zip(*tower_grads):
             grads = []
@@ -268,7 +267,9 @@ class MultiRolesModel():
                     continue
                 expanded_g = tf.expand_dims(g, 0)
                 grads.append(expanded_g)
+
             # Average over the 'tower' dimension.
+            if len(grads)==0: pdb.set_trace()
             grad = tf.concat(grads, 0)
             grad = tf.reduce_sum(grad, 0)
             # Keep in mind that the Variables are redundant because they are shared
@@ -364,7 +365,10 @@ class MultiRolesModel():
                      self._speaker: data_dict['speaker']}
         if step_type == 'train':
             output_list = [self.loss, self.train_op, self.merged]
-            loss, _, summary = sess.run(output_list, feed_dict=feed_dict)
+            try:
+                loss, _, summary = sess.run(output_list, feed_dict=feed_dict)
+            except:pdb.set_trace()
+
             return loss, _, summary
         if step_type == 'test':
             output_list = [self.loss, self.response, self.merged]

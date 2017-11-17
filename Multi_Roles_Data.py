@@ -92,7 +92,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number,rl=False):
             # for i in range(name_pad): name_list.append(vocabulary.word_to_index('<pad>'))
             scene['name'] = name_list
             scene[last_speaker] = sentence_size * [vocabulary.word_to_index('<pad>')]
-            scene['speaker']=last_speaker
+            scene['speaker']=vocabulary.word_to_index(last_speaker)
             scenes.append(scene)
             scene = {}
             name_list_ = []
