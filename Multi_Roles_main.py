@@ -172,7 +172,7 @@ def main(_):
     train_data, valid_data, test_data, vocab = data_process(config)
     # initiall model from new parameters or checkpoints
     sess = tf.Session()
-
+    print ('train data set %d, valid data set %d, test data set %d' %(len(train_data),len(valid_data),len(test_data)))
     if config.model_type == 'train':
         print('establish the model...')
         model = Multi_Roles_Model.MultiRolesModel(config, vocab)

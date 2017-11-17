@@ -6,7 +6,7 @@ from tensorflow.python.ops import nn_ops
 from tensorflow.python.ops import rnn
 from tensorflow.python.ops import rnn_cell_impl
 from tensorflow.python.util import nest
-
+import pdb
 
 def add_gradient_noise(t, stddev=1e-3, name=None):
     """
@@ -50,8 +50,8 @@ class MultiRolesModel():
             Rachel_emb = [tf.nn.embedding_lookup(self._word_embedding, word) for word in _Rachel]
             _Ross = tf.unstack(self._Ross, axis=1)
             Ross_emb = [tf.nn.embedding_lookup(self._word_embedding, word) for word in _Ross]
-            _others=tf.unstack(self._others,axis=1)
-            others_emb=[tf.nn.embedding_lookup(self._word_embedding, word) for word in _others]
+            _others = tf.unstack(self._others, axis=1)
+            others_emb = [tf.nn.embedding_lookup(self._word_embedding, word) for word in _others]
             _answer = tf.unstack(self._answers, axis=1)
             answer_emb = [tf.nn.embedding_lookup(self._word_embedding, word) for word in _answer]
             _name_list = tf.unstack(self._name_list, axis=1)
@@ -80,7 +80,7 @@ class MultiRolesModel():
         phoebe_encoder, phoebe_state = _encoding_roles(Phoebe_emb, 'Phoebe')
         rachel_encoder, rachel_state = _encoding_roles(Rachel_emb, 'Rachel')
         ross_encoder, ross_state = _encoding_roles(Ross_emb, 'Ross')
-        others_encoder,others_state=_encoding_roles(others_emb,'others')
+        others_encoder, others_state = _encoding_roles(others_emb, 'others')
 
         monica_state = tf.expand_dims(tf.stack(monica_state), 2)  # monica_sate.shape=[layers,batch_size,1,neurons]
         joey_state = tf.expand_dims(tf.stack(joey_state), 2)
@@ -88,14 +88,15 @@ class MultiRolesModel():
         phoebe_state = tf.expand_dims(tf.stack(phoebe_state), 2)
         rachel_state = tf.expand_dims(tf.stack(rachel_state), 2)
         ross_state = tf.expand_dims(tf.stack(ross_state), 2)
-        others_state=tf.expand_dims(tf.stack(others_state),2)
-        state_all_roles = tf.concat([chandler_state, joey_state, monica_state, phoebe_state, rachel_state, ross_state,others_state],
-                                    2)  # all_roles_sate.shape=[layers,batch_size,roles_number,neurons]
+        others_state = tf.expand_dims(tf.stack(others_state), 2)
+        state_all_roles = tf.concat(
+            [chandler_state, joey_state, monica_state, phoebe_state, rachel_state, ross_state, others_state],
+            2)  # all_roles_sate.shape=[layers,batch_size,roles_number,neurons]
 
-        next_speaker, _ = _encoding_roles(name_list_emb,
+        next_speaker_logit, _ = _encoding_roles(name_list_emb,
                                           'name_seq')  # next_speaker.shape=roles_number*[batch_size,neurons]
         linear = rnn_cell_impl._linear
-        next_speaker = linear(next_speaker[-1], self._roles_number,
+        next_speaker = linear(next_speaker_logit[-1], self._roles_number,
                               True)  # next_speaker.shape=[batch_size,roles_number]
         next_speaker = tf.nn.softmax(next_speaker)  # next_speaker.shape=[batch_size,roles_number]
         next_speaker = tf.expand_dims(next_speaker, 0)  # next_speaker.shape=[1,batch_size,roles_number]
@@ -223,32 +224,60 @@ class MultiRolesModel():
             #           for i in xrange(len(self.decoder_inputs) - 1)]
             _, labels = tf.split(self._answers, [1, -1], 1)
             labels = tf.concat([labels, _], axis=1)
-            cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=response,
-                                                                           labels=labels,
-                                                                           name="cross_entropy")
-            cross_entropy = tf.multiply(cross_entropy, self._weight)
+            true_speaker = self._speaker
+            next_speaker_logits=linear(next_speaker_logit[-1], self._vocab.vocab_size, True)
+            cross_entropy_speaker = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=next_speaker_logits, labels=true_speaker)
+            cross_entropy_sentence = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=response,
+                                                                                    labels=labels,
+                                                                                    name="cross_entropy")
+            cross_entropy_speaker = tf.reduce_sum(cross_entropy_speaker)
+            cross_entropy_sentence = tf.multiply(cross_entropy_sentence, self._weight)
             weight_sum = tf.reduce_sum(self._weight, axis=1)
-            cross_entropy = tf.reduce_sum(cross_entropy, axis=1)
-            cross_entropy = cross_entropy / weight_sum
+            cross_entropy_sentence = tf.reduce_sum(cross_entropy_sentence, axis=1)
+            cross_entropy_sentence = cross_entropy_sentence / weight_sum
+
             if self.rl:
-                cross_entropy = cross_entropy * self.rl_reward
-            cross_entropy_sum = tf.reduce_sum(cross_entropy, name="cross_entropy_sum")
+                cross_entropy_sentence = cross_entropy_sentence * self.rl_reward
+            cross_entropy_sentence_sum = tf.reduce_sum(cross_entropy_sentence, name="cross_entropy_sum")
 
-            self.loss = cross_entropy_sum
-
-        grads_and_vars = self._opt.compute_gradients(cross_entropy_sum)
+            self.loss = cross_entropy_sentence_sum + cross_entropy_speaker
+        grads_and_vars = []
+        grads_and_vars.append(self._opt.compute_gradients(cross_entropy_sentence_sum))
+        grads_and_vars.append(self._opt.compute_gradients(cross_entropy_speaker))
+        grads_and_vars = self._combine_gradients(grads_and_vars)
         grads_and_vars = [(tf.clip_by_norm(g, self._max_grad_norm), v) for g, v in grads_and_vars]
         grads_and_vars = [(add_gradient_noise(g), v) for g, v in grads_and_vars]
 
         self.train_op = self._opt.apply_gradients(grads_and_vars=grads_and_vars, name='train_op')
 
-        self.saver = tf.train.Saver(tf.global_variables(), max_to_keep=1) 
+        self.saver = tf.train.Saver(tf.global_variables(), max_to_keep=1)
 
         self.response = tf.argmax(response, axis=2)
-        self.loss_summary = tf.summary.scalar("loss", cross_entropy_sum)
+        self.loss_summary = tf.summary.scalar("loss", self.loss)
         self.learning_rate_summary = tf.summary.scalar("learning_rate",
-                                                       self._learn_rate * config.learning_rate_decay_factor)
+                                                       self._learn_rate)
         self.merged = tf.summary.merge_all()
+
+    def _combine_gradients(self,tower_grads):
+        pdb.set_trace()
+        combine_grads = []
+        for grad_and_vars in zip(*tower_grads):
+            grads = []
+            for g, _ in grad_and_vars:
+                if g is None:
+                    continue
+                expanded_g = tf.expand_dims(g, 0)
+                grads.append(expanded_g)
+            # Average over the 'tower' dimension.
+            grad = tf.concat(grads, 0)
+            grad = tf.reduce_sum(grad, 0)
+            # Keep in mind that the Variables are redundant because they are shared
+            # across towers. So .. we will just return the first tower's pointer to
+            # the Variable.
+            v = grad_and_vars[0][1]
+            grad_and_var = (grad, v)
+            combine_grads.append(grad_and_var)
+        return combine_grads
 
     def _build_inputs(self):
         self._Monica = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Monica')
@@ -261,6 +290,7 @@ class MultiRolesModel():
         self._weight = tf.placeholder(tf.float32, [self._batch_size, self._sentence_size], name='weight')
         self._answers = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='answer')
         self._name_list = tf.placeholder(tf.int32, [self._batch_size, self._roles_number], name='name_list')
+        self._speaker = tf.placeholder(tf.int32, [self._batch_size], name='true_speaker')
 
     def _build_vars(self):
 
@@ -278,7 +308,7 @@ class MultiRolesModel():
         for _ in range(0, len(data_raw), self._batch_size):
             if _ + self._batch_size > len(data_raw): continue
             data_batch = data_raw[_:_ + self._batch_size]
-            Monica, Joey, Chandler, Phoebe, Rachel, Ross,others, answer, weight, name = [], [], [], [], [], [], [], [], [],[]
+            Monica, Joey, Chandler, Phoebe, Rachel, Ross, others, answer, weight, name, speaker = [], [], [], [], [], [], [], [], [], [], []
             for i in data_batch:
                 if 'Monica' in i:
                     Monica.append(i.get('Monica'))
@@ -311,10 +341,11 @@ class MultiRolesModel():
                 name.append(i.get('name'))
                 answer.append(i.get('ans'))
                 weight.append(i.get('weight'))
+                speaker.append(i.get('speaker'))
 
             list_all_batch.append({'Monica': Monica, 'Joey': Joey, 'Chandler': Chandler, 'Phoebe': Phoebe,
-                                   'Rachel': Rachel, 'Ross': Ross,'others':others, 'answer': answer, 'weight': weight,
-                                   'name_list': name})
+                                   'Rachel': Rachel, 'Ross': Ross, 'others': others, 'answer': answer, 'weight': weight,
+                                   'name_list': name, 'speaker': speaker})
             # pdb.set_trace()
         return list_all_batch
 
@@ -326,10 +357,11 @@ class MultiRolesModel():
                      self._Chandler: data_dict['Chandler'],
                      self._Monica: data_dict['Monica'],
                      self._Joey: data_dict['Joey'],
-                     self._others:data_dict['others'],
+                     self._others: data_dict['others'],
                      self._answers: data_dict['answer'],
                      self._weight: data_dict['weight'],
-                     self._name_list: data_dict['name_list']}
+                     self._name_list: data_dict['name_list'],
+                     self._speaker: data_dict['speaker']}
         if step_type == 'train':
             output_list = [self.loss, self.train_op, self.merged]
             loss, _, summary = sess.run(output_list, feed_dict=feed_dict)

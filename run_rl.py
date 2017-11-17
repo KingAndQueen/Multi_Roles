@@ -8,8 +8,6 @@ flags=tf.app.flags
 flags.DEFINE_float("reward_decay",0.9,'decay the reward of RL')
 config=flags.FLAGS
 
-
-
 DISPLAY_REWARD_THRESHOLD = 400  # renders environment if total episode reward is greater then this threshold
 RENDER = False  # rendering wastes time
 config.batch_size=1
@@ -51,7 +49,6 @@ for i_episode in range(300):
             print("episode:", i_episode, "  reward:", int(running_reward))
 
             vt = RL.learn()
-
             # if i_episode == 0:
             #     plt.plot(vt)    # plot the episode vt
             #     plt.xlabel('episode steps')

@@ -79,8 +79,9 @@ def read_file(data_path, vocabulary, sentence_size, roles_number,rl=False):
                 else:
                     weight.append(1.0)
             scene['weight'] = weight
-            if not rl:
-                name_list_.pop()  # pop the last speaker to hidden the true speaker for none-rl
+            # if not rl:
+            #     name_list_.pop()  # pop the last speaker to hidden the true speaker for none-rl
+            name_list_.pop() #pop out the last speaker
             for name_ in [ 'Chandler','Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross','others']:
                 if name_ in name_list_:
                     name_list.append(vocabulary.word_to_index(name_))
@@ -91,6 +92,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number,rl=False):
             # for i in range(name_pad): name_list.append(vocabulary.word_to_index('<pad>'))
             scene['name'] = name_list
             scene[last_speaker] = sentence_size * [vocabulary.word_to_index('<pad>')]
+            scene['speaker']=last_speaker
             scenes.append(scene)
             scene = {}
             name_list_ = []
