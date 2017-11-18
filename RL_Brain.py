@@ -48,8 +48,8 @@ class PolicyGradient:
         for name in name_list:
             if name == self.vocab.word_to_index('<pad>'):
                 name_list.remove(name)
-        for r in range(len(name_list) - 1):
-            pdb.set_trace()
+        role_number=len(name_list)
+        for r in range(role_number):
             predict = self.choose_action(observation)
             new_speaker = name_list.pop(0)
             observation['answer'] = predict
@@ -61,7 +61,6 @@ class PolicyGradient:
                     new_weight.append(0.0)
             observation['weight'] = [new_weight]
             observations.append(observation) #save last observation for learning in RL
-            pdb.set_trace()
             # update observation to construct new observation
             observation[self.vocab.index_to_word(new_speaker)] = [
                 len(predict[-1]) * [self.vocab.word_to_index('<pad>')]]
@@ -73,7 +72,6 @@ class PolicyGradient:
                     new_name_list.append(name_id)
                 else:
                     new_name_list.append(self.vocab.word_to_index('<pad>'))
-            pdb.set_trace()
             observation[self.vocab.index_to_word(next_speaker)] = predict
             observation['speaker'] = [new_speaker]
             observation['name_list'] = [new_name_list]
