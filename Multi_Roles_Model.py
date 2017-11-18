@@ -91,7 +91,7 @@ class MultiRolesModel():
         others_state = tf.expand_dims(tf.stack(others_state), 2)
         state_all_roles = tf.concat(
             [chandler_state, joey_state, monica_state, phoebe_state, rachel_state, ross_state, others_state],
-            2)  # all_roles_sate.shape=[layers,batch_size,roles_number,neurons]
+            2)  # all_roles_sate.shape=[layers,batch_size,roles_number,neurons] order by namelist
 
         next_speaker_logit, _ = _encoding_roles(name_list_emb,
                                           'name_seq')  # next_speaker.shape=roles_number*[batch_size,neurons]

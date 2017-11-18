@@ -96,9 +96,6 @@ def data_process(config, vocabulary=None):
 
 
 # training model
-
-
-
 def train_model(sess, model, train_data, valid_data):
     # train_data, eval_data = model_selection.train_test_split(train_data, test_size=0.2)
     current_step = 1

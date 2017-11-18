@@ -4,6 +4,7 @@ import pickle
 # import nltk
 import numpy as np
 
+NAMELIST=['Chandler','Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross','others']
 
 class Vocab():
     def __init__(self, word2vec=None, embed_size=0):
@@ -40,6 +41,7 @@ class Vocab():
 
 
 def read_file(data_path, vocabulary, sentence_size, roles_number,rl=False):
+    global NAMELIST
     f = open(data_path, 'r')
     # f = open(data_path, 'r', encoding='utf-8', errors='surrogateescape')
     scene = {}
@@ -82,7 +84,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number,rl=False):
             # if not rl:
             #     name_list_.pop()  # pop the last speaker to hidden the true speaker for none-rl
             name_list_.pop() #pop out the last speaker
-            for name_ in [ 'Chandler','Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross','others']:
+            for name_ in NAMELIST:
                 if name_ in name_list_:
                     name_list.append(vocabulary.word_to_index(name_))
                 else:

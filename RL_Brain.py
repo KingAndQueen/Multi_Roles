@@ -2,11 +2,11 @@ import numpy as np
 import tensorflow as tf
 import pdb
 import Multi_Roles_Model
-
+# import copy
 # reproducible
 np.random.seed(1)
 tf.set_random_seed(1)
-
+NAMELIST=['Chandler','Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross','others']
 
 class PolicyGradient:
     def __init__(
@@ -38,18 +38,28 @@ class PolicyGradient:
         ckpt = tf.train.get_checkpoint_state(self.config.checkpoints_dir)
         self.model.saver.restore(self.sess, ckpt.model_checkpoint_path)
 
-    def choose_scence(self, observation):
+    def choose_scene(self, observation):
         observations = list()
         observations.append(observation)
-        pdb.set_trace()
-        name_list=observation['name_list'][-1]
+        name_list=list(observation['name_list'][-1])
+        next_speaker=observation['speaker'][0]
         for name in name_list:
             if name==self.vocab.word_to_index('<pad>'):
                 name_list.remove(name)
         for r in range(len(name_list)-1):
+            pdb.set_trace()
             predict = self.choose_action(observation)
-            replace_name = name_list[-1+r]
-            observation[self.vocab.index_to_word(replace_name)] = predict
+            new_speaker = name_list.pop(0)
+            name_list.append(next_speaker)
+            new_name_list = []
+            for name in NAMELIST:
+                if name in name_list:
+                    new_name_list.append(self.vocab.word_to_index(name))
+                else:
+                    new_name_list.append(self.vocab.word_to_index('<pad>'))
+            observation[self.vocab.index_to_word(next_speaker)] = predict
+            observation['speaker']=new_speaker
+            observation['name_list']=[new_name_list]
             observations.append(observation)
         return observations[-1]
 
