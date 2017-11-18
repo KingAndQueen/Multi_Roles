@@ -38,6 +38,21 @@ class PolicyGradient:
         ckpt = tf.train.get_checkpoint_state(self.config.checkpoints_dir)
         self.model.saver.restore(self.sess, ckpt.model_checkpoint_path)
 
+    def choose_scence(self, observation):
+        observations = list()
+        observations.append(observation)
+        pdb.set_trace()
+        name_list=observation['name_list'][-1]
+        for name in name_list:
+            if name==self.vocab.word_to_index('<pad>'):
+                name_list.remove(name)
+        for r in range(len(name_list)-1):
+            predict = self.choose_action(observation)
+            replace_name = name_list[-1+r]
+            observation[self.vocab.index_to_word(replace_name)] = predict
+            observations.append(observation)
+        return observations[-1]
+
     def choose_action(self, observation):
         loss, predict, _ = self.model.step(self.sess, observation, step_type='test')
 

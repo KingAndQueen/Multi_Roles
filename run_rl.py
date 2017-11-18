@@ -33,7 +33,7 @@ for i_episode in range(300):
         print('try ',index)
         index+=1
         if RENDER: env.render()
-        sentence = RL.choose_action(observation)
+        sentence = RL.choose_scence(observation)
         observation_, reward, done = env.step(sentence,vocab)
         RL.store_transition(observation, sentence, reward)
         print (sentence)
