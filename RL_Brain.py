@@ -2,11 +2,13 @@ import numpy as np
 import tensorflow as tf
 import pdb
 import Multi_Roles_Model
+
 # import copy
 # reproducible
 np.random.seed(1)
 tf.set_random_seed(1)
-NAMELIST=['Chandler','Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross','others']
+NAMELIST = ['Chandler', 'Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross', 'others']
+
 
 class PolicyGradient:
     def __init__(
@@ -41,26 +43,41 @@ class PolicyGradient:
     def choose_scene(self, observation):
         observations = list()
         observations.append(observation)
-        name_list=list(observation['name_list'][-1])
-        next_speaker=observation['speaker'][0]
+        name_list = list(observation['name_list'][-1])
+        next_speaker = observation['speaker'][0]
         for name in name_list:
-            if name==self.vocab.word_to_index('<pad>'):
+            if name == self.vocab.word_to_index('<pad>'):
                 name_list.remove(name)
-        for r in range(len(name_list)-1):
+        for r in range(len(name_list) - 1):
             pdb.set_trace()
             predict = self.choose_action(observation)
             new_speaker = name_list.pop(0)
+            observation['answer'] = predict
+            new_weight = []
+            for ans in predict[-1]:
+                if ans != self.vocab.word_to_index('<pad>'):
+                    new_weight.append(1.0)
+                else:
+                    new_weight.append(0.0)
+            observation['weight'] = [new_weight]
+            observations.append(observation) #save last observation for learning in RL
+            pdb.set_trace()
+            # update observation to construct new observation
+            observation[self.vocab.index_to_word(new_speaker)] = [
+                len(predict[-1]) * [self.vocab.word_to_index('<pad>')]]
             name_list.append(next_speaker)
             new_name_list = []
             for name in NAMELIST:
-                if name in name_list:
-                    new_name_list.append(self.vocab.word_to_index(name))
+                name_id = self.vocab.word_to_index(name)
+                if name_id in name_list:
+                    new_name_list.append(name_id)
                 else:
                     new_name_list.append(self.vocab.word_to_index('<pad>'))
+            pdb.set_trace()
             observation[self.vocab.index_to_word(next_speaker)] = predict
-            observation['speaker']=new_speaker
-            observation['name_list']=[new_name_list]
-            observations.append(observation)
+            observation['speaker'] = [new_speaker]
+            observation['name_list'] = [new_name_list]
+
         return observations[-1]
 
     def choose_action(self, observation):
@@ -78,11 +95,11 @@ class PolicyGradient:
         discounted_ep_rs_norm = self._discount_and_norm_rewards()
 
         # train on episode
-        for index,conversation in enumerate(self.ep_obs):
-            conversation['answer']=self.ep_as[index]
+        for index, conversation in enumerate(self.ep_obs):
+            conversation['answer'] = self.ep_as[index]
             # conversation['weight']=[]
-            if len(self.ep_rs)>3:
-                conversation['reward']=discounted_ep_rs_norm[index]
+            if len(self.ep_rs) > 3:
+                conversation['reward'] = discounted_ep_rs_norm[index]
             # pdb.set_trace()
             loss, _, _ = self.model.step(self.sess, conversation, step_type='rl')
 
