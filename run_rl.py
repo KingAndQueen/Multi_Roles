@@ -33,10 +33,11 @@ for i_episode in range(300):
         print('try ',index)
         index+=1
         if RENDER: env.render()
-        sentence = RL.choose_scene(observation)
-        observation_, reward, done = env.step(sentence,vocab)
-        RL.store_transition(observation, sentence, reward)
-        print (sentence)
+        scenes = RL.choose_scene(observation)
+        observation_, reward, done = env.step_scene(scenes,vocab)
+        RL.store_transition(observation_,None,reward)
+        # RL.store_transition(observation, sentence, reward)
+        print (observation_)
         if done:
             print('------positive sentence!----')
             ep_rs_sum = sum(RL.ep_rs)
@@ -49,11 +50,7 @@ for i_episode in range(300):
             print("episode:", i_episode, "  reward:", int(running_reward))
 
             vt = RL.learn()
-            # if i_episode == 0:
-            #     plt.plot(vt)    # plot the episode vt
-            #     plt.xlabel('episode steps')
-            #     plt.ylabel('normalized state-action value')
-            #     plt.show()
+
             break
 
         observation = observation_

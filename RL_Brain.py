@@ -76,7 +76,7 @@ class PolicyGradient:
             observation['speaker'] = [new_speaker]
             observation['name_list'] = [new_name_list]
 
-        return observations[-1]
+        return observations
 
     def choose_action(self, observation):
         loss, predict, _ = self.model.step(self.sess, observation, step_type='test')
@@ -85,7 +85,7 @@ class PolicyGradient:
 
     def store_transition(self, s, a, r):
         self.ep_obs.append(s)  # observations
-        self.ep_as.append(a)  # actions
+        # self.ep_as.append(a)  # actions
         self.ep_rs.append(r)  # rewards
 
     def learn(self):
@@ -94,7 +94,7 @@ class PolicyGradient:
 
         # train on episode
         for index, conversation in enumerate(self.ep_obs):
-            conversation['answer'] = self.ep_as[index]
+            # conversation['answer'] = self.ep_as[index]
             # conversation['weight']=[]
             if len(self.ep_rs) > 3:
                 conversation['reward'] = discounted_ep_rs_norm[index]

@@ -67,6 +67,15 @@ class Drama():
             # pdb.set_trace()
             return True
 
+    def check_scene_state(self,scene):
+        #calculate the scene quality
+
+        return done,reward
+    def step_scene(self,scenes,vocab):
+        done,reward=self.check_scene_state(scenes[-1])
+        observation_=scenes[0]
+        return observation_, reward, done
+
     def step(self, sentence, vocab):
         conversation = self.script[-1]
         name_list = conversation.get('name_list')
