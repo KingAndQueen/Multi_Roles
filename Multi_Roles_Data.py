@@ -3,6 +3,7 @@ import pdb
 import pickle
 # import nltk
 import numpy as np
+import codecs
 
 NAMELIST=['Chandler','Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross','others']
 
@@ -42,8 +43,9 @@ class Vocab():
 
 def read_file(data_path, vocabulary, sentence_size, roles_number,rl=False):
     global NAMELIST
-    f = open(data_path, 'r')
-    # f = open(data_path, 'r', encoding='utf-8', errors='surrogateescape')
+    # f = open(data_path, 'r')
+    # f = open(data_path, 'r', encoding='utf-8', errors='surrogateescap e')
+    f = codecs.open(data_path, 'r', 'utf-8')
     scene = {}
     scenes = []
     last_speaker = ''
