@@ -116,7 +116,7 @@ def get_data(data_path, vocabulary, sentence_size, roles_number,rl=False):
 
 def store_vocab(vocab, data_path):
     data_path = data_path + 'vocab.pkl'
-    f = open(data_path, 'w')
+    f = open(data_path, 'wb')
     pickle.dump(vocab, f)
     f.close()
 
@@ -124,7 +124,7 @@ def store_vocab(vocab, data_path):
 def get_vocab(data_path):
     data_path = data_path + 'vocab.pkl'
     if os.path.exists(data_path):
-        f = open(data_path, 'r')
+        f = open(data_path, 'rb')
         vocab = pickle.load(f)
         f.close()
     else:
