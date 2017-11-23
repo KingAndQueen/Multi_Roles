@@ -43,9 +43,9 @@ class Vocab():
 
 def read_file(data_path, vocabulary, sentence_size, roles_number,rl=False):
     global NAMELIST
-    # f = open(data_path, 'r')
+    f = open(data_path, 'r')
     # f = open(data_path, 'r', encoding='utf-8', errors='surrogateescap e')
-    f = codecs.open(data_path, 'r', 'utf-8')
+    # f = codecs.open(data_path, 'r', 'utf-8')
     scene = {}
     scenes = []
     last_speaker = ''
@@ -116,7 +116,7 @@ def get_data(data_path, vocabulary, sentence_size, roles_number,rl=False):
 
 def store_vocab(vocab, data_path):
     data_path = data_path + 'vocab.pkl'
-    f = open(data_path, 'wb')
+    f = open(data_path, 'w')
     pickle.dump(vocab, f)
     f.close()
 
@@ -124,7 +124,7 @@ def store_vocab(vocab, data_path):
 def get_vocab(data_path):
     data_path = data_path + 'vocab.pkl'
     if os.path.exists(data_path):
-        f = open(data_path, 'rb')
+        f = open(data_path, 'r')
         vocab = pickle.load(f)
         f.close()
     else:
