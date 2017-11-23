@@ -145,7 +145,6 @@ def test_model(sess, model, test_data, vocab):
     data_input_test = model.get_batch(test_data)
     loss_test = 0.0
     predicts = []
-    f=open('')
     for batch_id, data_test in enumerate(data_input_test):
         loss, predict, _ ,vector= model.step(sess, data_test, step_type='test')
         loss_test += loss
@@ -155,7 +154,7 @@ def test_model(sess, model, test_data, vocab):
         # predicts.append(predict)
 
         # print ('predicts: Id:', batch_id)
-        # show_result(predict, vocab)
+        show_result(predict, vocab)
     print('test total loss:', loss_test / len(data_input_test))
 
 
