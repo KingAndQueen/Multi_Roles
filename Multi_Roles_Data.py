@@ -51,6 +51,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number,rl=False):
     last_speaker = ''
     name_list_ = []
     for lines in f:
+        lines=lines.strip()[2:-5]
         if len(lines) > 2:
             name = lines[:lines.index(':')]
             if name not in [ 'Chandler','Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross']:
@@ -123,7 +124,7 @@ def store_vocab(vocab, data_path):
 def get_vocab(data_path):
     data_path = data_path + 'vocab.pkl'
     if os.path.exists(data_path):
-        f = open(data_path, 'r')
+        f = open(data_path, 'rb')
         vocab = pickle.load(f)
         f.close()
     else:

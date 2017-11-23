@@ -96,9 +96,10 @@ class MultiRolesModel():
         next_speaker_logit, _ = _encoding_roles(name_list_emb,
                                           'name_seq')  # next_speaker.shape=roles_number*[batch_size,neurons]
         linear = rnn_cell_impl._linear
-        next_speaker = linear(next_speaker_logit[-1], self._roles_number,
+        next_speaker_pred = linear(next_speaker_logit[-1], self._roles_number,
                               True)  # next_speaker.shape=[batch_size,roles_number]
-        next_speaker = tf.nn.softmax(next_speaker)  # next_speaker.shape=[batch_size,roles_number]
+        self.next_speakers_vector=next_speaker_pred
+        next_speaker = tf.nn.softmax(next_speaker_pred)  # next_speaker.shape=[batch_size,roles_number]
         next_speaker = tf.expand_dims(next_speaker, 0)  # next_speaker.shape=[1,batch_size,roles_number]
         next_speaker = tf.expand_dims(next_speaker, -1)  # next_speaker.shape=[1,batch_size,roles_number,1]
 
@@ -371,10 +372,10 @@ class MultiRolesModel():
 
             return loss, _, summary
         if step_type == 'test':
-            output_list = [self.loss, self.response, self.merged]
-            loss, response, summary = sess.run(output_list, feed_dict=feed_dict)
+            output_list = [self.loss, self.response, self.merged,self.next_speakers_vector]
+            loss, response, summary,next_speakers_vector = sess.run(output_list, feed_dict=feed_dict)
 
-            return loss, response, summary
+            return loss, response, summary,next_speakers_vector
         if step_type == 'rl':
             self.rl_reward = data_dict['reward']
             output_list = [self.loss, self.train_op, self.loss_summary]

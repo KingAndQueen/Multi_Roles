@@ -3,7 +3,7 @@ import random
 
 import numpy as np
 import tensorflow as tf
-
+import pdb
 import Multi_Roles_Data
 import Multi_Roles_Model
 
@@ -22,8 +22,8 @@ flags.DEFINE_integer('layers', 3, 'levels of rnn or cnn')
 flags.DEFINE_integer('neurons', 100, 'neuron number of one level')
 flags.DEFINE_integer('batch_size', 128, 'batch_size')
 flags.DEFINE_integer('roles_number', 7, 'number of roles in the data')
-flags.DEFINE_integer('epoch', 2000, 'training times')
-flags.DEFINE_integer('check_epoch', 100, 'training times')
+flags.DEFINE_integer('epoch', 1, 'training times')
+flags.DEFINE_integer('check_epoch', 1, 'training times')
 flags.DEFINE_integer('sentence_size', 20, 'length of sentence')
 flags.DEFINE_float('interpose', 0.5, 'value for gru gate to decide interpose')
 flags.DEFINE_float('learn_rate', 0.01, 'value for gru gate to decide interpose')
@@ -98,7 +98,7 @@ def data_process(config, vocabulary=None):
 # training model
 def train_model(sess, model, train_data, valid_data):
     # train_data, eval_data = model_selection.train_test_split(train_data, test_size=0.2)
-    current_step = 1
+    current_step = 0
     data_input_train = model.get_batch(train_data)
     data_input_eval = model.get_batch(valid_data)
 
@@ -145,9 +145,11 @@ def test_model(sess, model, test_data, vocab):
     data_input_test = model.get_batch(test_data)
     loss_test = 0.0
     predicts = []
+    f=open('')
     for batch_id, data_test in enumerate(data_input_test):
-        loss, predict, _ = model.step(sess, data_test, step_type='test')
+        loss, predict, _ ,vector= model.step(sess, data_test, step_type='test')
         loss_test += loss
+        # pdb.set_trace()
         # print('labels: Id:', batch_id)
         # show_result(data_test.get('answer'), vocab)
         # predicts.append(predict)
