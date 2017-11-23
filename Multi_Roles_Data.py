@@ -106,9 +106,9 @@ def read_file(data_path, vocabulary, sentence_size, roles_number,rl=False):
 
 
 def get_data(data_path, vocabulary, sentence_size, roles_number,rl=False):
-    train_data_path = os.path.join(data_path, 'Train.txt')
-    test_data_path = os.path.join(data_path, 'Test.txt')
-    valid_data_path=os.path.join(data_path,'Validation.txt')
+    train_data_path = os.path.join(data_path, 'train.txt')
+    test_data_path = os.path.join(data_path, 'test.txt')
+    valid_data_path=os.path.join(data_path,'validation.txt')
     return read_file(train_data_path, vocabulary, sentence_size, roles_number), \
            read_file(valid_data_path,vocabulary,sentence_size,roles_number), \
            read_file(test_data_path, vocabulary, sentence_size, roles_number,rl)
