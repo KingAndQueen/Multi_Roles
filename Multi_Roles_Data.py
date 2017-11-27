@@ -131,3 +131,19 @@ def get_vocab(data_path):
         print('<<<<<<< vocab is not exist >>>>>>>')
         vocab = None
     return vocab
+
+def get_humorous_scene_rl(data_path,vocabulary):
+    data_path=data_path+'humorous_scenes.txt'
+    scene={}
+    if os.path.exists(data_path):
+        f=open(data_path,'r')
+        for line in f:
+            if len(line) > 2:
+                name=line[:line.index(':')]
+                sents=line[line.index(':')+1:]
+                sents_idx=[vocabulary.word_to_index(word) for word in sents.split()]
+                scene[vocabulary.word_to_index(name)]=sents_idx
+
+
+    else:
+        print('<<<<<<< humorous scenes is not exist >>>>>>>')

@@ -3,7 +3,7 @@ import pdb
 import math
 import nltk
 import numpy as np
-
+import tensorflow as tf
 
 class Drama():
     def __init__(self, name):

@@ -8,6 +8,7 @@ from tensorflow.python.ops import rnn_cell_impl
 from tensorflow.python.util import nest
 import pdb
 
+
 def add_gradient_noise(t, stddev=1e-3, name=None):
     """
     Adds gradient noise as described in http://arxiv.org/abs/1511.06807 [2]..
@@ -93,16 +94,6 @@ class MultiRolesModel():
             [chandler_state, joey_state, monica_state, phoebe_state, rachel_state, ross_state, others_state],
             2)  # all_roles_sate.shape=[layers,batch_size,roles_number,neurons] order by namelist
 
-        next_speaker_logit, _ = _encoding_roles(name_list_emb,
-                                          'name_seq')  # next_speaker.shape=roles_number*[batch_size,neurons]
-        linear = rnn_cell_impl._linear
-        next_speaker_pred = linear(next_speaker_logit[-1], self._roles_number,
-                              True)  # next_speaker.shape=[batch_size,roles_number]
-        self.next_speakers_vector=next_speaker_pred
-        next_speaker = tf.nn.softmax(next_speaker_pred)  # next_speaker.shape=[batch_size,roles_number]
-        next_speaker = tf.expand_dims(next_speaker, 0)  # next_speaker.shape=[1,batch_size,roles_number]
-        next_speaker = tf.expand_dims(next_speaker, -1)  # next_speaker.shape=[1,batch_size,roles_number,1]
-
         with tf.variable_scope('encoding_context'):
             encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons)
             encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
@@ -112,6 +103,26 @@ class MultiRolesModel():
             context_encoder, context_state_fw = rnn.static_rnn(encoding_cell, context, dtype=tf.float32)
             top_output_context = [array_ops.reshape(o, [-1, 1, encoding_cell.output_size]) for o in context_encoder]
             attention_states = array_ops.concat(top_output_context, 1)
+        linear = rnn_cell_impl._linear
+
+        def _speaker_prediction(next_speaker_emb):
+            with tf.variable_scope('speaker_prediction'):
+                encoding_single_layer = tf.nn.rnn_cell.GRUCell(2*config.neurons, reuse=tf.get_variable_scope().reuse)
+                encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
+                output, state_fw = rnn.static_rnn(encoding_cell, next_speaker_emb, dtype=tf.float32)
+            return output, state_fw
+        with tf.variable_scope('next_speaker'):
+            next_speaker_emb=[]
+            for name_emb in name_list_emb:
+                next_speaker_emb.append(tf.concat([name_emb, context_state_fw[-1]], 1))
+            next_speaker_logit, _ = _speaker_prediction(next_speaker_emb)
+
+            next_speaker_pred = linear(next_speaker_logit[-1], self._roles_number,
+                                       True)  # next_speaker.shape=[batch_size,roles_number]
+            self.next_speakers_vector = next_speaker_pred
+            next_speaker = tf.nn.softmax(next_speaker_pred)  # next_speaker.shape=[batch_size,roles_number]
+            next_speaker = tf.expand_dims(next_speaker, 0)  # next_speaker.shape=[1,batch_size,roles_number]
+            next_speaker = tf.expand_dims(next_speaker, -1)  # next_speaker.shape=[1,batch_size,roles_number,1]
 
         def speaker(encoder_state, attention_states, q_emb, model_type='train'):
             with tf.variable_scope('speaker'):
@@ -226,8 +237,9 @@ class MultiRolesModel():
             _, labels = tf.split(self._answers, [1, -1], 1)
             labels = tf.concat([labels, _], axis=1)
             true_speaker = self._speaker
-            next_speaker_logits=linear(next_speaker_logit[-1], self._vocab.vocab_size, True)
-            cross_entropy_speaker = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=next_speaker_logits, labels=true_speaker)
+            next_speaker_logits = linear(next_speaker_logit[-1], self._vocab.vocab_size, True)
+            cross_entropy_speaker = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=next_speaker_logits,
+                                                                                   labels=true_speaker)
             cross_entropy_sentence = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=response,
                                                                                     labels=labels,
                                                                                     name="cross_entropy")
@@ -259,7 +271,7 @@ class MultiRolesModel():
                                                        self._learn_rate)
         self.merged = tf.summary.merge_all()
 
-    def _combine_gradients(self,tower_grads):
+    def _combine_gradients(self, tower_grads):
         combine_grads = []
         for grad_and_vars in zip(*tower_grads):
             grads = []
@@ -270,7 +282,7 @@ class MultiRolesModel():
                 grads.append(expanded_g)
 
             # Average over the 'tower' dimension.
-            if len(grads)==0: pdb.set_trace()
+            if len(grads) == 0: pdb.set_trace()
             grad = tf.concat(grads, 0)
             grad = tf.reduce_sum(grad, 0)
             # Keep in mind that the Variables are redundant because they are shared
@@ -368,14 +380,15 @@ class MultiRolesModel():
             output_list = [self.loss, self.train_op, self.merged]
             try:
                 loss, _, summary = sess.run(output_list, feed_dict=feed_dict)
-            except:pdb.set_trace()
+            except:
+                pdb.set_trace()
 
             return loss, _, summary
         if step_type == 'test':
-            output_list = [self.loss, self.response, self.merged,self.next_speakers_vector]
-            loss, response, summary,next_speakers_vector = sess.run(output_list, feed_dict=feed_dict)
+            output_list = [self.loss, self.response, self.merged, self.next_speakers_vector]
+            loss, response, summary, next_speakers_vector = sess.run(output_list, feed_dict=feed_dict)
 
-            return loss, response, summary,next_speakers_vector
+            return loss, response, summary, next_speakers_vector
         if step_type == 'rl':
             self.rl_reward = data_dict['reward']
             output_list = [self.loss, self.train_op, self.loss_summary]
