@@ -111,6 +111,7 @@ class MultiRolesModel():
                 encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
                 output, state_fw = rnn.static_rnn(encoding_cell, next_speaker_emb, dtype=tf.float32)
             return output, state_fw
+
         with tf.variable_scope('next_speaker'):
             next_speaker_emb=[]
             for name_emb in name_list_emb:
@@ -244,6 +245,7 @@ class MultiRolesModel():
                                                                                     labels=labels,
                                                                                     name="cross_entropy")
             cross_entropy_speaker = tf.reduce_sum(cross_entropy_speaker)
+
             cross_entropy_sentence = tf.multiply(cross_entropy_sentence, self._weight)
             weight_sum = tf.reduce_sum(self._weight, axis=1)
             cross_entropy_sentence = tf.reduce_sum(cross_entropy_sentence, axis=1)
@@ -254,10 +256,13 @@ class MultiRolesModel():
             cross_entropy_sentence_sum = tf.reduce_sum(cross_entropy_sentence, name="cross_entropy_sum")
 
             self.loss = cross_entropy_sentence_sum + cross_entropy_speaker
+            # self.loss = 0.4*cross_entropy_sentence_sum + 0.6*cross_entropy_speaker
         grads_and_vars = []
+        #grads_and_vars.append(self._opt.compute_gradients(self.loss))
         grads_and_vars.append(self._opt.compute_gradients(cross_entropy_sentence_sum))
         grads_and_vars.append(self._opt.compute_gradients(cross_entropy_speaker))
         grads_and_vars = self._combine_gradients(grads_and_vars)
+
         grads_and_vars = [(tf.clip_by_norm(g, self._max_grad_norm), v) for g, v in grads_and_vars]
         grads_and_vars = [(add_gradient_noise(g), v) for g, v in grads_and_vars]
 
