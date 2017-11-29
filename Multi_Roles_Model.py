@@ -120,8 +120,9 @@ class MultiRolesModel():
 
             next_speaker_pred = linear(next_speaker_logit[-1], self._roles_number,
                                        True)  # next_speaker.shape=[batch_size,roles_number]
+
+            next_speaker = tf.nn.softmax(next_speaker_pred) # next_speaker.shape=[batch_size,roles_number]
             self.next_speakers_vector = next_speaker_pred
-            next_speaker = tf.nn.softmax(next_speaker_pred)  # next_speaker.shape=[batch_size,roles_number]
             next_speaker = tf.expand_dims(next_speaker, 0)  # next_speaker.shape=[1,batch_size,roles_number]
             next_speaker = tf.expand_dims(next_speaker, -1)  # next_speaker.shape=[1,batch_size,roles_number,1]
 
