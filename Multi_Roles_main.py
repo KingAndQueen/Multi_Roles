@@ -1,15 +1,16 @@
 import os
+import pdb
 import random
 
 import numpy as np
 import tensorflow as tf
-import pdb
+
 import Multi_Roles_Data
 import Multi_Roles_Model
 
 # set parameters of model
 flags = tf.app.flags
-flags.DEFINE_string('model_type', 'train', 'whether model initial from checkpoints')
+flags.DEFINE_string('model_type', 'test', 'whether model initial from checkpoints')
 flags.DEFINE_string('data_dir', 'data/', 'data path for model')
 flags.DEFINE_string('checkpoints_dir', 'checkpoints/', 'path for save checkpoints')
 flags.DEFINE_string('summary_path', './summary', 'path of summary for tensorboard')
@@ -22,15 +23,16 @@ flags.DEFINE_integer('layers', 3, 'levels of rnn or cnn')
 flags.DEFINE_integer('neurons', 100, 'neuron number of one level')
 flags.DEFINE_integer('batch_size', 128, 'batch_size')
 flags.DEFINE_integer('roles_number', 7, 'number of roles in the data')
-flags.DEFINE_integer('epoch', 1000, 'training times')
-flags.DEFINE_integer('check_epoch', 100, 'training times')
+flags.DEFINE_integer('epoch', 2000, 'training times')
+flags.DEFINE_integer('check_epoch', 50, 'training times')
 flags.DEFINE_integer('sentence_size', 20, 'length of sentence')
 flags.DEFINE_float('interpose', 0.5, 'value for gru gate to decide interpose')
-flags.DEFINE_float('learn_rate', 0.01, 'value for gru gate to decide interpose')
+flags.DEFINE_float('learn_rate', 0.1, 'value for gru gate to decide interpose')
 flags.DEFINE_float("learning_rate_decay_factor", 1, 'if loss not decrease, multiple the lr with factor')
 flags.DEFINE_float("max_grad_norm", 5, 'Clip gradients to this norm')
 
 config = flags.FLAGS
+
 
 def record_result(current_step=-1, eval_loss=-1, loss=-1):
     if not os.path.isfile('./result_data.txt'):
@@ -54,18 +56,18 @@ def record_result(current_step=-1, eval_loss=-1, loss=-1):
             return
         result_file = open('./result_data.txt', 'a+')
         result_file.write("%d,%d,%d,%d,%f,%f,%f,%d,%d,%d,%d,%d,%s\n" % (config.layers,
-                                                                  config.neurons,
-                                                                  config.batch_size,
-                                                                  config.epoch,
-                                                                  config.interpose,
-                                                                  config.learn_rate,
-                                                                  config.learning_rate_decay_factor,
-                                                                  config.max_grad_norm,
-                                                                  config.stop_limit,
-                                                                  current_step,
-                                                                  eval_loss ,
-                                                                  loss ,
-                                                                  config.checkpoints_dir))
+                                                                        config.neurons,
+                                                                        config.batch_size,
+                                                                        config.epoch,
+                                                                        config.interpose,
+                                                                        config.learn_rate,
+                                                                        config.learning_rate_decay_factor,
+                                                                        config.max_grad_norm,
+                                                                        config.stop_limit,
+                                                                        current_step,
+                                                                        eval_loss,
+                                                                        loss,
+                                                                        config.checkpoints_dir))
         result_file.flush()
     result_file.close()
 
@@ -89,7 +91,7 @@ def data_process(config, vocabulary=None):
     if vocabulary == None:
         vocabulary = Multi_Roles_Data.Vocab()
     train_data, valid_data, test_data = Multi_Roles_Data.get_data(config.data_dir, vocabulary, config.sentence_size,
-                                                                  config.roles_number,config.rl)
+                                                                  config.roles_number, config.rl)
     print('data processed,vocab size:', vocabulary.vocab_size)
     Multi_Roles_Data.store_vocab(vocabulary, config.data_dir)
     return train_data, valid_data, test_data, vocabulary
@@ -146,7 +148,8 @@ def test_model(sess, model, test_data, vocab):
     loss_test = 0.0
     predicts = []
     for batch_id, data_test in enumerate(data_input_test):
-        loss, predict, _ ,vector= model.step(sess, data_test, step_type='test')
+        loss, predict, _, vector = model.step(sess, data_test, step_type='test')
+        related_matrix(vocab, vector, test_data, 1)
         loss_test += loss
         # pdb.set_trace()
         # print('labels: Id:', batch_id)
@@ -165,12 +168,40 @@ def test_model(sess, model, test_data, vocab):
     # show_result(predict,vocab)
 
 
+def related_matrix(vocab, vectors, datas, data_type):
+    name_dir = {'Chandler': 0, 'Joey': 1, 'Monica': 2, 'Phoebe': 3, 'Rachel': 4, 'Ross': 5, 'others': 6}
+    relation_matrix = np.zeros(
+        # NAMELIST = ['Chandler', 'Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross', 'others']
+        shape=(config.roles_number, config.roles_number),
+        dtype=np.float64)
+    if data_type == 1:  # real data 0/1
+        for data in datas:
+            name_set = set(vocab.idx2word[name_idx] for name_idx in data['name'] if name_idx != 2)
+            speaker = vocab.idx2word[data['speaker']]
+            # name_set.add(speaker)
+            # print(name_set)
+            for name in name_set:
+                relation_matrix[name_dir[str(name)]][name_dir[str(speaker)]] += 1
+        pdb.set_trace()
+    else:  # guess speaker
+        for vector in vectors:
+            for data in datas:
+                name_set = set(vocab.idx2word[name_idx] for name_idx in data['name'] if name_idx != 2)
+                speaker = vocab.idx2word[data['speaker']]
+                # name_set.add(speaker)
+                for name in name_set:
+                    relation_matrix[name_dir[str(name)]:] += vector
+
+    # pdb.set_trace()
+    return relation_matrix  # testing model
+
+
 # testing model
 def main(_):
     train_data, valid_data, test_data, vocab = data_process(config)
     # initiall model from new parameters or checkpoints
     sess = tf.Session()
-    print ('train data set %d, valid data set %d, test data set %d' %(len(train_data),len(valid_data),len(test_data)))
+    print('train data set %d, valid data set %d, test data set %d' % (len(train_data), len(valid_data), len(test_data)))
     if config.model_type == 'train':
         print('establish the model...')
         model = Multi_Roles_Model.MultiRolesModel(config, vocab)
