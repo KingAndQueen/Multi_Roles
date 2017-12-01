@@ -141,7 +141,7 @@ def get_humorous_scene_rl(data_path,vocabulary,sentence_size):
         scene = {}
         scenes = []
         for lines in f:
-            pdb.set_trace()
+            # pdb.set_trace()
             if len(lines) > 2:
                 name = lines[:lines.index(':')]
                 if name not in [ 'Chandler','Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross']:
@@ -175,7 +175,7 @@ def get_humorous_scene_rl(data_path,vocabulary,sentence_size):
                 scenes.append(scene)
                 scene = {}
                 name_list_ = []
-
+        return scenes
 
     else:
         print('<<<<<<< humorous scenes is not exist >>>>>>>')

@@ -79,7 +79,7 @@ class PolicyGradient:
         return observations
 
     def choose_action(self, observation):
-        loss, predict, _ = self.model.step(self.sess, observation, step_type='test')
+        loss, predict, _ ,_= self.model.step(self.sess, observation, step_type='test')
 
         return predict
 

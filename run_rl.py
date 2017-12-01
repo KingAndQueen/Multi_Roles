@@ -3,7 +3,7 @@ from RL_Brain import PolicyGradient
 from Multi_Roles_main import data_process
 from Multi_Roles_Data import get_vocab,get_humorous_scene_rl
 import tensorflow as tf
-
+import pdb
 flags=tf.app.flags
 flags.DEFINE_float("reward_decay",0.9,'decay the reward of RL')
 config=flags.FLAGS
@@ -22,10 +22,11 @@ RL_model = PolicyGradient(
     vocab,
     # output_graph=True,
 )
-
 data_input_test = RL_model.model.get_batch(test_data)
-humor_data=get_humorous_scene_rl(config.data_dir,vocab,config.sentence_size)
 
+humor_data=get_humorous_scene_rl(config.data_dir,vocab,config.sentence_size)
+humor_input_data=RL_model.model.get_batch(humor_data)
+pdb.set_trace()
 for i_episode in range(300):
     observation = env.reset(data_input_test)
     index=1
