@@ -97,10 +97,11 @@ class MultiRolesModel():
         with tf.variable_scope('encoding_context'):
             encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons)
             encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
-            context = tf.concat(values=[Chandler_emb, Joey_emb, Monica_emb, Phoebe_emb, Rachel_emb, Ross_emb], axis=0)
+            context = tf.concat(values=[Chandler_emb, Joey_emb, Monica_emb, Phoebe_emb, Rachel_emb, Ross_emb,others_emb], axis=0)
             context = tf.unstack(context, axis=0)
             # context_encoder, state_fw,state_bw = rnn.static_bidirectional_rnn(encoding_cell, encoding_cell, context,dtype=tf.float32)
             context_encoder, context_state_fw = rnn.static_rnn(encoding_cell, context, dtype=tf.float32)
+            self.context_vector=context_state_fw
             top_output_context = [array_ops.reshape(o, [-1, 1, encoding_cell.output_size]) for o in context_encoder]
             attention_states = array_ops.concat(top_output_context, 1)
         linear = rnn_cell_impl._linear
@@ -117,7 +118,6 @@ class MultiRolesModel():
             for name_emb in name_list_emb:
                 next_speaker_emb.append(tf.concat([name_emb, context_state_fw[-1]], 1))
             next_speaker_logit, _ = _speaker_prediction(next_speaker_emb)
-
             next_speaker_pred = linear(next_speaker_logit[-1], self._roles_number,
                                        True)  # next_speaker.shape=[batch_size,roles_number]
 
@@ -393,11 +393,14 @@ class MultiRolesModel():
         if step_type == 'test':
             output_list = [self.loss, self.response, self.merged, self.next_speakers_vector]
             loss, response, summary, next_speakers_vector = sess.run(output_list, feed_dict=feed_dict)
-
             return loss, response, summary, next_speakers_vector
-        if step_type == 'rl':
+        if step_type == 'rl_compute':
+            output_list = [ self.context_vector]
+            context_vector=sess.run(output_list, feed_dict=feed_dict)
+            return context_vector
+        if step_type == 'rl_learn':
             self.rl_reward = data_dict['reward']
-            output_list = [self.loss, self.train_op, self.loss_summary]
+            output_list = [self.loss, self.train_op, self.merged]
             loss, _, summary = sess.run(output_list, feed_dict=feed_dict)
             return loss, _, summary
         print('step_type is wrong!>>>')

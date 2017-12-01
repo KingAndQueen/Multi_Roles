@@ -132,17 +132,49 @@ def get_vocab(data_path):
         vocab = None
     return vocab
 
-def get_humorous_scene_rl(data_path,vocabulary):
+def get_humorous_scene_rl(data_path,vocabulary,sentence_size):
     data_path=data_path+'humorous_scenes.txt'
-    scene={}
+
     if os.path.exists(data_path):
         f=open(data_path,'r')
-        for line in f:
-            if len(line) > 2:
-                name=line[:line.index(':')]
-                sents=line[line.index(':')+1:]
-                sents_idx=[vocabulary.word_to_index(word) for word in sents.split()]
-                scene[vocabulary.word_to_index(name)]=sents_idx
+        name_list_ = []
+        scene = {}
+        scenes = []
+        for lines in f:
+            pdb.set_trace()
+            if len(lines) > 2:
+                name = lines[:lines.index(':')]
+                if name not in [ 'Chandler','Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross']:
+                    name='others'
+            # name_id=vocabulary.word_to_index(name)#for word in name.split()]
+                sentence = lines[lines.index(':') + 1:]
+                sentence=sentence.split()
+                sentence_id = [vocabulary.word_to_index(word) for word in sentence]
+                sentence_id=sentence_id[:sentence_size - 1]
+                sentence_id.append(vocabulary.word_to_index('<eos>'))
+                padding_len = max(sentence_size - len(sentence_id), 0)
+                for i in range(padding_len):
+                    sentence_id.append(vocabulary.word_to_index('<pad>'))
+                scene[name] = sentence_id
+                last_speaker = name
+                name_list_.append(name)
+            else:
+                if last_speaker not in scene or last_speaker=='':
+                    continue
+                scene['ans'] = sentence_size *[vocabulary.word_to_index('<pad>')]
+                name_list=[]
+                weight=sentence_size *[0]
+                scene['weight'] = weight
+                for name_ in NAMELIST:
+                    if name_ in name_list_:
+                        name_list.append(vocabulary.word_to_index(name_))
+                    else:
+                        name_list.append(vocabulary.word_to_index('<pad>'))
+                scene['name'] = name_list
+                scene['speaker']=vocabulary.word_to_index(last_speaker)
+                scenes.append(scene)
+                scene = {}
+                name_list_ = []
 
 
     else:

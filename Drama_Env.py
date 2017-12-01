@@ -21,7 +21,7 @@ class Drama():
     def render(self):
         print(self.script)
 
-    def check_state(self, vocab):
+    def check_state(self, vocab,):
         def score(conversation):
 
             speaker_list = conversation.get('name_list')[-1]
@@ -67,12 +67,28 @@ class Drama():
             # pdb.set_trace()
             return True
 
-    def check_scene_state(self,scene):
-        #calculate the scene quality
+    def cosine_similarity(self, tokens_a, tokens_b, mask=None):
+        reward=sum(tokens_a*tokens_b)/sum(abs(tokens_a)*abs(tokens_b))
+        if reward >0:
+            reward=-math.log(reward)
+        else:
+            reward=-reward
+        return reward
 
+    def check_scene_state(self,scene_pred,RL_model,humor_data):
+        #calculate the scene quality
+        predict_scene_vector=RL_model.step(RL_model.sess, scene_pred, step_type='rl_compute')
+        score1=0
+        for scene in humor_data:
+            humor_scene_vector=RL_model.step(RL_model.sess, scene, step_type='rl_compute')
+            score1+=self.cosine_similarity(humor_scene_vector,predict_scene_vector)
+        reward=score1
+        if reward<1:done=False
+        else:done=True
         return done,reward
-    def step_scene(self,scenes,vocab):
-        done,reward=self.check_scene_state(scenes[-1])
+
+    def step_scene(self,scenes,vocab,RL_model,humor_data):
+        done,reward=self.check_scene_state(scenes[-1],RL_model,humor_data)
         observation_=scenes[0]
         return observation_, reward, done
 

@@ -99,7 +99,7 @@ class PolicyGradient:
             if len(self.ep_rs) > 3:
                 conversation['reward'] = discounted_ep_rs_norm[index]
             # pdb.set_trace()
-            loss, _, _ = self.model.step(self.sess, conversation, step_type='rl')
+            loss, _ = self.model.step(self.sess, conversation, step_type='rl_learn')
 
         self.ep_obs, self.ep_as, self.ep_rs = [], [], []  # empty episode data
         return discounted_ep_rs_norm

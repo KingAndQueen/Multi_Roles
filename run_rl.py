@@ -1,7 +1,7 @@
 import Drama_Env
 from RL_Brain import PolicyGradient
 from Multi_Roles_main import data_process
-from Multi_Roles_Data import get_vocab
+from Multi_Roles_Data import get_vocab,get_humorous_scene_rl
 import tensorflow as tf
 
 flags=tf.app.flags
@@ -17,14 +17,14 @@ vocab=get_vocab(config.data_dir)
 env = Drama_Env.make('Drama')
 _,_,test_data,vocab=data_process(config,vocabulary=vocab)
 
-RL = PolicyGradient(
+RL_model = PolicyGradient(
     config,
     vocab,
     # output_graph=True,
 )
 
-data_input_test = RL.model.get_batch(test_data)
-
+data_input_test = RL_model.model.get_batch(test_data)
+humor_data=get_humorous_scene_rl(config.data_dir,vocab,config.sentence_size)
 
 for i_episode in range(300):
     observation = env.reset(data_input_test)
@@ -33,14 +33,14 @@ for i_episode in range(300):
         print('try ',index)
         index+=1
         if RENDER: env.render()
-        scenes = RL.choose_scene(observation)
-        observation_, reward, done = env.step_scene(scenes,vocab)
-        RL.store_transition(observation_,None,reward)
+        scenes = RL_model.choose_scene(observation)
+        observation_, reward, done = env.step_scene(scenes,vocab,RL_model,humor_data)
+        RL_model.store_transition(observation_,None,reward)
         # RL.store_transition(observation, sentence, reward)
         print (observation_)
         if done:
             print('------positive sentence!----')
-            ep_rs_sum = sum(RL.ep_rs)
+            ep_rs_sum = sum(RL_model.ep_rs)
 
             if 'running_reward' not in globals():
                 running_reward = ep_rs_sum
@@ -49,7 +49,7 @@ for i_episode in range(300):
             if running_reward > DISPLAY_REWARD_THRESHOLD: RENDER = True     # rendering
             print("episode:", i_episode, "  reward:", int(running_reward))
 
-            vt = RL.learn()
+            vt = RL_model.learn()
 
             break
 
