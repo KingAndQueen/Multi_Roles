@@ -110,15 +110,20 @@ class MultiRolesModel():
             with tf.variable_scope('speaker_prediction'):
                 encoding_single_layer = tf.nn.rnn_cell.GRUCell(2*config.neurons, reuse=tf.get_variable_scope().reuse)
                 encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
-                output, state_fw = rnn.static_rnn(encoding_cell, next_speaker_emb, dtype=tf.float32)
-            return output, state_fw
+                # pdb.set_trace()
+                output=None
+                state=encoding_cell.zero_state(self._batch_size, dtype=tf.float32)
+                for emb in next_speaker_emb:
+                    output, state = encoding_cell(emb, state=state)
+
+            return output, state
 
         with tf.variable_scope('next_speaker'):
             next_speaker_emb=[]
             for name_emb in name_list_emb:
                 next_speaker_emb.append(tf.concat([name_emb, context_state_fw[-1]], 1))
             next_speaker_logit, _ = _speaker_prediction(next_speaker_emb)
-            next_speaker_pred = linear(next_speaker_logit[-1], self._roles_number,
+            next_speaker_pred = linear(next_speaker_logit, self._roles_number,
                                        True)  # next_speaker.shape=[batch_size,roles_number]
 
             next_speaker = tf.nn.softmax(next_speaker_pred) # next_speaker.shape=[batch_size,roles_number]
@@ -239,7 +244,7 @@ class MultiRolesModel():
             _, labels = tf.split(self._answers, [1, -1], 1)
             labels = tf.concat([labels, _], axis=1)
             true_speaker = self._speaker
-            next_speaker_logits = linear(next_speaker_logit[-1], self._vocab.vocab_size, True)
+            next_speaker_logits = linear(next_speaker_logit, self._vocab.vocab_size, True)
             cross_entropy_speaker = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=next_speaker_logits,
                                                                                    labels=true_speaker)
             cross_entropy_sentence = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=response,

@@ -22,6 +22,7 @@ class Vocab():
                     self.idx2word[index] = word
         else:
             if words not in self.word2idx:
+                # print('adding new word',words)
                 index = len(self.word2idx)
                 self.word2idx[words] = index
                 self.idx2word[index] = words
