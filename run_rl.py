@@ -35,7 +35,7 @@ for i_episode in range(300):
         index+=1
         if RENDER: env.render()
         scenes = RL_model.choose_scene(observation)
-        observation_, reward, done = env.step_scene(scenes,vocab,RL_model,humor_data)
+        observation_, reward, done = env.step_scene(scenes,vocab,RL_model,humor_input_data)
         RL_model.store_transition(observation_,None,reward)
         # RL.store_transition(observation, sentence, reward)
         print (observation_)
