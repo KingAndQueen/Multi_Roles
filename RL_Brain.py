@@ -40,15 +40,17 @@ class PolicyGradient:
         ckpt = tf.train.get_checkpoint_state(self.config.checkpoints_dir)
         self.model.saver.restore(self.sess, ckpt.model_checkpoint_path)
 
-    def choose_scene(self, observation):
+    def choose_scene(self, obser):
+        observation=obser
         observations = list()
-        observations.append(observation)
+        observations.append(dict(observation))
         name_list = list(observation['name_list'][-1])
         next_speaker = observation['speaker'][0]
         for name in name_list:
             if name == self.vocab.word_to_index('<pad>'):
                 name_list.remove(name)
         role_number=len(name_list)
+        # pdb.set_trace()
         for r in range(role_number):
             predict = self.choose_action(observation)
             new_speaker = name_list.pop(0)
@@ -60,7 +62,7 @@ class PolicyGradient:
                 else:
                     new_weight.append(0.0)
             observation['weight'] = [new_weight]
-            observations.append(observation) #save last observation for learning in RL
+            observations.append(dict(observation)) #save last observation for learning in RL
             # update observation to construct new observation
             observation[self.vocab.index_to_word(new_speaker)] = [
                 len(predict[-1]) * [self.vocab.word_to_index('<pad>')]]
@@ -75,7 +77,7 @@ class PolicyGradient:
             observation[self.vocab.index_to_word(next_speaker)] = predict
             observation['speaker'] = [new_speaker]
             observation['name_list'] = [new_name_list]
-
+        # pdb.set_trace()
         return observations
 
     def choose_action(self, observation):

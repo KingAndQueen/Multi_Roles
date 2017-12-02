@@ -77,10 +77,11 @@ class Drama():
 
     def check_scene_state(self,scene_pred,RL_model,humor_data):
         #calculate the scene quality
-        predict_scene_vector=RL_model.step(RL_model.sess, scene_pred, step_type='rl_compute')
+        predict_scene_vector=RL_model.model.step(RL_model.sess, scene_pred, step_type='rl_compute')
         score1=0
         for scene in humor_data:
-            humor_scene_vector=RL_model.step(RL_model.sess, scene, step_type='rl_compute')
+            humor_scene_vector=RL_model.model.step(RL_model.sess, scene, step_type='rl_compute')
+            pdb.set_trace()
             score1+=self.cosine_similarity(humor_scene_vector,predict_scene_vector)
         reward=score1
         if reward<1:done=False
