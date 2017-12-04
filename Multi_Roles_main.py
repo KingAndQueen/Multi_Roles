@@ -1,10 +1,9 @@
 import os
-import pdb
 import random
 
-import numpy as np
 import tensorflow as tf
 
+import Multi_Roles_Analyze
 import Multi_Roles_Data
 import Multi_Roles_Model
 
@@ -23,7 +22,7 @@ flags.DEFINE_integer('layers', 3, 'levels of rnn or cnn')
 flags.DEFINE_integer('neurons', 100, 'neuron number of one level')
 flags.DEFINE_integer('batch_size', 128, 'batch_size')
 flags.DEFINE_integer('roles_number', 7, 'number of roles in the data')
-flags.DEFINE_integer('epoch', 2000, 'training times')
+flags.DEFINE_integer('epoch', 200, 'training times')
 flags.DEFINE_integer('check_epoch', 50, 'training times')
 flags.DEFINE_integer('sentence_size', 20, 'length of sentence')
 flags.DEFINE_float('interpose', 0.5, 'value for gru gate to decide interpose')
@@ -32,58 +31,6 @@ flags.DEFINE_float("learning_rate_decay_factor", 1, 'if loss not decrease, multi
 flags.DEFINE_float("max_grad_norm", 5, 'Clip gradients to this norm')
 
 config = flags.FLAGS
-
-
-def record_result(current_step=-1, eval_loss=-1, loss=-1):
-    if not os.path.isfile('./result_data.txt'):
-        result_file = open('./result_data.txt', 'a+')
-        result_file.write("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % ('layers',
-                                                                        'neurons',
-                                                                        'batch_size',
-                                                                        'epoch',
-                                                                        'interpose',
-                                                                        'learn_rate',
-                                                                        'learning_rate_decay_factor',
-                                                                        'max_grad_norm',
-                                                                        'stop_limit',
-                                                                        'stop_step',
-                                                                        'eval_loss',
-                                                                        'train_loss',
-                                                                        'checkpoints_dir'))
-        result_file.flush()
-    else:
-        if current_step == -1:
-            return
-        result_file = open('./result_data.txt', 'a+')
-        result_file.write("%d,%d,%d,%d,%f,%f,%f,%d,%d,%d,%d,%d,%s\n" % (config.layers,
-                                                                        config.neurons,
-                                                                        config.batch_size,
-                                                                        config.epoch,
-                                                                        config.interpose,
-                                                                        config.learn_rate,
-                                                                        config.learning_rate_decay_factor,
-                                                                        config.max_grad_norm,
-                                                                        config.stop_limit,
-                                                                        current_step,
-                                                                        eval_loss,
-                                                                        loss,
-                                                                        config.checkpoints_dir))
-        result_file.flush()
-    result_file.close()
-
-
-def show_result(seq, vocab):
-    if isinstance(seq, (list, np.ndarray)):
-        words = []
-        for idx in seq:
-            if isinstance(idx, (list, np.ndarray)):
-                show_result(idx, vocab)
-            else:
-                if vocab.index_to_word(idx) == '<eos>': break
-                words.append(vocab.index_to_word(idx))
-        print(words)
-    if isinstance(seq, (str, int)):
-        print(vocab.idx_to_word(seq))
 
 
 def data_process(config, vocabulary=None):
@@ -96,9 +43,8 @@ def data_process(config, vocabulary=None):
     Multi_Roles_Data.store_vocab(vocabulary, config.data_dir)
     return train_data, valid_data, test_data, vocabulary
 
-
 # training model
-def train_model(sess, model, train_data, valid_data):
+def train_model(sess, model, analyze, train_data, valid_data):
     # train_data, eval_data = model_selection.train_test_split(train_data, test_size=0.2)
     current_step = 0
     data_input_train = model.get_batch(train_data)
@@ -110,7 +56,7 @@ def train_model(sess, model, train_data, valid_data):
     checkpoint_path = os.path.join(config.checkpoints_dir, 'MultiRoles.ckpt')
     train_losses = []
     eval_losses = []
-    record_result()
+    analyze.record_result(config)
     loss = float()
     eval_loss = float()
     while current_step < config.epoch:
@@ -138,18 +84,16 @@ def train_model(sess, model, train_data, valid_data):
             if len(eval_losses) > config.stop_limit - 1 and eval_loss > max(eval_losses[-1 * config.stop_limit:]):
                 print('----End training for evaluation increase----')
                 break
-
         current_step += 1
-    record_result(current_step, eval_loss, loss)
+        analyze.record_result(config, current_step, eval_loss, loss)
 
-
-def test_model(sess, model, test_data, vocab):
+def test_model(sess, model, analyze, test_data, vocab):
     data_input_test = model.get_batch(test_data)
     loss_test = 0.0
     predicts = []
     for batch_id, data_test in enumerate(data_input_test):
         loss, predict, _, vector = model.step(sess, data_test, step_type='test')
-        related_matrix(vocab, vector, test_data, 1)
+        analyze.related_matrix(config, vocab, vector, test_data, 1)
         loss_test += loss
         # pdb.set_trace()
         # print('labels: Id:', batch_id)
@@ -157,7 +101,7 @@ def test_model(sess, model, test_data, vocab):
         # predicts.append(predict)
 
         # print ('predicts: Id:', batch_id)
-        show_result(predict, vocab)
+        analyze.show_result(predict, vocab)
     print('test total loss:', loss_test / len(data_input_test))
 
 
@@ -166,34 +110,6 @@ def test_model(sess, model, test_data, vocab):
     # loss,predict,_=model.step(sess,test_sample,step_type='test')
     # show_result(test_sample.get('answer'),vocab)
     # show_result(predict,vocab)
-
-
-def related_matrix(vocab, vectors, datas, data_type):
-    name_dir = {'Chandler': 0, 'Joey': 1, 'Monica': 2, 'Phoebe': 3, 'Rachel': 4, 'Ross': 5, 'others': 6}
-    relation_matrix = np.zeros(
-        # NAMELIST = ['Chandler', 'Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross', 'others']
-        shape=(config.roles_number, config.roles_number),
-        dtype=np.float64)
-    if data_type == 1:  # real data 0/1
-        for data in datas:
-            name_set = set(vocab.idx2word[name_idx] for name_idx in data['name'] if name_idx != 2)
-            speaker = vocab.idx2word[data['speaker']]
-            # name_set.add(speaker)
-            # print(name_set)
-            for name in name_set:
-                relation_matrix[name_dir[str(name)]][name_dir[str(speaker)]] += 1
-        pdb.set_trace()
-    else:  # guess speaker
-        for vector in vectors:
-            for data in datas:
-                name_set = set(vocab.idx2word[name_idx] for name_idx in data['name'] if name_idx != 2)
-                speaker = vocab.idx2word[data['speaker']]
-                # name_set.add(speaker)
-                for name in name_set:
-                    relation_matrix[name_dir[str(name)]:] += vector
-
-    # pdb.set_trace()
-    return relation_matrix  # testing model
 
 
 # testing model
@@ -205,6 +121,7 @@ def main(_):
     if config.model_type == 'train':
         print('establish the model...')
         model = Multi_Roles_Model.MultiRolesModel(config, vocab)
+        analyze = Multi_Roles_Analyze.Multi_Roles_Analyze()
         ckpt = tf.train.get_checkpoint_state(config.checkpoints_dir)
         if ckpt and tf.train.checkpoint_exists(ckpt.model_checkpoint_path):
             print("Reading model parameters from %s" % ckpt.model_checkpoint_path)
@@ -212,16 +129,17 @@ def main(_):
         else:
             print("Created model with fresh parameters....")
             sess.run(tf.global_variables_initializer())
-        train_model(sess, model, train_data, valid_data)
-        test_model(sess, model, test_data, vocab)
+        train_model(sess, model, analyze, train_data, valid_data)
+        test_model(sess, model, analyze, test_data, vocab)
     if config.model_type == 'test':
         print('establish the model...')
         config.batch_size = len(test_data)
         model = Multi_Roles_Model.MultiRolesModel(config, vocab)
+        analyze = Multi_Roles_Analyze.Multi_Roles_Analyze()
         print('Reload model from checkpoints.....')
         ckpt = tf.train.get_checkpoint_state(config.checkpoints_dir)
         model.saver.restore(sess, ckpt.model_checkpoint_path)
-        test_model(sess, model, test_data, vocab)
+        test_model(sess, model, analyze, test_data, vocab)
 
 
 if __name__ == "__main__":
