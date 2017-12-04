@@ -2,14 +2,14 @@ import os
 import random
 
 import tensorflow as tf
-
+import pdb
 import Multi_Roles_Analyze
 import Multi_Roles_Data
 import Multi_Roles_Model
 
 # set parameters of model
 flags = tf.app.flags
-flags.DEFINE_string('model_type', 'train', 'whether model initial from checkpoints')
+flags.DEFINE_string('model_type', 'test', 'whether model initial from checkpoints')
 flags.DEFINE_string('data_dir', 'data/', 'data path for model')
 flags.DEFINE_string('checkpoints_dir', 'checkpoints/', 'path for save checkpoints')
 flags.DEFINE_string('summary_path', './summary', 'path of summary for tensorboard')
@@ -93,6 +93,7 @@ def test_model(sess, model, analyze, test_data, vocab):
     predicts = []
     for batch_id, data_test in enumerate(data_input_test):
         loss, predict, _, vector = model.step(sess, data_test, step_type='test')
+        pdb.set_trace()
         analyze.related_matrix(config, vocab, vector, data_test, 1)
         loss_test += loss
         # pdb.set_trace()
