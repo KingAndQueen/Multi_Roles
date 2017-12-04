@@ -93,8 +93,7 @@ def test_model(sess, model, analyze, test_data, vocab):
     predicts = []
     for batch_id, data_test in enumerate(data_input_test):
         loss, predict, _, vector = model.step(sess, data_test, step_type='test')
-        pdb.set_trace()
-        analyze.related_matrix(config, vocab, vector, data_test, 1)
+        print(analyze.related_matrix(config, vocab, vector, data_test, 0))
         loss_test += loss
         # pdb.set_trace()
         # print('labels: Id:', batch_id)
@@ -136,7 +135,7 @@ def main(_):
         print('establish the model...')
         config.batch_size = len(test_data)
         model = Multi_Roles_Model.MultiRolesModel(config, vocab)
-        analyze = Multi_Roles_Analyze.Multi_Roles_Analyze()
+        analyze = Multi_Roles_Analyze.Multi_Roles_Analyze(config)
         print('Reload model from checkpoints.....')
         ckpt = tf.train.get_checkpoint_state(config.checkpoints_dir)
         model.saver.restore(sess, ckpt.model_checkpoint_path)
