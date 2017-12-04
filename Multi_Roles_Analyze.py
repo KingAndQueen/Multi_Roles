@@ -6,6 +6,8 @@ import numpy as np
 
 NAME_MAP={'Chandler':0,'Joey':1, 'Monica':2, 'Phoebe':3, 'Rachel':4, 'Ross':5,'others':6,'pad':7}
 NAME_MAP_REVERSE={0:'Chandler',1:'Joey', 2:'Monica', 3:'Phoebe', 4:'Rachel', 5:'Ross',6:'others',7:'pad'}
+
+
 class Multi_Roles_Analyze():
     def __init__(self,config):
         self.relation_matrix = np.zeros(shape=(config.roles_number, config.roles_number),
@@ -44,7 +46,7 @@ class Multi_Roles_Analyze():
         if isinstance(seq, (str, int)):
             print(vocab.idx_to_word(seq))
 
-    def related_matrix(self, vocab, vectors, datas, data_type):
+    def related_matrix(self, vectors, datas, data_type):
         name_dir = {'Chandler': 0, 'Joey': 1, 'Monica': 2, 'Phoebe': 3, 'Rachel': 4, 'Ross': 5, 'others': 6}
         # relation_matrix = np.zeros(
         #     # NAMELIST = ['Chandler', 'Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross', 'others']
@@ -53,7 +55,7 @@ class Multi_Roles_Analyze():
         if data_type == 1:  # real data 0/1
             for id, name_list in enumerate(datas['name_list']):
                 name_set = set(NAME_MAP_REVERSE[name_idx] for name_idx in name_list if name_idx != 7)
-                speaker = vocab.idx2word[datas['speaker'][id]]
+                speaker = NAME_MAP_REVERSE[datas['speaker'][id]]
                 # name_set.add(speaker)
                 # print(name_set)
                 for name in name_set:
