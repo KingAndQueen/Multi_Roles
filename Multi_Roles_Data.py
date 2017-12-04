@@ -6,7 +6,7 @@ import numpy as np
 import codecs
 
 NAMELIST=['Chandler','Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross','others']
-
+NAME_MAP={'Chandler':0,'Joey':1, 'Monica':2, 'Phoebe':3, 'Rachel':4, 'Ross':5,'others':6,'pad':7}
 class Vocab():
     def __init__(self, word2vec=None, embed_size=0):
         self.word2idx = {'<eos>': 0, '<go>': 1, '<pad>': 2, '<unk>': 3}
@@ -90,15 +90,15 @@ def read_file(data_path, vocabulary, sentence_size, roles_number,rl=False):
             name_list_.pop() #pop out the last speaker
             for name_ in NAMELIST:
                 if name_ in name_list_:
-                    name_list.append(vocabulary.word_to_index(name_))
+                    name_list.append(NAME_MAP[name_])
                 else:
-                    name_list.append(vocabulary.word_to_index('<pad>'))
+                    name_list.append(NAME_MAP['pad'])
             # name_pad = roles_number - len(name_list)
             if len(name_list) != roles_number: pdb.set_trace()
             # for i in range(name_pad): name_list.append(vocabulary.word_to_index('<pad>'))
-            scene['name'] = name_list
+            scene['name_list'] = name_list
             scene[last_speaker] = sentence_size * [vocabulary.word_to_index('<pad>')]
-            scene['speaker']=vocabulary.word_to_index(last_speaker)
+            scene['speaker']=NAME_MAP[last_speaker]
             scenes.append(scene)
             scene = {}
             name_list_ = []

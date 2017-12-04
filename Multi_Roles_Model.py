@@ -39,6 +39,7 @@ class MultiRolesModel():
         with tf.variable_scope('embedding'):
             self._word_embedding = tf.get_variable(name='embedding_word',
                                                    shape=[self._vocab.vocab_size, config.neurons])
+            self._name_embedding=tf.get_variable(name='emnbedding_name',shape=[self._roles_number+1,config.neurons])
             _Monica = tf.unstack(self._Monica, axis=1)
             Monica_emb = [tf.nn.embedding_lookup(self._word_embedding, word) for word in _Monica]
             _Joey = tf.unstack(self._Joey, axis=1)
@@ -57,7 +58,7 @@ class MultiRolesModel():
             answer_emb = [tf.nn.embedding_lookup(self._word_embedding, word) for word in _answer]
             _name_list = tf.unstack(self._name_list, axis=1)
             # word_embedding may be too big for name
-            name_list_emb = [tf.nn.embedding_lookup(self._word_embedding, word) for word in _name_list]
+            name_list_emb = [tf.nn.embedding_lookup(self._name_embedding, word) for word in _name_list]
 
         def _encoding_roles(person_emb, name=''):
             with tf.variable_scope('encoding_role_' + name):
@@ -127,7 +128,7 @@ class MultiRolesModel():
                                        True)  # next_speaker.shape=[batch_size,roles_number]
 
             next_speaker = tf.nn.softmax(next_speaker_pred) # next_speaker.shape=[batch_size,roles_number]
-            self.next_speakers_vector = next_speaker_pred
+            self.next_speakers_vector = next_speaker
             next_speaker = tf.expand_dims(next_speaker, 0)  # next_speaker.shape=[1,batch_size,roles_number]
             next_speaker = tf.expand_dims(next_speaker, -1)  # next_speaker.shape=[1,batch_size,roles_number,1]
 
@@ -244,8 +245,9 @@ class MultiRolesModel():
             _, labels = tf.split(self._answers, [1, -1], 1)
             labels = tf.concat([labels, _], axis=1)
             true_speaker = self._speaker
-            next_speaker_logits = linear(next_speaker_logit, self._vocab.vocab_size, True)
-            cross_entropy_speaker = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=next_speaker_logits,
+
+
+            cross_entropy_speaker = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=next_speaker_pred,
                                                                                    labels=true_speaker)
             cross_entropy_sentence = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=response,
                                                                                     labels=labels,
@@ -333,7 +335,7 @@ class MultiRolesModel():
         for _ in range(0, len(data_raw), self._batch_size):
             if _ + self._batch_size > len(data_raw): continue
             data_batch = data_raw[_:_ + self._batch_size]
-            Monica, Joey, Chandler, Phoebe, Rachel, Ross, others, answer, weight, name, speaker = [], [], [], [], [], [], [], [], [], [], []
+            Monica, Joey, Chandler, Phoebe, Rachel, Ross, others, answer, weight, name_list, speaker = [], [], [], [], [], [], [], [], [], [], []
             for i in data_batch:
                 if 'Monica' in i:
                     Monica.append(i.get('Monica'))
@@ -363,14 +365,14 @@ class MultiRolesModel():
                     others.append(i.get('others'))
                 else:
                     others.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
-                name.append(i.get('name'))
+                name_list.append(i.get('name_list'))
                 answer.append(i.get('ans'))
                 weight.append(i.get('weight'))
                 speaker.append(i.get('speaker'))
 
             list_all_batch.append({'Monica': Monica, 'Joey': Joey, 'Chandler': Chandler, 'Phoebe': Phoebe,
                                    'Rachel': Rachel, 'Ross': Ross, 'others': others, 'answer': answer, 'weight': weight,
-                                   'name_list': name, 'speaker': speaker})
+                                   'name_list': name_list, 'speaker': speaker})
             # pdb.set_trace()
         return list_all_batch
 
