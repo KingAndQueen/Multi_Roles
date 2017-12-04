@@ -50,7 +50,7 @@ class Multi_Roles_Analyze():
             dtype=np.float64)
         if data_type == 1:  # real data 0/1
             for data in datas:
-                name_set = set(vocab.idx2word[name_idx] for name_idx in data['name'] if name_idx != 2)
+                name_set = set(vocab.idx2word[name_idx] for name_idx in data['name_list'] if name_idx != 7)
                 speaker = vocab.idx2word[data['speaker']]
                 # name_set.add(speaker)
                 # print(name_set)
@@ -60,7 +60,7 @@ class Multi_Roles_Analyze():
         else:  # guess speaker
             for vector in vectors:
                 for data in datas:
-                    name_set = set(vocab.idx2word[name_idx] for name_idx in data['name'] if name_idx != 2)
+                    name_set = set(vocab.idx2word[name_idx] for name_idx in data['name_list'] if name_idx != 7)
                     speaker = vocab.idx2word[data['speaker']]
                     # name_set.add(speaker)
                     for name in name_set:
