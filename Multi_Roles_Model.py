@@ -391,10 +391,10 @@ class MultiRolesModel():
                      self._speaker: data_dict['speaker']}
         if step_type == 'train':
             output_list = [self.loss, self.train_op, self.merged]
-            try:
-                loss, _, summary = sess.run(output_list, feed_dict=feed_dict)
-            except:
-                pdb.set_trace()
+            # try:
+            loss, _, summary = sess.run(output_list, feed_dict=feed_dict)
+            # except:
+            #     pdb.set_trace()
 
             return loss, _, summary
         if step_type == 'test':

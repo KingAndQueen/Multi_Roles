@@ -93,7 +93,7 @@ def test_model(sess, model, analyze, test_data, vocab):
     predicts = []
     for batch_id, data_test in enumerate(data_input_test):
         loss, predict, _, vector = model.step(sess, data_test, step_type='test')
-        analyze.related_matrix(config, vocab, vector, test_data, 1)
+        analyze.related_matrix(config, vocab, vector, data_test, 1)
         loss_test += loss
         # pdb.set_trace()
         # print('labels: Id:', batch_id)
