@@ -62,7 +62,7 @@ class Multi_Roles_Analyze():
                     self.relation_matrix[name_dir[str(name)]][name_dir[str(speaker)]] += 1
                     # pdb.set_trace()
         else:  # guess speaker
-            pdb.set_trace()
+
             for id, name_list in enumerate(datas['name_list']):
                 name_set = set(NAME_MAP_REVERSE[name_idx] for name_idx in name_list if name_idx != 7)
                 # speaker = vocab.idx2word[datas[id]['speaker']]
