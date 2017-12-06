@@ -62,16 +62,19 @@ class Multi_Roles_Analyze():
                     self.relation_matrix[name_dir[str(name)]][name_dir[str(speaker)]] += 1
                     # pdb.set_trace()
         else:  # guess speaker
-
+            right=0.0
             for id, name_list in enumerate(datas['name_list']):
                 name_set = set(NAME_MAP_REVERSE[name_idx] for name_idx in name_list if name_idx != 7)
-                # speaker = vocab.idx2word[datas[id]['speaker']]
+                true_speaker = datas['speaker'][id]
                 # name_set.add(speaker)
+                if true_speaker==np.argmax(vectors[id], axis=0):
+                    right+=1
                 for name in name_set:
                     # relation_matrix[name_dir[str(name)]:] += vector
                     self.relation_matrix[name_dir[str(name)]][np.argmax(vectors[id], axis=0)] += 1
-                    # pdb.set_trace()
-        # pdb.set_trace()
+                # pdb.set_trace()
+            acc=float(right)/len(datas['speaker'])
+            print('next speaker accuracy:',acc)
         return self.relation_matrix  # testing model
 
 

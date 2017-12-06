@@ -22,11 +22,11 @@ flags.DEFINE_integer('layers', 3, 'levels of rnn or cnn')
 flags.DEFINE_integer('neurons', 100, 'neuron number of one level')
 flags.DEFINE_integer('batch_size', 128, 'batch_size')
 flags.DEFINE_integer('roles_number', 7, 'number of roles in the data')
-flags.DEFINE_integer('epoch', 200, 'training times')
+flags.DEFINE_integer('epoch', 500, 'training times')
 flags.DEFINE_integer('check_epoch', 50, 'training times')
 flags.DEFINE_integer('sentence_size', 20, 'length of sentence')
 flags.DEFINE_float('interpose', 0.5, 'value for gru gate to decide interpose')
-flags.DEFINE_float('learn_rate', 0.1, 'value for gru gate to decide interpose')
+flags.DEFINE_float('learn_rate', 0.01, 'value for gru gate to decide interpose')
 flags.DEFINE_float("learning_rate_decay_factor", 1, 'if loss not decrease, multiple the lr with factor')
 flags.DEFINE_float("max_grad_norm", 5, 'Clip gradients to this norm')
 
@@ -93,7 +93,6 @@ def test_model(sess, model, analyze, test_data, vocab):
     predicts = []
     for batch_id, data_test in enumerate(data_input_test):
         loss, predict, _, vector = model.step(sess, data_test, step_type='test')
-
         print(analyze.related_matrix(vector, data_test, 0))
         loss_test += loss
         # pdb.set_trace()
