@@ -9,7 +9,7 @@ import Multi_Roles_Model
 
 # set parameters of model
 flags = tf.app.flags
-flags.DEFINE_string('model_type', 'test', 'whether model initial from checkpoints')
+flags.DEFINE_string('model_type', 'train', 'whether model initial from checkpoints')
 flags.DEFINE_string('data_dir', 'data/', 'data path for model')
 flags.DEFINE_string('checkpoints_dir', 'checkpoints/', 'path for save checkpoints')
 flags.DEFINE_string('summary_path', './summary', 'path of summary for tensorboard')
@@ -39,9 +39,14 @@ def data_process(config, vocabulary=None):
         vocabulary = Multi_Roles_Data.Vocab()
     train_data, valid_data, test_data = Multi_Roles_Data.get_data(config.data_dir, vocabulary, config.sentence_size,
                                                                   config.roles_number, config.rl)
+    pr_train_data = Multi_Roles_Data.read_tt_data(
+        '/Users/young/Research/workspace_mem_seq/my_mn_decoder_kb_1709/my_data/ticktock_data/train/', vocabulary,
+        config.sentence_size)
+
     print('data processed,vocab size:', vocabulary.vocab_size)
     Multi_Roles_Data.store_vocab(vocabulary, config.data_dir)
-    return train_data, valid_data, test_data, vocabulary
+    return train_data, valid_data, test_data, vocabulary,pr_train_data
+
 
 # training model
 def train_model(sess, model, analyze, train_data, valid_data):
@@ -87,6 +92,7 @@ def train_model(sess, model, analyze, train_data, valid_data):
         current_step += 1
         analyze.record_result(config, current_step, eval_loss, loss)
 
+
 def test_model(sess, model, analyze, test_data, vocab):
     data_input_test = model.get_batch(test_data)
     loss_test = 0.0
@@ -114,10 +120,10 @@ def test_model(sess, model, analyze, test_data, vocab):
 
 # testing model
 def main(_):
-    train_data, valid_data, test_data, vocab = data_process(config)
+    train_data, valid_data, test_data, vocab,pre_train_data = data_process(config)
     # initiall model from new parameters or checkpoints
     sess = tf.Session()
-    print('train data set %d, valid data set %d, test data set %d' % (len(train_data), len(valid_data), len(test_data)))
+    print('pretrain data set %d, train data set %d, valid data set %d, test data set %d' % (len(pre_train_data),len(train_data), len(valid_data), len(test_data)))
     if config.model_type == 'train':
         print('establish the model...')
         model = Multi_Roles_Model.MultiRolesModel(config, vocab)
@@ -129,6 +135,8 @@ def main(_):
         else:
             print("Created model with fresh parameters....")
             sess.run(tf.global_variables_initializer())
+        train_model(sess, model, analyze, pre_train_data,valid_data)
+        pdb.set_trace()
         train_model(sess, model, analyze, train_data, valid_data)
         test_model(sess, model, analyze, test_data, vocab)
     if config.model_type == 'test':
