@@ -4,7 +4,9 @@ import math
 import nltk
 import numpy as np
 import tensorflow as tf
-
+import Multi_Roles_Data
+ID_MAP_NAME=Multi_Roles_Data.ID_MAP_NAME
+NAME_MAP_ID=Multi_Roles_Data.NAME_MAP_ID
 class Drama():
     def __init__(self, name):
         self.name = name
@@ -27,9 +29,9 @@ class Drama():
             speaker_list = conversation.get('name_list')[-1]
             speaker = ''
             for spk in reversed(speaker_list):
-                if spk != vocab.word_to_index('<pad>'):
+                if spk != NAME_MAP_ID['<pad>']:
                     speaker = spk
-            sent = conversation.get(vocab.index_to_word(speaker))
+            sent = conversation.get(ID_MAP_NAME[speaker])
             # pdb.set_trace()
             sent = (sent[-1])
             if vocab.word_to_index('<eos>') in sent:
@@ -98,11 +100,11 @@ class Drama():
         name_list = conversation.get('name_list')
         speaker = ''
         for name in reversed(name_list[-1]):
-            if name != vocab.word_to_index('<pad>'):
+            if name != NAME_MAP_ID['<pad>']:
                 speaker = name
                 break
         if speaker == '': pdb.set_trace()
-        speaker_name = vocab.index_to_word(speaker)
+        speaker_name = ID_MAP_NAME[speaker]
         conversation[speaker_name] = sentence
         self.script.append(conversation)
         observation_ = self.script[-1]

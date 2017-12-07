@@ -399,7 +399,10 @@ class MultiRolesModel():
             return loss, _, summary
         if step_type == 'test':
             output_list = [self.loss, self.response, self.merged, self.next_speakers_vector]
-            loss, response, summary, next_speakers_vector = sess.run(output_list, feed_dict=feed_dict)
+            try:
+                loss, response, summary, next_speakers_vector = sess.run(output_list, feed_dict=feed_dict)
+            except:
+                 pdb.set_trace()
             return loss, response, summary, next_speakers_vector
         if step_type == 'rl_compute':
             output_list = [ self.context_vector]

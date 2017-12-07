@@ -4,8 +4,8 @@ import pdb
 import Multi_Roles_Data
 import numpy as np
 
-NAME_MAP=Multi_Roles_Data.NAME_MAP
-NAME_MAP_REVERSE=Multi_Roles_Data.NAME_MAP_REVERSE
+NAME_MAP=Multi_Roles_Data.NAME_MAP_ID
+NAME_MAP_REVERSE=Multi_Roles_Data.ID_MAP_NAME
 
 NAMELIST = list(Multi_Roles_Data.NAMELIST)
 NAMELIST.append('answer')

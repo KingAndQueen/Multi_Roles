@@ -8,7 +8,8 @@ import Multi_Roles_Data
 np.random.seed(1)
 tf.set_random_seed(1)
 NAMELIST = Multi_Roles_Data.NAMELIST
-NAME_MAP = Multi_Roles_Data.NAME_MAP
+NAME_MAP_ID = Multi_Roles_Data.NAME_MAP_ID
+ID_MAP_NAME=Multi_Roles_Data.ID_MAP_NAME
 
 
 class PolicyGradient:
@@ -48,7 +49,7 @@ class PolicyGradient:
         name_list = list(observation['name_list'][-1])
         next_speaker = observation['speaker'][0]
         for name in name_list:
-            if name == self.vocab.word_to_index('<pad>'):
+            if name == NAME_MAP_ID['<pad>']:
                 name_list.remove(name)
         role_number=len(name_list)
         # pdb.set_trace()
@@ -65,17 +66,17 @@ class PolicyGradient:
             observation['weight'] = [new_weight]
             observations.append(dict(observation)) #save last observation for learning in RL
             # update observation to construct new observation
-            observation[self.vocab.index_to_word(new_speaker)] = [
+            observation[ID_MAP_NAME[new_speaker]] = [
                 len(predict[-1]) * [self.vocab.word_to_index('<pad>')]]
             name_list.append(next_speaker)
             new_name_list = []
             for name in NAMELIST:
-                name_id = NAME_MAP[name]
+                name_id = NAME_MAP_ID[name]
                 if name_id in name_list:
                     new_name_list.append(name_id)
                 else:
-                    new_name_list.append(self.vocab.word_to_index('<pad>'))
-            observation[self.vocab.index_to_word(next_speaker)] = predict
+                    new_name_list.append(NAME_MAP_ID['<pad>'])
+            observation[ID_MAP_NAME[next_speaker]] = predict
             observation['speaker'] = [new_speaker]
             observation['name_list'] = [new_name_list]
         # pdb.set_trace()

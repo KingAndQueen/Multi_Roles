@@ -10,8 +10,8 @@ import sklearn
 import random
 
 NAMELIST = ['Chandler', 'Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross', 'others']
-NAME_MAP = {'Chandler': 0, 'Joey': 1, 'Monica': 2, 'Phoebe': 3, 'Rachel': 4, 'Ross': 5, 'others': 6, 'pad': 7}
-NAME_MAP_REVERSE={0:'Chandler',1:'Joey', 2:'Monica', 3:'Phoebe', 4:'Rachel', 5:'Ross',6:'others',7:'pad'}
+NAME_MAP_ID = {'Chandler': 0, 'Joey': 1, 'Monica': 2, 'Phoebe': 3, 'Rachel': 4, 'Ross': 5, 'others': 6, 'pad': 7}
+ID_MAP_NAME={0:'Chandler',1:'Joey', 2:'Monica', 3:'Phoebe', 4:'Rachel', 5:'Ross',6:'others',7:'pad'}
 
 class Vocab():
     def __init__(self, word2vec=None, embed_size=0):
@@ -96,15 +96,15 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
             name_list_.pop()  # pop out the last speaker
             for name_ in NAMELIST:
                 if name_ in name_list_:
-                    name_list.append(NAME_MAP[name_])
+                    name_list.append(NAME_MAP_ID[name_])
                 else:
-                    name_list.append(NAME_MAP['pad'])
+                    name_list.append(NAME_MAP_ID['pad'])
             # name_pad = roles_number - len(name_list)
             if len(name_list) != roles_number: pdb.set_trace()
             # for i in range(name_pad): name_list.append(vocabulary.word_to_index('<pad>'))
             scene['name_list'] = name_list
             scene[last_speaker] = sentence_size * [vocabulary.word_to_index('<pad>')]
-            scene['speaker'] = NAME_MAP[last_speaker]
+            scene['speaker'] = NAME_MAP_ID[last_speaker]
             scenes.append(scene)
             scene = {}
             name_list_ = []
@@ -249,11 +249,11 @@ def read_tt_data(data_dir, vocabulary, sents_len):
         scene[speaker]=sents_len * [vocabulary.word_to_index('<pad>')]
         for name_ in NAMELIST:
             if name_ in name_list_:
-                name_list.append(NAME_MAP[name_])
+                name_list.append(NAME_MAP_ID[name_])
             else:
-                name_list.append(NAME_MAP['pad'])
+                name_list.append(NAME_MAP_ID['pad'])
         scene['name_list'] = name_list
-        scene['speaker'] = NAME_MAP[speaker]
+        scene['speaker'] = NAME_MAP_ID[speaker]
         scenes.append(dict(scene))
 
     return scenes
