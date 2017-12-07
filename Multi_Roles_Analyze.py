@@ -1,12 +1,14 @@
 # coding=utf8
 import os
 import pdb
-
+import Multi_Roles_Data
 import numpy as np
 
-NAME_MAP={'Chandler':0,'Joey':1, 'Monica':2, 'Phoebe':3, 'Rachel':4, 'Ross':5,'others':6,'pad':7}
-NAME_MAP_REVERSE={0:'Chandler',1:'Joey', 2:'Monica', 3:'Phoebe', 4:'Rachel', 5:'Ross',6:'others',7:'pad'}
-NAMELIST = ['Chandler', 'Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross', 'others','answer']
+NAME_MAP=Multi_Roles_Data.NAME_MAP
+NAME_MAP_REVERSE=Multi_Roles_Data.NAME_MAP_REVERSE
+
+NAMELIST = list(Multi_Roles_Data.NAMELIST)
+NAMELIST.append('answer')
 
 class Multi_Roles_Analyze():
     def __init__(self,config):
@@ -19,7 +21,7 @@ class Multi_Roles_Analyze():
             for name in NAMELIST:
                 sents_id=data_test[name]
                 sents=[vocab.index_to_word(id) for id in sents_id[key]]
-                pdb.set_trace()
+
                 while '<pad>' in sents:
                     sents.pop(sents.index('<pad>'))
                 if '<eos>' in sents:

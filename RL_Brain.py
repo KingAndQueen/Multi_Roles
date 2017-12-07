@@ -2,12 +2,13 @@ import numpy as np
 import tensorflow as tf
 import pdb
 import Multi_Roles_Model
-
+import Multi_Roles_Data
 # import copy
 # reproducible
 np.random.seed(1)
 tf.set_random_seed(1)
-NAMELIST = ['Chandler', 'Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross', 'others']
+NAMELIST = Multi_Roles_Data.NAMELIST
+NAME_MAP = Multi_Roles_Data.NAME_MAP
 
 
 class PolicyGradient:
@@ -69,7 +70,7 @@ class PolicyGradient:
             name_list.append(next_speaker)
             new_name_list = []
             for name in NAMELIST:
-                name_id = self.vocab.word_to_index(name)
+                name_id = NAME_MAP[name]
                 if name_id in name_list:
                     new_name_list.append(name_id)
                 else:
