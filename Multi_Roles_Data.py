@@ -175,11 +175,11 @@ def get_humorous_scene_rl(data_path, vocabulary, sentence_size):
                 scene['weight'] = weight
                 for name_ in NAMELIST:
                     if name_ in name_list_:
-                        name_list.append(vocabulary.word_to_index(name_))
+                        name_list.append(NAME_MAP_ID[name_])
                     else:
-                        name_list.append(vocabulary.word_to_index('<pad>'))
+                        name_list.append(NAME_MAP_ID['pad'])
                 scene['name'] = name_list
-                scene['speaker'] = vocabulary.word_to_index(last_speaker)
+                scene['speaker'] =NAME_MAP_ID[last_speaker]
                 scenes.append(scene)
                 scene = {}
                 name_list_ = []

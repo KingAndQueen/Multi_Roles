@@ -406,7 +406,10 @@ class MultiRolesModel():
             return loss, response, summary, next_speakers_vector
         if step_type == 'rl_compute':
             output_list = [ self.context_vector]
-            context_vector=sess.run(output_list, feed_dict=feed_dict)
+            try:
+                context_vector=sess.run(output_list, feed_dict=feed_dict)
+            except:
+                 pdb.set_trace()
             return context_vector
         if step_type == 'rl_learn':
             self.rl_reward = data_dict['reward']
