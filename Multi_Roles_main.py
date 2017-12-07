@@ -9,7 +9,7 @@ import Multi_Roles_Model
 
 # set parameters of model
 flags = tf.app.flags
-flags.DEFINE_string('model_type', 'test', 'whether model initial from checkpoints')
+flags.DEFINE_string('model_type', 'train', 'whether model initial from checkpoints')
 flags.DEFINE_string('data_dir', 'data/', 'data path for model')
 flags.DEFINE_string('checkpoints_dir', 'checkpoints/', 'path for save checkpoints')
 flags.DEFINE_string('summary_path', './summary', 'path of summary for tensorboard')
@@ -40,33 +40,39 @@ def data_process(config, vocabulary=None):
     train_data, valid_data, test_data = Multi_Roles_Data.get_data(config.data_dir, vocabulary, config.sentence_size,
                                                                   config.roles_number, config.rl)
     pre_train_data = Multi_Roles_Data.read_tt_data(config.data_dir, vocabulary, config.sentence_size)
-    humor_data = Multi_Roles_Data.get_humorous_scene_rl(config.data_dir, vocabulary, config.sentence_size)
+    Multi_Roles_Data.get_humorous_scene_rl(config.data_dir, vocabulary, config.sentence_size)
     print('data processed,vocab size:', vocabulary.vocab_size)
     Multi_Roles_Data.store_vocab(vocabulary, config.data_dir)
     return train_data, valid_data, test_data, vocabulary, pre_train_data
 
 
 # training model
-def train_model(sess, model, analyze, train_data, valid_data):
+def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
     # train_data, eval_data = model_selection.train_test_split(train_data, test_size=0.2)
-    current_step = 0
+    current_step = 1
     data_input_train = model.get_batch(train_data)
     data_input_eval = model.get_batch(valid_data)
 
     train_summary_writer = tf.summary.FileWriter(config.summary_path + '/train', sess.graph)
     test_summary_writer = tf.summary.FileWriter(config.summary_path + '/test')
-    print('training....')
+
     checkpoint_path = os.path.join(config.checkpoints_dir, 'MultiRoles.ckpt')
     train_losses = []
     eval_losses = []
     analyze.record_result(config)
     loss = float()
     eval_loss = float()
-    while current_step < config.epoch:
+    if pretrain_epoch>0:
+        epoch=pretrain_epoch
+        print('pre-training....')
+    else:
+        epoch=config.epoch
+        print('training....')
+    while current_step < epoch:
         #  print ('current_step:',current_step)
 
         for i in range(len(data_input_train)):
-            loss, _, summary_train = model.step(sess, random.choice(data_input_train))
+            loss, _, summary_train = model.step(sess, random.choice(data_input_train),step_type='train')
 
         if current_step % config.check_epoch == 0:
             train_losses.append(loss)
@@ -135,7 +141,7 @@ def main(_):
         else:
             print("Created model with fresh parameters....")
             sess.run(tf.global_variables_initializer())
-        train_model(sess, model, analyze, pre_train_data, valid_data)
+        train_model(sess, model, analyze, pre_train_data, valid_data,pretrain_epoch=10)
 
         train_model(sess, model, analyze, train_data, valid_data)
         test_model(sess, model, analyze, test_data, vocab)
