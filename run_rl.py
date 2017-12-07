@@ -26,7 +26,7 @@ data_input_test = RL_model.model.get_batch(test_data)
 
 humor_data=get_humorous_scene_rl(config.data_dir,vocab,config.sentence_size)
 humor_input_data=RL_model.model.get_batch(humor_data)
-# pdb.set_trace()
+
 for i_episode in range(300):
     observation = env.reset(data_input_test)
     index=1

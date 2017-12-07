@@ -178,7 +178,7 @@ def get_humorous_scene_rl(data_path, vocabulary, sentence_size):
                         name_list.append(NAME_MAP_ID[name_])
                     else:
                         name_list.append(NAME_MAP_ID['pad'])
-                scene['name'] = name_list
+                scene['name_list'] = name_list
                 scene['speaker'] =NAME_MAP_ID[last_speaker]
                 scenes.append(scene)
                 scene = {}
