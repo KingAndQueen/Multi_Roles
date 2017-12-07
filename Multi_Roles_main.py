@@ -99,7 +99,7 @@ def test_model(sess, model, analyze, test_data, vocab):
         loss, predict, _, vector = model.step(sess, data_test, step_type='test')
         print(analyze.related_matrix(vector, data_test, 0))
         loss_test += loss
-        pdb.set_trace()
+
         # print('labels: Id:', batch_id)
         # show_result(data_test.get('answer'), vocab)
         # predicts.append(predict)

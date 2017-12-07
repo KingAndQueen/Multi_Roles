@@ -19,6 +19,9 @@ class Multi_Roles_Analyze():
             for name in NAMELIST:
                 sents_id=data_test[name]
                 sents=[vocab.index_to_word(id) for id in sents_id[key]]
+                pdb.set_trace()
+                if '<pad>' in sents:
+                    sents = sents.pop(sents.index('<pad>'))
                 if '<eos>' in sents:
                     sents=sents[:sents.index('<eos>')]
                 print(name, sents)
