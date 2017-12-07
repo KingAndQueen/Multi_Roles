@@ -6,7 +6,6 @@ import numpy as np
 import codecs
 import json
 import nltk
-import sklearn
 import random
 
 NAMELIST = ['Chandler', 'Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross', 'others']

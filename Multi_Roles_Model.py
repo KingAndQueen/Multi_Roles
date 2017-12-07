@@ -18,7 +18,6 @@ def add_gradient_noise(t, stddev=1e-3, name=None):
         gn = tf.random_normal(tf.shape(t), stddev=stddev)
         return tf.add(t, gn, name=name)
 
-
 class MultiRolesModel():
     def __init__(self, config, vocab):
         self._vocab = vocab
