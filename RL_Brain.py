@@ -49,7 +49,7 @@ class PolicyGradient:
         name_list = list(observation['name_list'][-1])
         next_speaker = observation['speaker'][0]
         for name in name_list:
-            if name == NAME_MAP_ID['<pad>']:
+            if name == NAME_MAP_ID['pad']:
                 name_list.remove(name)
         role_number=len(name_list)
         # pdb.set_trace()
@@ -75,7 +75,7 @@ class PolicyGradient:
                 if name_id in name_list:
                     new_name_list.append(name_id)
                 else:
-                    new_name_list.append(NAME_MAP_ID['<pad>'])
+                    new_name_list.append(NAME_MAP_ID['pad'])
             observation[ID_MAP_NAME[next_speaker]] = predict
             observation['speaker'] = [new_speaker]
             observation['name_list'] = [new_name_list]

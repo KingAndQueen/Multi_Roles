@@ -29,7 +29,7 @@ class Drama():
             speaker_list = conversation.get('name_list')[-1]
             speaker = ''
             for spk in reversed(speaker_list):
-                if spk != NAME_MAP_ID['<pad>']:
+                if spk != NAME_MAP_ID['pad']:
                     speaker = spk
             sent = conversation.get(ID_MAP_NAME[speaker])
             # pdb.set_trace()
@@ -100,7 +100,7 @@ class Drama():
         name_list = conversation.get('name_list')
         speaker = ''
         for name in reversed(name_list[-1]):
-            if name != NAME_MAP_ID['<pad>']:
+            if name != NAME_MAP_ID['pad']:
                 speaker = name
                 break
         if speaker == '': pdb.set_trace()
