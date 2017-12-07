@@ -366,7 +366,7 @@ class MultiRolesModel():
                 else:
                     others.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
                 name_list.append(i.get('name_list'))
-                answer.append(i.get('ans'))
+                answer.append(i.get('answer'))
                 weight.append(i.get('weight'))
                 speaker.append(i.get('speaker'))
 
@@ -391,10 +391,10 @@ class MultiRolesModel():
                      self._speaker: data_dict['speaker']}
         if step_type == 'train':
             output_list = [self.loss, self.train_op, self.merged]
-            # try:
-            loss, _, summary = sess.run(output_list, feed_dict=feed_dict)
-            # except:
-            #     pdb.set_trace()
+            try:
+                loss, _, summary = sess.run(output_list, feed_dict=feed_dict)
+            except:
+                 pdb.set_trace()
 
             return loss, _, summary
         if step_type == 'test':

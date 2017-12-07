@@ -169,7 +169,7 @@ def get_humorous_scene_rl(data_path, vocabulary, sentence_size):
             else:
                 if last_speaker not in scene or last_speaker == '':
                     continue
-                scene['ans'] = sentence_size * [vocabulary.word_to_index('<pad>')]
+                scene['answer'] = sentence_size * [vocabulary.word_to_index('<pad>')]
                 name_list = []
                 weight = sentence_size * [0]
                 scene['weight'] = weight
