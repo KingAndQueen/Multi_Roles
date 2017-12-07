@@ -84,7 +84,7 @@ class Drama():
         for scene in humor_data:
             humor_scene_vector=RL_model.model.step(RL_model.sess, scene, step_type='rl_compute')
             pdb.set_trace()
-            score1+=self.cosine_similarity(humor_scene_vector,predict_scene_vector)
+            score1+=self.cosine_similarity(humor_scene_vector[-1][-1][-1],predict_scene_vector[-1][-1][-1])
         reward=score1
         if reward<1:done=False
         else:done=True
