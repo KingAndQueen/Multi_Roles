@@ -82,7 +82,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
             ans = scene[last_speaker]
             ans.pop()  # pop out the last word IN answer
             ans.insert(0, vocabulary.word_to_index('<go>'))  # padding <go>
-            scene['ans'] = ans
+            scene['answer'] = ans
             weight = []
             name_list = []
             for id in scene[last_speaker]:
