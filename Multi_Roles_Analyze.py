@@ -6,12 +6,25 @@ import numpy as np
 
 NAME_MAP={'Chandler':0,'Joey':1, 'Monica':2, 'Phoebe':3, 'Rachel':4, 'Ross':5,'others':6,'pad':7}
 NAME_MAP_REVERSE={0:'Chandler',1:'Joey', 2:'Monica', 3:'Phoebe', 4:'Rachel', 5:'Ross',6:'others',7:'pad'}
-
+NAMELIST = ['Chandler', 'Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross', 'others','answer']
 
 class Multi_Roles_Analyze():
     def __init__(self,config):
         self.relation_matrix = np.zeros(shape=(config.roles_number, config.roles_number),
                                         dtype=np.float64)
+    def show_scene(self,predict,data_test,vocab):
+        assert len(predict)!=len(data_test),'data length is not correct'
+        for key,value_id in enumerate(predict):
+            print('--------------------')
+            for name in NAMELIST:
+                sents_id=data_test[name]
+                sents=[vocab.index_to_word(id) for id in sents_id[key]]
+                if '<eos>' in sents:
+                    sents=sents[:sents.index('<eos>')]
+                print(name, sents)
+            value=[vocab.index_to_word(id) for id in value_id]
+            print('predict:%s' % value)
+
 
     def record_result(self, config, current_step=-1, eval_loss=-1, loss=-1, file_path='./result_data.txt'):
         if not os.path.isfile(file_path):
