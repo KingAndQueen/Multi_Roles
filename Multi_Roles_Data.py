@@ -1,13 +1,10 @@
 import os
 import pdb
 import pickle
-# import nltk
 import numpy as np
-import codecs
 import json
-import nltk
 import random
-
+import nltk
 NAMELIST = ['Chandler', 'Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross', 'others']
 NAME_MAP_ID = {'Chandler': 0, 'Joey': 1, 'Monica': 2, 'Phoebe': 3, 'Rachel': 4, 'Ross': 5, 'others': 6, 'pad': 7}
 ID_MAP_NAME={0:'Chandler',1:'Joey', 2:'Monica', 3:'Phoebe', 4:'Rachel', 5:'Ross',6:'others',7:'pad'}
@@ -148,6 +145,7 @@ def get_humorous_scene_rl(data_path, vocabulary, sentence_size):
         scene = {}
         scenes = []
         for lines in f:
+            # lines = lines.strip()[2:-5]
             # pdb.set_trace()
             if len(lines) > 2:
                 name = lines[:lines.index(':')]
@@ -217,9 +215,11 @@ def read_tt_data(data_dir, vocabulary, sents_len):
         raw_data = json.loads(str(line.strip()))
         for data in raw_data:
             sents_q = nltk.word_tokenize(data['question'])
+            # sents_q = data['question'].split()
             sents_q = structed(sents_q)
             sents_data.append(sents_q)
             sents_a = nltk.word_tokenize(data['answer'])
+            # sents_a = data['answer'].split()
             sents_a = structed(sents_a)
             sents_data.append(sents_a)
     scenes = []
