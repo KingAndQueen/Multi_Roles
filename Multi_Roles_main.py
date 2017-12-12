@@ -107,9 +107,8 @@ def test_model(sess, model, analyze, test_data, vocab):
         loss_test += loss
         predicts.append(predict)
         vectors.append(vector)
-    pdb.set_trace()
+
     print(analyze.related_matrix(vectors, data_input_test, 0))
-    pdb.set_trace()
     analyze.show_scene(predicts,data_input_test,vocab)
     print('test total loss:', loss_test / len(data_input_test))
 
