@@ -98,6 +98,6 @@ class Multi_Roles_Analyze():
                         # relation_matrix[name_dir[str(name)]:] += vector
                         self.relation_matrix[name_dir[str(name)]][np.argmax(vectors[id], axis=0)] += 1
                         # pdb.set_trace()
-            acc = float(right) / (len(datas_batch) * len(datas['speaker']))
-            print('next speaker accuracy:', acc)
+        acc = float(right) / (len(datas_batch) * len(datas['speaker']))
+        print('next speaker accuracy:', acc)
         return self.relation_matrix  # testing model
