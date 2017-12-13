@@ -6,6 +6,7 @@ import pdb
 import Multi_Roles_Analyze
 import Multi_Roles_Data
 import Multi_Roles_Model
+from math import exp
 
 # set parameters of model
 flags = tf.app.flags
@@ -72,24 +73,28 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
         #  print ('current_step:',current_step)
 
         for i in range(len(data_input_train)):
-            loss, _, summary_train = model.step(sess, random.choice(data_input_train),step_type='train')
+            train_loss_, _, summary_train = model.step(sess, random.choice(data_input_train),step_type='train')
 
         if current_step % config.check_epoch == 0:
             eval_losses = []
-            train_losses.append(loss)
+            train_losses.append(train_loss_)
             if len(train_losses) > 2 and loss > max(train_losses[-3:]):
                 sess.run(model.learning_rate_decay_op)
             print('-------------------------------')
             print('current_step:', current_step)
-            print('training total loss:', loss)
+            print('training total loss:', train_loss_)
             train_summary_writer.add_summary(summary_train, current_step)
 
             # eval_data = random.choice(data_input_eval)
             for eval_data in data_input_eval:
-                eval_loss, _, summary_eval = model.step(sess, eval_data)
-                eval_losses.append(eval_loss)
+                eval_loss_, _, summary_eval = model.step(sess, eval_data)
+                eval_losses.append(eval_loss_)
             test_summary_writer.add_summary(summary_eval)
-            print('evaluation total loss:', float(sum(eval_losses)) / len(eval_losses))
+            eval_loss=float(sum(eval_losses)) / len(eval_losses)
+            print('evaluation total loss:', eval_loss)
+            if eval_loss<300 and train_loss_ <300:
+                print('train perplex:',exp(eval_loss))
+                print('evaluation perplex:',exp(train_loss_))
             print('saving current step %d checkpoints....' % current_step)
             model.saver.save(sess, checkpoint_path, global_step=current_step)
             if len(eval_losses) > config.stop_limit - 1 and eval_loss > max(eval_losses[-1 * config.stop_limit:]):
@@ -101,18 +106,21 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
 
 def test_model(sess, model, analyze, test_data, vocab):
     data_input_test = model.get_batch(test_data)
-    loss_test = 0.0
+    test_loss = 0.0
     predicts = []
     vectors=[]
     for batch_id, data_test in enumerate(data_input_test):
         loss, predict, _, vector = model.step(sess, data_test, step_type='test')
-        loss_test += loss
+        test_loss += loss
         predicts.append(predict)
         vectors.append(vector)
 
     print(analyze.related_matrix(vectors, data_input_test, 0))
     analyze.show_scene(predicts,data_input_test,vocab)
-    print('test total loss:', loss_test / len(data_input_test))
+    test_loss=test_loss / len(data_input_test)
+    print('test total loss:', test_loss)
+    if test_loss<300:
+        print ('test perplex:',exp(test_loss))
 
 
 

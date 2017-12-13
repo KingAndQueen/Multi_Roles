@@ -254,7 +254,7 @@ class MultiRolesModel():
             cross_entropy_speaker = tf.reduce_mean(cross_entropy_speaker)
 
             cross_entropy_sentence = tf.multiply(cross_entropy_sentence, self._weight)  #batch_size * sents_size
-            pdb.set_trace()
+
             cross_entropy_sentence = tf.reduce_sum(cross_entropy_sentence, axis=1)
             weight_sum = tf.reduce_sum(self._weight, axis=1)
             cross_entropy_sentence = cross_entropy_sentence / weight_sum
