@@ -1,6 +1,6 @@
 import os
 import random
-
+import numpy as np
 import tensorflow as tf
 import pdb
 import Multi_Roles_Analyze
@@ -9,7 +9,7 @@ import Multi_Roles_Model
 
 # set parameters of model
 flags = tf.app.flags
-flags.DEFINE_string('model_type', 'test', 'whether model initial from checkpoints')
+flags.DEFINE_string('model_type', 'train', 'whether model initial from checkpoints')
 flags.DEFINE_string('data_dir', 'data/', 'data path for model')
 flags.DEFINE_string('checkpoints_dir', 'checkpoints/', 'path for save checkpoints')
 flags.DEFINE_string('summary_path', './summary', 'path of summary for tensorboard')
@@ -58,7 +58,7 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
 
     checkpoint_path = os.path.join(config.checkpoints_dir, 'MultiRoles.ckpt')
     train_losses = []
-    eval_losses = []
+
     analyze.record_result(config)
     loss = float()
     eval_loss = float()
@@ -75,6 +75,7 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
             loss, _, summary_train = model.step(sess, random.choice(data_input_train),step_type='train')
 
         if current_step % config.check_epoch == 0:
+            eval_losses = []
             train_losses.append(loss)
             if len(train_losses) > 2 and loss > max(train_losses[-3:]):
                 sess.run(model.learning_rate_decay_op)
@@ -83,11 +84,12 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
             print('training total loss:', loss)
             train_summary_writer.add_summary(summary_train, current_step)
 
-            eval_data = random.choice(data_input_eval)
-            eval_loss, _, summary_eval = model.step(sess, eval_data)
-            eval_losses.append(eval_loss)
+            # eval_data = random.choice(data_input_eval)
+            for eval_data in data_input_eval:
+                eval_loss, _, summary_eval = model.step(sess, eval_data)
+                eval_losses.append(eval_loss)
             test_summary_writer.add_summary(summary_eval)
-            print('evaluation total loss:', eval_loss)
+            print('evaluation total loss:', float(sum(eval_losses)) / len(eval_losses))
             print('saving current step %d checkpoints....' % current_step)
             model.saver.save(sess, checkpoint_path, global_step=current_step)
             if len(eval_losses) > config.stop_limit - 1 and eval_loss > max(eval_losses[-1 * config.stop_limit:]):
