@@ -23,8 +23,8 @@ flags.DEFINE_integer('layers', 3, 'levels of rnn or cnn')
 flags.DEFINE_integer('neurons', 100, 'neuron number of one level')
 flags.DEFINE_integer('batch_size', 128, 'batch_size')
 flags.DEFINE_integer('roles_number', 7, 'number of roles in the data')
-flags.DEFINE_integer('epoch', 500, 'training times')
-flags.DEFINE_integer('check_epoch', 50, 'training times')
+flags.DEFINE_integer('epoch', 1000, 'training times')
+flags.DEFINE_integer('check_epoch', 50, 'evaluation times')
 flags.DEFINE_integer('sentence_size', 20, 'length of sentence')
 flags.DEFINE_float('interpose', 0.5, 'value for gru gate to decide interpose')
 flags.DEFINE_float('learn_rate', 0.01, 'value for gru gate to decide interpose')
@@ -69,7 +69,7 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
     else:
         epoch=config.epoch
         print('training....')
-    while current_step < epoch:
+    while current_step <= epoch:
         #  print ('current_step:',current_step)
 
         for i in range(len(data_input_train)):
@@ -116,7 +116,7 @@ def test_model(sess, model, analyze, test_data, vocab):
         vectors.append(vector)
 
     print(analyze.related_matrix(vectors, data_input_test, 0))
-    analyze.show_scene(predicts,data_input_test,vocab)
+    # analyze.show_scene(predicts,data_input_test,vocab)
     test_loss=test_loss / len(data_input_test)
     print('test total loss:', test_loss)
     if test_loss<300:
