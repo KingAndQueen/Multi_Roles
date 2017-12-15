@@ -2,6 +2,7 @@ import Drama_Env
 from RL_Brain import PolicyGradient
 from Multi_Roles_main import data_process
 from Multi_Roles_Data import get_vocab,get_humorous_scene_rl
+import Multi_Roles_Analyze
 import tensorflow as tf
 import pdb
 flags=tf.app.flags
@@ -12,7 +13,7 @@ DISPLAY_REWARD_THRESHOLD = 400  # renders environment if total episode reward is
 RENDER = False  # rendering wastes time
 config.batch_size=1
 config.rl=True
-
+config.model_type='test'
 #env.seed(1)     # reproducible, general Policy gradient has high variance
 vocab=get_vocab(config.data_dir)
 env = Drama_Env.make('Drama')
@@ -27,7 +28,7 @@ data_input_test = RL_model.model.get_batch(test_data)
 
 humor_data=get_humorous_scene_rl(config.data_dir,vocab,config.sentence_size)
 humor_input_data=RL_model.model.get_batch(humor_data)
-
+analyze = Multi_Roles_Analyze.Multi_Roles_Analyze(config)
 for i_episode in range(300):
     observation = env.reset(data_input_test)
     index=1
@@ -39,6 +40,7 @@ for i_episode in range(300):
         observation_, reward, done = env.step_scene(scenes,vocab,RL_model,humor_input_data)
         RL_model.store_transition(observation_,None,reward)
         # RL.store_transition(observation, sentence, reward)
+        analyze.show_only_scene(observation_,vocab)
         print (observation_)
         if done:
             print('------positive sentence!----')
