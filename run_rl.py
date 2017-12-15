@@ -40,6 +40,7 @@ for i_episode in range(300):
         observation_, reward, done = env.step_scene(scenes,vocab,RL_model,humor_input_data)
         RL_model.store_transition(observation_,None,reward)
         # RL.store_transition(observation, sentence, reward)
+
         analyze.show_only_scene(observation_,vocab)
         print (observation_)
         if done:

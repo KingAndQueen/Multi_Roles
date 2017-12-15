@@ -18,7 +18,7 @@ class Multi_Roles_Analyze():
 
     def show_only_scene(self, scene, vocab):
         for name in NAMELIST:
-            sents_id = scene[name]
+            sents_id = scene[name][0]
             sents = [vocab.index_to_word(id) for id in sents_id]
 
             while '<pad>' in sents:
