@@ -116,7 +116,7 @@ def test_model(sess, model, analyze, test_data, vocab):
         vectors.append(vector)
 
     print(analyze.related_matrix(vectors, data_input_test, 0))
-    # analyze.show_scene(predicts,data_input_test,vocab)
+    analyze.show_scene(predicts,data_input_test,vocab)
     test_loss=test_loss / len(data_input_test)
     print('test total loss:', test_loss)
     if test_loss<300:
