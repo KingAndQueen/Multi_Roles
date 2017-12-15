@@ -14,6 +14,7 @@ RENDER = False  # rendering wastes time
 config.batch_size=1
 config.rl=True
 config.model_type='test'
+config.checkpoints_dir='checkpoints/rl/'
 #env.seed(1)     # reproducible, general Policy gradient has high variance
 vocab=get_vocab(config.data_dir)
 env = Drama_Env.make('Drama')
