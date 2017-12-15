@@ -17,7 +17,7 @@ flags.DEFINE_string('summary_path', './summary', 'path of summary for tensorboar
 flags.DEFINE_string('device_type', 'gpu', 'device for computing')
 
 flags.DEFINE_boolean('rl', False, 'rl sign for model')
-flags.DEFINE_boolean('test_role_generator',False,'for verify the role defined generator')
+
 flags.DEFINE_integer('stop_limit', 5, 'number of evaluation loss is greater than train loss  ')
 flags.DEFINE_integer('layers', 3, 'levels of rnn or cnn')
 flags.DEFINE_integer('neurons', 100, 'neuron number of one level')
