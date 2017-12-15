@@ -35,6 +35,7 @@ class MultiRolesModel():
         self._max_grad_norm = config.max_grad_norm
         self._build_inputs()
         self.rl = config.rl
+
         with tf.variable_scope('embedding'):
             self._word_embedding = tf.get_variable(name='embedding_word',
                                                    shape=[self._vocab.vocab_size, config.neurons])
@@ -128,13 +129,14 @@ class MultiRolesModel():
 
             next_speaker = tf.nn.softmax(next_speaker_pred) # next_speaker.shape=[batch_size,roles_number]
             self.next_speakers_vector = next_speaker
+
             next_speaker = tf.expand_dims(next_speaker, 0)  # next_speaker.shape=[1,batch_size,roles_number]
             next_speaker = tf.expand_dims(next_speaker, -1)  # next_speaker.shape=[1,batch_size,roles_number,1]
 
-        def speaker(encoder_state, attention_states, q_emb, model_type='train'):
+        def speaker(encoder_state, attention_states, ans_emb, model_type='train'):
             with tf.variable_scope('speaker'):
                 num_heads = 1
-                batch_size = q_emb[0].get_shape()[0]
+                batch_size = ans_emb[0].get_shape()[0]
                 attn_length = attention_states.get_shape()[1].value
                 attn_size = attention_states.get_shape()[2].value
                 hidden = array_ops.reshape(attention_states, [-1, attn_length, 1, attn_size])
@@ -191,7 +193,7 @@ class MultiRolesModel():
                     prev = None
                     #   pdb.set_trace()
                     state = encoder_state
-                    for i, inp in enumerate(q_emb):
+                    for i, inp in enumerate(ans_emb):
                         if loop_function is not None and prev is not None:
                             with tf.variable_scope("loop_function", reuse=True):
                                 inp = array_ops.stop_gradient(loop_function(prev, i))
@@ -322,6 +324,7 @@ class MultiRolesModel():
     def _build_vars(self):
 
         self.rl_reward = tf.get_variable('rl_reward', [1], dtype=tf.float32, trainable=False)
+
         # init=tf.random_normal_initializer(stddev=0.1)
         # self._w_context=init([1,self._batch_size])
         # self._w_attention=init([1,self._batch_size])
@@ -416,9 +419,7 @@ class MultiRolesModel():
             output_list = [self.loss, self.train_op, self.merged]
             loss, _, summary = sess.run(output_list, feed_dict=feed_dict)
             return loss, _, summary
+
         print('step_type is wrong!>>>')
         return None
-        # try:
-        #     loss,_=sess.run(output_list, feed_dict=feed_dict)
-        # except:
-        #     pdb.set_trace()
+

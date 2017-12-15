@@ -10,14 +10,14 @@ from math import exp
 
 # set parameters of model
 flags = tf.app.flags
-flags.DEFINE_string('model_type', 'train', 'whether model initial from checkpoints')
+flags.DEFINE_string('model_type', 'role_test', 'whether model initial from checkpoints')
 flags.DEFINE_string('data_dir', 'data/', 'data path for model')
 flags.DEFINE_string('checkpoints_dir', 'checkpoints/', 'path for save checkpoints')
 flags.DEFINE_string('summary_path', './summary', 'path of summary for tensorboard')
 flags.DEFINE_string('device_type', 'gpu', 'device for computing')
 
 flags.DEFINE_boolean('rl', False, 'rl sign for model')
-
+flags.DEFINE_boolean('test_role_generator',False,'for verify the role defined generator')
 flags.DEFINE_integer('stop_limit', 5, 'number of evaluation loss is greater than train loss  ')
 flags.DEFINE_integer('layers', 3, 'levels of rnn or cnn')
 flags.DEFINE_integer('neurons', 100, 'neuron number of one level')
@@ -123,6 +123,18 @@ def test_model(sess, model, analyze, test_data, vocab):
         print ('test perplex:',exp(test_loss))
 
 
+def test_role_model(sess, model, analyze, test_data, vocab) :   #test role defined generator
+    print('test role defined generator')
+
+    data_input_test_role= model.get_batch(test_data)
+    data_input_test_role= random.choice(data_input_test_role)
+    _, predict, _, vector = model.step(sess, data_input_test_role, step_type='test')
+    analyze.show_scene([predict], [data_input_test_role], vocab)
+    data_input_test_sample=Multi_Roles_Data.get_role_test_data(data_input_test_role)
+    _,predict,_, vector = model.step(sess, data_input_test_sample, step_type='test')
+    analyze.show_scene([predict], [data_input_test_sample], vocab)
+
+
 
 # testing model
 def main(_):
@@ -142,13 +154,13 @@ def main(_):
         else:
             print("Created model with fresh parameters....")
             sess.run(tf.global_variables_initializer())
-        train_model(sess, model, analyze, pre_train_data, valid_data,pretrain_epoch=10)
+        train_model(sess, model, analyze, pre_train_data, valid_data,pretrain_epoch=40)
 
         train_model(sess, model, analyze, train_data, valid_data)
         test_model(sess, model, analyze, test_data, vocab)
     if config.model_type == 'test':
         print('establish the model...')
-        config.batch_size = len(test_data)
+        # config.batch_size = len(test_data)
         model = Multi_Roles_Model.MultiRolesModel(config, vocab)
         analyze = Multi_Roles_Analyze.Multi_Roles_Analyze(config)
         print('Reload model from checkpoints.....')
@@ -156,6 +168,15 @@ def main(_):
         model.saver.restore(sess, ckpt.model_checkpoint_path)
         test_model(sess, model, analyze, test_data, vocab)
 
+    if config.model_type=='role_test':
+        config.batch_size = 1
+        config.model_type='test'
+        model = Multi_Roles_Model.MultiRolesModel(config, vocab)
+        analyze = Multi_Roles_Analyze.Multi_Roles_Analyze(config)
+        print('Reload model from checkpoints.....')
+        ckpt = tf.train.get_checkpoint_state(config.checkpoints_dir)
+        model.saver.restore(sess, ckpt.model_checkpoint_path)
+        test_role_model(sess, model, analyze, test_data, vocab)
 
 if __name__ == "__main__":
     tf.app.run()

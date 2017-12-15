@@ -145,7 +145,7 @@ def get_humorous_scene_rl(data_path, vocabulary, sentence_size):
         scene = {}
         scenes = []
         for lines in f:
-            lines = lines.strip()[2:-5]
+            #lines = lines.strip()[2:-5]
             # pdb.set_trace()
             if len(lines) > 2:
                 name = lines[:lines.index(':')]
@@ -256,3 +256,16 @@ def read_tt_data(data_dir, vocabulary, sents_len):
         scenes.append(dict(scene))
 
     return scenes
+def get_role_test_data(test_data):
+    sents_last = []
+    for id ,name in enumerate(NAMELIST):
+        if id==0:
+            sents_last = test_data[name]
+        if id<len(NAMELIST)-1:
+            sents=list(test_data[NAMELIST[id+1]])
+            test_data[NAMELIST[id+1]]=sents_last
+            sents_last=sents
+        else:
+            test_data[NAMELIST[0]]=sents_last
+
+    return test_data

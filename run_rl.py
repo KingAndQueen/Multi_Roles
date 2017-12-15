@@ -12,6 +12,7 @@ DISPLAY_REWARD_THRESHOLD = 400  # renders environment if total episode reward is
 RENDER = False  # rendering wastes time
 config.batch_size=1
 config.rl=True
+
 #env.seed(1)     # reproducible, general Policy gradient has high variance
 vocab=get_vocab(config.data_dir)
 env = Drama_Env.make('Drama')

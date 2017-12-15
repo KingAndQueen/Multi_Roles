@@ -15,6 +15,24 @@ class Multi_Roles_Analyze():
     def __init__(self, config):
         self.relation_matrix = np.zeros(shape=(config.roles_number, config.roles_number),
                                         dtype=np.float64)
+    def show_role_scene(self,predict, data_input_test_sample, vocab):
+        # assert len(predict) == len(NAMELIST), 'role length is not correct'
+        batch_size=len(data_input_test_sample[NAMELIST[0]])
+        for id in range(batch_size):
+            print('------')
+            for name in NAMELIST:
+                sents_id=data_input_test_sample[name]
+                sents=[vocab.index_to_word(idx) for idx in sents_id[id]]
+                while '<pad>' in sents:
+                    sents.pop(sents.index('<pad>'))
+                if '<eos>' in sents:
+                    sents = sents[:sents.index('<eos>')]
+                print(name, sents)
+            for no,pred in enumerate(predict):
+                pred_id=pred[id]
+                pred_vale=[vocab.index_to_word(idx) for idx in pred_id]
+                print ('pred %d : % r' %(no,pred_vale))
+
 
     def show_scene(self, predict_, data_test_, vocab):
         assert len(predict_) == len(data_test_), 'data length is not correct'
