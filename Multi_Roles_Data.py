@@ -257,6 +257,7 @@ def read_tt_data(data_dir, vocabulary, sents_len):
 
     return scenes
 def get_role_test_data(test_data):
+    pdb.set_trace()
     sents_last = []
     for id ,name in enumerate(NAMELIST):
         if id==0:
@@ -267,5 +268,20 @@ def get_role_test_data(test_data):
             sents_last=sents
         else:
             test_data[NAMELIST[0]]=sents_last
-
+    name_list=test_data['name_list'][0]
+    name_list_simple=[]
+    for name in name_list:
+        if name==NAME_MAP_ID['pad']:
+            name_list_simple.append(0)
+        else:
+            name_list_simple.append(1)
+    last_simple=name_list_simple.pop()
+    name_list_simple.insert(0,last_simple)
+    new_name_list=[]
+    for id,name_s in enumerate(name_list_simple):
+        if name_s==1:
+            new_name_list.append(NAME_MAP_ID[NAMELIST[id]])
+        else:
+            new_name_list.append(NAME_MAP_ID['pad'])
+    test_data['name_list']=[new_name_list]
     return test_data
