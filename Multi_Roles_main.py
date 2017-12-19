@@ -154,7 +154,7 @@ def main(_):
         else:
             print("Created model with fresh parameters....")
             sess.run(tf.global_variables_initializer())
-        # train_model(sess, model, analyze, pre_train_data, valid_data,pretrain_epoch=40)
+        train_model(sess, model, analyze, pre_train_data, valid_data,pretrain_epoch=5)
 
         train_model(sess, model, analyze, train_data, valid_data)
         test_model(sess, model, analyze, test_data, vocab)

@@ -265,7 +265,7 @@ class MultiRolesModel():
                 cross_entropy_sentence = cross_entropy_sentence * self.rl_reward
             cross_entropy_sentence_sum = tf.reduce_mean(cross_entropy_sentence, name="cross_entropy_sum")
 
-            self.loss = 0.9*cross_entropy_sentence_sum + 0.1*cross_entropy_speaker
+            self.loss = 0.6*cross_entropy_sentence_sum + 0.4*cross_entropy_speaker
             # self.loss = 0.4*cross_entropy_sentence_sum + 0.6*cross_entropy_speaker
         # grads_and_vars = []
         grads_and_vars=self._opt.compute_gradients(self.loss)
