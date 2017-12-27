@@ -125,13 +125,17 @@ def test_model(sess, model, analyze, test_data, vocab):
 
 def test_role_model(sess, model, analyze, test_data, vocab) :   #test role defined generator
     print('test role defined generator')
-
+    pdb.set_trace()
     data_input_test_role= model.get_batch(test_data)
     data_input_test_role= random.choice(data_input_test_role)
     _, predict, _, vector = model.step(sess, data_input_test_role, step_type='test')
+    role_predict=np.argmax(vector,0)
+    print('next speaker:',role_predict)
     analyze.show_scene([predict], [data_input_test_role], vocab)
     data_input_test_sample=Multi_Roles_Data.get_role_test_data(data_input_test_role)
     _,predict,_, vector = model.step(sess, data_input_test_sample, step_type='test')
+    role_predict = np.argmax(vector, 0)
+    print('next speaker:', role_predict)
     analyze.show_scene([predict], [data_input_test_sample], vocab)
 
 
@@ -154,7 +158,7 @@ def main(_):
         else:
             print("Created model with fresh parameters....")
             sess.run(tf.global_variables_initializer())
-        train_model(sess, model, analyze, pre_train_data, valid_data,pretrain_epoch=5)
+        train_model(sess, model, analyze, pre_train_data, valid_data,pretrain_epoch=10)
 
         train_model(sess, model, analyze, train_data, valid_data)
         test_model(sess, model, analyze, test_data, vocab)

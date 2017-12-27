@@ -257,7 +257,7 @@ def read_tt_data(data_dir, vocabulary, sents_len):
 
     return scenes
 def get_role_test_data(test_data):
-    pdb.set_trace()
+    # pdb.set_trace()
     sents_last = []
     for id ,name in enumerate(NAMELIST):
         if id==0:
