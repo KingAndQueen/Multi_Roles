@@ -7,7 +7,7 @@ import Multi_Roles_Analyze
 import Multi_Roles_Data
 import Multi_Roles_Model
 from math import exp
-
+ID_MAP_NAME=Multi_Roles_Data.ID_MAP_NAME
 # set parameters of model
 flags = tf.app.flags
 flags.DEFINE_string('model_type', 'role_test', 'whether model initial from checkpoints')
@@ -129,17 +129,17 @@ def test_model(sess, model, analyze, test_data, vocab):
 
 def test_role_model(sess, model, analyze, test_data, vocab) :   #test role defined generator
     print('test role defined generator')
-    pdb.set_trace()
+    # pdb.set_trace()
     data_input_test_role= model.get_batch(test_data)
     data_input_test_role= random.choice(data_input_test_role)
     _, predict, _, vector = model.step(sess, data_input_test_role, step_type='test')
-    role_predict=np.argmax(vector,0)
-    print('next speaker:',role_predict)
+    role_predict=np.argmax(vector[0],0)
+    print('next speaker:',ID_MAP_NAME[role_predict])
     analyze.show_scene([predict], [data_input_test_role], vocab)
     data_input_test_sample=Multi_Roles_Data.get_role_test_data(data_input_test_role)
     _,predict,_, vector = model.step(sess, data_input_test_sample, step_type='test')
-    role_predict = np.argmax(vector, 0)
-    print('next speaker:', role_predict)
+    role_predict = np.argmax(vector[0], 0)
+    print('next speaker:', ID_MAP_NAME[role_predict])
     analyze.show_scene([predict], [data_input_test_sample], vocab)
 
 
