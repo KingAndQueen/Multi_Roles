@@ -175,6 +175,7 @@ def main(_):
     if config.model_type=='role_test':
         config.batch_size = 1
         config.model_type='test'
+        print('establish the model...')
         model = Multi_Roles_Model.MultiRolesModel(config, vocab)
         analyze = Multi_Roles_Analyze.Multi_Roles_Analyze(config)
         print('Reload model from checkpoints.....')
