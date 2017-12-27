@@ -23,12 +23,12 @@ flags.DEFINE_integer('layers', 3, 'levels of rnn or cnn')
 flags.DEFINE_integer('neurons', 100, 'neuron number of one level')
 flags.DEFINE_integer('batch_size', 128, 'batch_size')
 flags.DEFINE_integer('roles_number', 7, 'number of roles in the data')
-flags.DEFINE_integer('epoch', 1000, 'training times')
-flags.DEFINE_integer('check_epoch', 50, 'evaluation times')
+flags.DEFINE_integer('epoch', 2000, 'training times')
+flags.DEFINE_integer('check_epoch',100, 'evaluation times')
 flags.DEFINE_integer('sentence_size', 20, 'length of sentence')
 flags.DEFINE_float('interpose', 0.5, 'value for gru gate to decide interpose')
 flags.DEFINE_float('learn_rate', 0.01, 'value for gru gate to decide interpose')
-flags.DEFINE_float("learning_rate_decay_factor", 1, 'if loss not decrease, multiple the lr with factor')
+flags.DEFINE_float("learning_rate_decay_factor", 0.5, 'if loss not decrease, multiple the lr with factor')
 flags.DEFINE_float("max_grad_norm", 5, 'Clip gradients to this norm')
 
 config = flags.FLAGS
@@ -70,6 +70,7 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
     else:
         epoch=config.epoch
         print('training....')
+    eval_losses_all = []
     while current_step <= epoch:
         #  print ('current_step:',current_step)
 
@@ -80,6 +81,7 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
             eval_losses = []
             train_losses.append(train_loss_)
             if len(train_losses) > 2 and loss > max(train_losses[-3:]):
+                print('decay learning rate....')
                 sess.run(model.learning_rate_decay_op)
             print('-------------------------------')
             print('current_step:', current_step)
@@ -92,13 +94,14 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
                 eval_losses.append(eval_loss_)
             test_summary_writer.add_summary(summary_eval)
             eval_loss=float(sum(eval_losses)) / len(eval_losses)
+            eval_losses_all.append(eval_loss)
             print('evaluation total loss:', eval_loss)
             if eval_loss<300 and train_loss_ <300:
                 print('train perplex:',exp(eval_loss))
                 print('evaluation perplex:',exp(train_loss_))
             print('saving current step %d checkpoints....' % current_step)
             model.saver.save(sess, checkpoint_path, global_step=current_step)
-            if len(eval_losses) > config.stop_limit - 1 and eval_loss > max(eval_losses[-1 * config.stop_limit:]):
+            if len(eval_losses_all) > config.stop_limit - 1 and eval_loss > max(eval_losses_all[-1 * config.stop_limit:]):
                 print('----End training for evaluation increase----')
                 break
         current_step += 1

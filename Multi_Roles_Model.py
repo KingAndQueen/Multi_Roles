@@ -249,10 +249,10 @@ class MultiRolesModel():
 
 
             cross_entropy_speaker = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=next_speaker_pred,
-                                                                                   labels=true_speaker)
+                                                                                   labels=true_speaker,name='cross_entrooy_speaker')
             cross_entropy_sentence = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=response,
                                                                                     labels=labels,
-                                                                                    name="cross_entropy")
+                                                                                    name="cross_entropy_sents")
             cross_entropy_speaker = tf.reduce_mean(cross_entropy_speaker)
 
             cross_entropy_sentence = tf.multiply(cross_entropy_sentence, self._weight)  #batch_size * sents_size
