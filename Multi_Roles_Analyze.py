@@ -52,7 +52,7 @@ class Multi_Roles_Analyze():
         data_all = zip(predict_, data_test_)
         for predict, data_test in data_all:
             for key, value_id in enumerate(predict):
-                print('--------------------')
+                # print('--------------------')
                 for name in NAMELIST:
                     sents_id = data_test[name]
                     sents = [vocab.index_to_word(id) for id in sents_id[key]]
@@ -64,6 +64,7 @@ class Multi_Roles_Analyze():
                     print(name, sents)
                 value = [vocab.index_to_word(id) for id in value_id]
                 print('predict:%s' % value)
+                print('--------------------')
 
     def record_result(self, config, current_step=-1, eval_loss=-1, loss=-1, file_path='./result_data.txt'):
         if not os.path.isfile(file_path):
