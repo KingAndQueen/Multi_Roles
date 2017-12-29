@@ -8,6 +8,7 @@ import Multi_Roles_Data
 import Multi_Roles_Model
 from math import exp
 ID_MAP_NAME=Multi_Roles_Data.ID_MAP_NAME
+NAMELIST=Multi_Roles_Data.NAMELIST
 # set parameters of model
 flags = tf.app.flags
 flags.DEFINE_string('model_type', 'role_test', 'whether model initial from checkpoints')
@@ -145,6 +146,29 @@ def test_role_model(sess, model, analyze, test_data, vocab) :   #test role defin
         print('#############################')
 
 
+def test_online(sess, model, analyze, test_data, vocab,config):
+    for key, value in test_data:
+        sents=value.split()
+        sentence_id=[vocab.word_to_index(word) for word in sents]
+        sentence_id = sentence_id[:config.sentence_size]
+        padding_len = max(config.sentence_size - len(sentence_id), 0)
+        for i in range(padding_len):
+            sentence_id.append(vocab.word_to_index('<pad>'))
+        test_data[key]=sentence_id
+    name_list=[]
+    for role in NAMELIST:
+        if role in test_data.keys():
+            name_list.append(1)
+        else:
+            name_list.append(0)
+    test_data['name_list']=name_list
+    test_data['answer']=[config.sentence_size*[vocab.word_to_index('<pad>')]]
+    test_data['weight'] = [config.sentence_size * [vocab.word_to_index('<pad>')]]
+    test_data['speaker'] = [vocab.word_to_index('<pad>')]
+    data_input_test = model.get_batch(test_data)
+    _, predict, _, _ = model.step(sess, data_input_test, step_type='test')
+    predict = [vocab.index_to_word(id) for id in predict]
+    return  predict
 
 # testing model
 def main(_):
