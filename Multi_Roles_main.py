@@ -130,17 +130,19 @@ def test_model(sess, model, analyze, test_data, vocab):
 def test_role_model(sess, model, analyze, test_data, vocab) :   #test role defined generator
     print('test role defined generator')
     # pdb.set_trace()
-    data_input_test_role= model.get_batch(test_data)
-    data_input_test_role= random.choice(data_input_test_role)
-    _, predict, _, vector = model.step(sess, data_input_test_role, step_type='test')
-    role_predict=np.argmax(vector[0],0)
-    print('next speaker:',ID_MAP_NAME[role_predict])
-    analyze.show_scene([predict], [data_input_test_role], vocab)
-    data_input_test_sample=Multi_Roles_Data.get_role_test_data(data_input_test_role)
-    _,predict,_, vector = model.step(sess, data_input_test_sample, step_type='test')
-    role_predict = np.argmax(vector[0], 0)
-    print('next speaker:', ID_MAP_NAME[role_predict])
-    analyze.show_scene([predict], [data_input_test_sample], vocab)
+    data_input_test= model.get_batch(test_data)
+    # data_input_test_role= random.choice(data_input_test)
+    for data_input_test_role in data_input_test:
+        _, predict, _, vector = model.step(sess, data_input_test_role, step_type='test')
+        role_predict=np.argmax(vector[0],0)
+        print('predict speaker:',ID_MAP_NAME[role_predict])
+        analyze.show_scene([predict], [data_input_test_role], vocab)
+        data_input_test_sample=Multi_Roles_Data.get_role_test_data(data_input_test_role)
+        _,predict,_, vector = model.step(sess, data_input_test_sample, step_type='test')
+        role_predict = np.argmax(vector[0], 0)
+        print('predict speaker:', ID_MAP_NAME[role_predict])
+        analyze.show_scene([predict], [data_input_test_sample], vocab)
+        print('#############################')
 
 
 

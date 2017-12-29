@@ -6,8 +6,8 @@ import numpy as np
 import collections
 import math
 
-NAME_MAP = Multi_Roles_Data.NAME_MAP_ID
-NAME_MAP_REVERSE = Multi_Roles_Data.ID_MAP_NAME
+NAME_MAP_ID = Multi_Roles_Data.NAME_MAP_ID
+ID_MAP_NAME = Multi_Roles_Data.ID_MAP_NAME
 
 NAMELIST = list(Multi_Roles_Data.NAMELIST)
 NAMELIST.append('answer')
@@ -62,6 +62,9 @@ class Multi_Roles_Analyze():
                     if '<eos>' in sents:
                         sents = sents[:sents.index('<eos>')]
                     print(name, sents)
+                # pdb.set_trace()
+                true_speaker=data_test['speaker'][key]
+                print('ture speaker',ID_MAP_NAME[true_speaker])
                 value = [vocab.index_to_word(id) for id in value_id]
                 print('predict:%s' % value)
                 print('--------------------')
@@ -111,8 +114,8 @@ class Multi_Roles_Analyze():
         for vectors, datas in data_all:
             if data_type == 1:  # real data 0/1
                 for id, name_list in enumerate(datas['name_list']):
-                    name_set = set(NAME_MAP_REVERSE[name_idx] for name_idx in name_list if name_idx != 7)
-                    speaker = NAME_MAP_REVERSE[datas['speaker'][id]]
+                    name_set = set(ID_MAP_NAME[name_idx] for name_idx in name_list if name_idx != 7)
+                    speaker = ID_MAP_NAME[datas['speaker'][id]]
                     # name_set.add(speaker)
                     # print(name_set)
                     for name in name_set:
@@ -121,7 +124,7 @@ class Multi_Roles_Analyze():
             else:  # guess speaker
 
                 for id, name_list in enumerate(datas['name_list']):
-                    name_set = set(NAME_MAP_REVERSE[name_idx] for name_idx in name_list if name_idx != 7)
+                    name_set = set(ID_MAP_NAME[name_idx] for name_idx in name_list if name_idx != 7)
                     true_speaker = datas['speaker'][id]
                     # name_set.add(speaker)
                     if true_speaker == np.argmax(vectors[id], axis=0):
