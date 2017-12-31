@@ -146,7 +146,7 @@ def test_role_model(sess, model, analyze, test_data, vocab) :   #test role defin
         print('#############################')
 
 
-def test_online(sess, model, analyze, test_data, vocab,config):
+def test_online(sess, model, test_data, vocab,config):
     for key, value in test_data:
         sents=value.split()
         sentence_id=[vocab.word_to_index(word) for word in sents]
