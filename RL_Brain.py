@@ -94,19 +94,20 @@ class PolicyGradient:
 
     def learn(self):
         # discount and normalize episode reward
-        discounted_ep_rs_norm = self._discount_and_norm_rewards()
+        # discounted_ep_rs_norm = self._discount_and_norm_rewards()
 
         # train on episode
         for index, conversation in enumerate(self.ep_obs):
             # conversation['answer'] = self.ep_as[index]
             # conversation['weight']=[]
-            if len(self.ep_rs) > 3:
-                conversation['reward'] = discounted_ep_rs_norm[index]
+            # if len(self.ep_rs) > 3:
+            #     conversation['reward'] = discounted_ep_rs_norm[index]
             # pdb.set_trace()
-            loss, _ = self.model.step(self.sess, conversation, step_type='rl_learn')
+            conversation['reward'] =self.ep_rs[index]
+            loss= self.model.step(self.sess, conversation, step_type='rl_learn')
 
-        self.ep_obs, self.ep_as, self.ep_rs = [], [], []  # empty episode data
-        return discounted_ep_rs_norm
+        # self.ep_obs, self.ep_as, self.ep_rs = [], [], []  # empty episode data
+        return loss
 
     def _discount_and_norm_rewards(self):
         # discount episode rewards

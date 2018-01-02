@@ -9,7 +9,7 @@ flags=tf.app.flags
 flags.DEFINE_float("reward_decay",0.9,'decay the reward of RL')
 config=flags.FLAGS
 
-DISPLAY_REWARD_THRESHOLD = 400  # renders environment if total episode reward is greater then this threshold
+DISPLAY_REWARD_THRESHOLD = 10  # renders environment if total episode reward is greater then this threshold
 RENDER = False  # rendering wastes time
 config.batch_size=1
 config.rl=True
@@ -30,11 +30,11 @@ data_input_test = RL_model.model.get_batch(test_data)
 humor_data=get_humorous_scene_rl(config.data_dir,vocab,config.sentence_size)
 humor_input_data=RL_model.model.get_batch(humor_data)
 analyze = Multi_Roles_Analyze.Multi_Roles_Analyze(config)
-for i_episode in range(300):
+for i_episode in range(30):
     observation = env.reset(data_input_test)
     index=1
     while True:
-        print('try ',index)
+        print('try:',index)
         index+=1
         if RENDER: env.render()
         scenes = RL_model.choose_scene(observation)
@@ -53,7 +53,7 @@ for i_episode in range(300):
             else:
                 running_reward = running_reward * 0.99 + ep_rs_sum * 0.01
             if running_reward > DISPLAY_REWARD_THRESHOLD: RENDER = True     # rendering
-            print("episode:", i_episode, "  reward:", int(running_reward))
+            print("episode:", i_episode, "  reward:", running_reward)
 
             vt = RL_model.learn()
 

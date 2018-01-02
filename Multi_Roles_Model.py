@@ -415,10 +415,11 @@ class MultiRolesModel():
                  pdb.set_trace()
             return context_vector
         if step_type == 'rl_learn':
+            # pdb.set_trace()
             self.rl_reward = data_dict['reward']
             output_list = [self.loss, self.train_op, self.merged]
-            loss, _, summary = sess.run(output_list, feed_dict=feed_dict)
-            return loss, _, summary
+            loss, _, _ = sess.run(output_list, feed_dict=feed_dict)
+            return loss
 
         print('step_type is wrong!>>>')
         return None
