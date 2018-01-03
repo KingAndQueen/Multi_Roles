@@ -44,10 +44,9 @@ for i_episode in range(30):
 
         analyze.show_only_scene(observation_,vocab)
         print (observation_)
+        pdb.set_trace()
         if done:
-            print('------positive sentence!----')
             ep_rs_sum = sum(RL_model.ep_rs)
-
             if 'running_reward' not in globals():
                 running_reward = ep_rs_sum
             else:
@@ -56,7 +55,8 @@ for i_episode in range(30):
             print("episode:", i_episode, "  reward:", running_reward)
 
             vt = RL_model.learn()
-
-            break
+            print('------positive sentence!----')
+            # if running_reward >0.0016:
+            #     break
 
         observation = observation_

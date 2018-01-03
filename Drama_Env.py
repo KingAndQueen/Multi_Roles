@@ -16,7 +16,7 @@ class Drama():
         self.script = []
         # test_sample = random.choice(data_input_test)
         # pdb.set_trace()
-        test_sample=data_input_test[0] #should give a good start
+        test_sample=data_input_test[1] #should give a good start
         self.script.append(test_sample)
         return test_sample
 
@@ -70,12 +70,15 @@ class Drama():
             return True
 
     def cosine_similarity(self, tokens_a, tokens_b, mask=None):
-        reward=sum(tokens_a*tokens_b)/sum(abs(tokens_a)*abs(tokens_b))
+        reward=sum(tokens_a*tokens_b)/float(sum(abs(tokens_a)*abs(tokens_b)))
         if reward >0:
             reward=-math.log(reward)
         else:
             reward=-reward
         return reward
+    def eculid_distance(self,tokens_a, tokens_b):
+        score=np.sqrt(np.dot(tokens_a-tokens_b,((tokens_a-tokens_b).T)))
+        return score
 
     def check_scene_state(self,scene_pred,RL_model,humor_data):
         #calculate the scene quality
@@ -83,8 +86,8 @@ class Drama():
         score1=0
         for scene in humor_data:
             humor_scene_vector=RL_model.model.step(RL_model.sess, scene, step_type='rl_compute')
-            pdb.set_trace()
-            score1+=self.cosine_similarity(humor_scene_vector[-1][-1][-1],predict_scene_vector[-1][-1][-1])
+            # pdb.set_trace()
+            score1+=self.eculid_distance(humor_scene_vector[-1][-1][-1],predict_scene_vector[-1][-1][-1])
 
         reward=score1
         # if reward<=1:done=False

@@ -11,9 +11,9 @@ ID_MAP_NAME=Multi_Roles_Data.ID_MAP_NAME
 NAMELIST=Multi_Roles_Data.NAMELIST
 # set parameters of model
 flags = tf.app.flags
-flags.DEFINE_string('model_type', 'role_test', 'whether model initial from checkpoints')
+flags.DEFINE_string('model_type', 'test', 'whether model initial from checkpoints')
 flags.DEFINE_string('data_dir', 'data/', 'data path for model')
-flags.DEFINE_string('checkpoints_dir', 'checkpoints/', 'path for save checkpoints')
+flags.DEFINE_string('checkpoints_dir', 'checkpoints', 'path for save checkpoints')
 flags.DEFINE_string('summary_path', './summary', 'path of summary for tensorboard')
 flags.DEFINE_string('device_type', 'gpu', 'device for computing')
 

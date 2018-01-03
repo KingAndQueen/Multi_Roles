@@ -54,8 +54,8 @@ class PolicyGradient:
         role_number=len(name_list)
         # pdb.set_trace()
         for r in range(role_number):
-            predict = self.choose_action(observation)
-            new_speaker = name_list.pop(0)
+            predict,next_speaker_new = self.choose_action(observation)
+            new_speaker = name_list.pop(0) #consider to use next_speaker_new to import new speaker
             observation['answer'] = predict
             new_weight = []
             for ans in predict[-1]:
@@ -83,9 +83,9 @@ class PolicyGradient:
         return observations
 
     def choose_action(self, observation):
-        loss, predict, _ ,_= self.model.step(self.sess, observation, step_type='test')
-
-        return predict
+        loss, predict, _ ,next_speaker_vector= self.model.step(self.sess, observation, step_type='test')
+        next_speaker=np.argmax(next_speaker_vector[0], 0)
+        return predict,next_speaker
 
     def store_transition(self, s, a, r):
         self.ep_obs.append(s)  # observations
