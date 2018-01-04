@@ -137,7 +137,7 @@ def get_vocab(data_path):
 
 
 def get_humorous_scene_rl(data_path, vocabulary, sentence_size):
-    data_path = data_path + 'humorous_scenes.txt'
+    data_path = data_path + 'humorous.txt'
 
     if os.path.exists(data_path):
         f = open(data_path, 'r')
@@ -145,7 +145,7 @@ def get_humorous_scene_rl(data_path, vocabulary, sentence_size):
         scene = {}
         scenes = []
         for lines in f:
-            lines = lines.strip()[2:-5]
+            #lines = lines.strip()[2:-5]
             # pdb.set_trace()
             if len(lines) > 2:
                 name = lines[:lines.index(':')]

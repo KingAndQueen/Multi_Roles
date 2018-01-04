@@ -45,30 +45,39 @@ class PolicyGradient:
     def choose_scene(self, obser):
         observation=obser
         observations = list()
-        observations.append(dict(observation))
+        pdb.set_trace()
+        # observations.append(dict(observation))
         name_list = list(observation['name_list'][-1])
-        next_speaker = observation['speaker'][0]
+
         for name in name_list:
             if name == NAME_MAP_ID['pad']:
                 name_list.remove(name)
         role_number=len(name_list)
         # pdb.set_trace()
         for r in range(role_number):
-            predict,next_speaker_new = self.choose_action(observation)
-            new_speaker = name_list.pop(0) #consider to use next_speaker_new to import new speaker
+            pdb.set_trace()
+            next_speaker = observation['speaker'][0]
+            predict,new_speaker = self.choose_action(observation)
+            observation['speaker'] = [new_speaker]
+            del_speaker = name_list.pop(0)
+            observation[ID_MAP_NAME[next_speaker]] = observation['answer']
             observation['answer'] = predict
             new_weight = []
+            flag = False
             for ans in predict[-1]:
-                if ans != self.vocab.word_to_index('<pad>'):
+                if ans == self.vocab.word_to_index('<eos>'):
+                    flag=True
+                if ans != self.vocab.word_to_index('<pad>') and not flag:
                     new_weight.append(1.0)
                 else:
                     new_weight.append(0.0)
             observation['weight'] = [new_weight]
-            observations.append(dict(observation)) #save last observation for learning in RL
+
             # update observation to construct new observation
-            observation[ID_MAP_NAME[new_speaker]] = [
-                len(predict[-1]) * [self.vocab.word_to_index('<pad>')]]
+            observation[ID_MAP_NAME[del_speaker]]=[len(predict[-1]) * [self.vocab.word_to_index('<pad>')]]
+            observation[ID_MAP_NAME[new_speaker]] = [len(predict[-1]) * [self.vocab.word_to_index('<pad>')]]
             name_list.append(next_speaker)
+
             new_name_list = []
             for name in NAMELIST:
                 name_id = NAME_MAP_ID[name]
@@ -76,10 +85,10 @@ class PolicyGradient:
                     new_name_list.append(name_id)
                 else:
                     new_name_list.append(NAME_MAP_ID['pad'])
-            observation[ID_MAP_NAME[next_speaker]] = predict
-            observation['speaker'] = [new_speaker]
+
             observation['name_list'] = [new_name_list]
-        # pdb.set_trace()
+            observations.append(dict(observation))  # save last observation for learning in RL
+
         return observations
 
     def choose_action(self, observation):

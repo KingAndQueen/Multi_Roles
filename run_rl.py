@@ -19,7 +19,7 @@ config.checkpoints_dir='checkpoints/rl/'
 vocab=get_vocab(config.data_dir)
 env = Drama_Env.make('Drama')
 _,_,test_data,vocab,_=data_process(config,vocabulary=vocab)
-
+# pdb.set_trace()
 RL_model = PolicyGradient(
     config,
     vocab,
@@ -41,10 +41,10 @@ for i_episode in range(30):
         observation_, reward, done = env.step_scene(scenes,vocab,RL_model,humor_input_data)
         RL_model.store_transition(observation_,None,reward)
         # RL.store_transition(observation, sentence, reward)
-
-        analyze.show_only_scene(observation_,vocab)
+        for scene in scenes:
+            analyze.show_only_scene(scene,vocab)
         print (observation_)
-        pdb.set_trace()
+        # pdb.set_trace()
         if done:
             ep_rs_sum = sum(RL_model.ep_rs)
             if 'running_reward' not in globals():
