@@ -36,14 +36,15 @@ for i_episode in range(30):
     while True:
         print('try:',index)
         index+=1
-        if RENDER: env.render()
+        # if RENDER: env.render()
         scenes = RL_model.choose_scene(observation)
         observation_, reward, done = env.step_scene(scenes,vocab,RL_model,humor_input_data)
         RL_model.store_transition(observation_,None,reward)
         # RL.store_transition(observation, sentence, reward)
         for scene in scenes:
             analyze.show_only_scene(scene,vocab)
-        print (observation_)
+            print ('--------------')
+        # print (observation_)
         # pdb.set_trace()
         if done:
             ep_rs_sum = sum(RL_model.ep_rs)
@@ -51,9 +52,9 @@ for i_episode in range(30):
                 running_reward = ep_rs_sum
             else:
                 running_reward = running_reward * 0.99 + ep_rs_sum * 0.01
-            if running_reward > DISPLAY_REWARD_THRESHOLD: RENDER = True     # rendering
+            # if running_reward > DISPLAY_REWARD_THRESHOLD: RENDER = True     # rendering
             print("episode:", i_episode, "  reward:", running_reward)
-
+            pdb.set_trace()
             vt = RL_model.learn()
             print('------positive sentence!----')
             # if running_reward >0.0016:

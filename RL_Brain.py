@@ -45,17 +45,16 @@ class PolicyGradient:
     def choose_scene(self, obser):
         observation=obser
         observations = list()
-        pdb.set_trace()
-        # observations.append(dict(observation))
+        # pdb.set_trace()
+        observations.append(dict(observation))
         name_list = list(observation['name_list'][-1])
 
-        for name in name_list:
-            if name == NAME_MAP_ID['pad']:
-                name_list.remove(name)
+        while NAME_MAP_ID['pad'] in name_list:
+            name_list.remove(NAME_MAP_ID['pad'])
         role_number=len(name_list)
         # pdb.set_trace()
         for r in range(role_number):
-            pdb.set_trace()
+            # pdb.set_trace()
             next_speaker = observation['speaker'][0]
             predict,new_speaker = self.choose_action(observation)
             observation['speaker'] = [new_speaker]
