@@ -7,6 +7,7 @@ import Multi_Roles_Analyze
 import Multi_Roles_Data
 import Multi_Roles_Model
 from math import exp
+from sklearn import model_selection
 ID_MAP_NAME=Multi_Roles_Data.ID_MAP_NAME
 NAMELIST=Multi_Roles_Data.NAMELIST
 # set parameters of model

@@ -47,11 +47,11 @@ for i_episode in range(30):
         # print (observation_)
         # pdb.set_trace()
         if done:
-            ep_rs_sum = sum(RL_model.ep_rs)
+            ep_rs_last = RL_model.ep_rs[-1]
             if 'running_reward' not in globals():
-                running_reward = ep_rs_sum
+                running_reward = running_reward-ep_rs_last
             else:
-                running_reward = running_reward * 0.99 + ep_rs_sum * 0.01
+                running_reward = (running_reward-ep_rs_last) * 0.99 + ep_rs_last * 0.01
             # if running_reward > DISPLAY_REWARD_THRESHOLD: RENDER = True     # rendering
             print("episode:", i_episode, "  reward:", running_reward)
             pdb.set_trace()
