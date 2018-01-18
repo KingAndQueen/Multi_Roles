@@ -30,12 +30,14 @@ class Vocab():
                 self.idx2word[index] = words
 
     def word_to_index(self, word):
-        #self.add_vocab(word)
-        #return self.word2idx[word]
-        if word in self.word2idx:
-            return self.word2idx[word]
-        else:
-            return self.word2idx['<unk>']
+
+        self.add_vocab(word)
+        return self.word2idx[word]
+        # for rl
+        # if word in self.word2idx:
+        #     return self.word2idx[word]
+        # else:
+        #     return self.word2idx['<unk>']
 
     def index_to_word(self, index):
         if index in self.idx2word:

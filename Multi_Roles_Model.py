@@ -200,8 +200,9 @@ class MultiRolesModel():
 
                         if i > 0:
                             tf.get_variable_scope().reuse_variables()
+                        pdb.set_trace()
                         inp = linear([inp] + attns, self._embedding_size, True)
-
+                        pdb.set_trace()
                         output, state = cell_de(inp, state)
                         attns = attention(state)
                         #  pdb.set_trace()
@@ -213,7 +214,8 @@ class MultiRolesModel():
 
                 outputs = tf.transpose(outputs, perm=[1, 0, 2])
                 return outputs  # ,outputs_original
-        def speaker_noatten(encoder_state, attention_states, ans_emb, model_type='train'):
+
+        def speaker_noatten(encoder_state, ans_emb, model_type='train'):
             with tf.variable_scope('speaker'):
                 def extract_argmax_and_embed(prev, _):
                     """Loop_function that extracts the symbol from prev and embeds it."""
@@ -239,11 +241,8 @@ class MultiRolesModel():
                         if loop_function is not None and prev is not None:
                             with tf.variable_scope("loop_function", reuse=True):
                                 inp = array_ops.stop_gradient(loop_function(prev, i))
-
                         if i > 0:
                             tf.get_variable_scope().reuse_variables()
-                        inp = linear([inp], self._embedding_size, True)
-
                         output, state = cell_de(inp, state)
                         #  pdb.set_trace()
                         with tf.variable_scope('OutputProjecton'):
@@ -276,7 +275,8 @@ class MultiRolesModel():
             state_all_roles_speaker = tf.unstack(state_all_roles_speaker)
             # next_speakers=tf.argmax(next_speaker,1)
 
-            response = speaker_atten(state_all_roles_speaker, attention_states_speaker, answer_emb, self.model_type)
+           # response = speaker_atten(state_all_roles_speaker, attention_states_speaker, answer_emb, self.model_type)
+            response = speaker_noatten(state_all_roles_speaker,answer_emb,self.model_type)
             #     else:
             #         response=[]
 
