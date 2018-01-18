@@ -133,7 +133,7 @@ class MultiRolesModel():
             next_speaker = tf.expand_dims(next_speaker, 0)  # next_speaker.shape=[1,batch_size,roles_number]
             next_speaker = tf.expand_dims(next_speaker, -1)  # next_speaker.shape=[1,batch_size,roles_number,1]
 
-        def speaker(encoder_state, attention_states, ans_emb, model_type='train'):
+        def speaker_atten(encoder_state, attention_states, ans_emb, model_type='train'):
             with tf.variable_scope('speaker'):
                 num_heads = 1
                 batch_size = ans_emb[0].get_shape()[0]
@@ -213,6 +213,47 @@ class MultiRolesModel():
 
                 outputs = tf.transpose(outputs, perm=[1, 0, 2])
                 return outputs  # ,outputs_original
+        def speaker_noatten(encoder_state, attention_states, ans_emb, model_type='train'):
+            with tf.variable_scope('speaker'):
+                def extract_argmax_and_embed(prev, _):
+                    """Loop_function that extracts the symbol from prev and embeds it."""
+                    prev_symbol = array_ops.stop_gradient(math_ops.argmax(prev, 1))
+                    return embedding_ops.embedding_lookup(self._word_embedding, prev_symbol)
+
+                if model_type == 'train':
+                    loop_function = None
+                if model_type == 'test':
+                    loop_function = extract_argmax_and_embed
+
+                linear = rnn_cell_impl._linear
+
+                with tf.variable_scope("rnn_decoder"):
+                    single_cell_de = tf.nn.rnn_cell.GRUCell(self._embedding_size)
+                    cell_de = tf.nn.rnn_cell.MultiRNNCell([single_cell_de] * self._layers)
+                    # cell_de = core_rnn_cell.OutputProjectionWrapper(cell_de, self._vocab_size)
+                    outputs = []
+                    prev = None
+                    #   pdb.set_trace()
+                    state = encoder_state
+                    for i, inp in enumerate(ans_emb):
+                        if loop_function is not None and prev is not None:
+                            with tf.variable_scope("loop_function", reuse=True):
+                                inp = array_ops.stop_gradient(loop_function(prev, i))
+
+                        if i > 0:
+                            tf.get_variable_scope().reuse_variables()
+                        inp = linear([inp], self._embedding_size, True)
+
+                        output, state = cell_de(inp, state)
+                        #  pdb.set_trace()
+                        with tf.variable_scope('OutputProjecton'):
+                            output = linear([output], self._vocab.vocab_size, True)
+                        outputs.append(output)
+                        if loop_function is not None:
+                            prev = array_ops.stop_gradient(output)
+
+                outputs = tf.transpose(outputs, perm=[1, 0, 2])
+                return outputs
 
         with tf.variable_scope('interaction'):
             # first decide wheter to speake,then choose the speaker
@@ -235,7 +276,7 @@ class MultiRolesModel():
             state_all_roles_speaker = tf.unstack(state_all_roles_speaker)
             # next_speakers=tf.argmax(next_speaker,1)
 
-            response = speaker(state_all_roles_speaker, attention_states_speaker, answer_emb, self.model_type)
+            response = speaker_atten(state_all_roles_speaker, attention_states_speaker, answer_emb, self.model_type)
             #     else:
             #         response=[]
 
