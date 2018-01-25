@@ -191,10 +191,11 @@ def main(_):
             sess.run(tf.global_variables_initializer())
         # train_model(sess, model, analyze, pre_train_data, valid_data,pretrain_epoch=10)
         train_model(sess, model, analyze, train_data, valid_data)
-        test_model(sess, model, analyze, test_data, vocab)
-    if config.model_type == 'test':
+        del model
+    if config.model_type == 'test' or config.model_type=='train':
         print('establish the model...')
         # config.batch_size = len(test_data)
+        config.model_type='test'
         model = Multi_Roles_Model.MultiRolesModel(config, vocab)
         analyze = Multi_Roles_Analyze.Multi_Roles_Analyze(config)
         print('Reload model from checkpoints.....')

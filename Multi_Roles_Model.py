@@ -172,10 +172,10 @@ class MultiRolesModel():
                     prev_symbol = array_ops.stop_gradient(math_ops.argmax(prev, 1))
                     return embedding_ops.embedding_lookup(self._word_embedding, prev_symbol)
 
-                if model_type == 'train':
-                    loop_function = None
-                else:
+                if model_type == 'test':
                     loop_function = extract_argmax_and_embed
+                else:
+                    loop_function = None
 
                 linear = rnn_cell_impl._linear
                 batch_attn_size = array_ops.stack([batch_size, attn_size])
