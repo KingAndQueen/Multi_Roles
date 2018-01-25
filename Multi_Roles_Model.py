@@ -174,7 +174,7 @@ class MultiRolesModel():
 
                 if model_type == 'train':
                     loop_function = None
-                if model_type == 'test':
+                else:
                     loop_function = extract_argmax_and_embed
 
                 linear = rnn_cell_impl._linear
@@ -224,7 +224,7 @@ class MultiRolesModel():
 
                 if model_type == 'train':
                     loop_function = None
-                if model_type == 'test':
+                else:
                     loop_function = extract_argmax_and_embed
 
                 linear = rnn_cell_impl._linear

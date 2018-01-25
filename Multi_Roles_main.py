@@ -82,7 +82,7 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
         if current_step % config.check_epoch == 0:
             eval_losses = []
             train_losses.append(train_loss_)
-            if len(train_losses) > 2 and loss > max(train_losses[-3:]):
+            if len(train_losses) > 2 and train_loss_ > max(train_losses[-3:]):
                 print('decay learning rate....')
                 sess.run(model.learning_rate_decay_op)
             print('-------------------------------')
@@ -99,8 +99,8 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
             eval_losses_all.append(eval_loss)
             print('evaluation total loss:', eval_loss)
             if eval_loss<300 and train_loss_ <300:
-                print('train perplex:',exp(eval_loss))
-                print('evaluation perplex:',exp(train_loss_))
+                print('train perplex:',exp(train_loss_))
+                print('evaluation perplex:',exp(eval_loss))
             print('saving current step %d checkpoints....' % current_step)
             model.saver.save(sess, checkpoint_path, global_step=current_step)
             if len(eval_losses_all) > config.stop_limit - 1 and eval_loss > max(eval_losses_all[-1 * config.stop_limit:]):
