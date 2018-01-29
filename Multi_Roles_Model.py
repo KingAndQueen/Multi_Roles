@@ -254,6 +254,71 @@ class MultiRolesModel():
                 outputs = tf.transpose(outputs, perm=[1, 0, 2])
                 return outputs
 
+        def speaker_beam(embedding_word, encoder_state,ans_emb,beam_size=10, model_type='train',output_projection=None):
+            with tf.variable_scope('speaker'):
+                # pdb.set_trace()
+                num_symbols=embedding_word.get_shape()[0].value
+                embedding_size=embedding_word.get_shape[1].value
+                def loop_function(prev, i, log_beam_probs, beam_path, beam_symbols):
+                    if output_projection is not None:
+                        prev = nn_ops.xw_plus_b(prev, output_projection[0], output_projection[1])
+
+                    probs = tf.log(tf.nn.softmax(prev))
+                    if i == 1:
+                        probs = tf.reshape(probs[0, :], [-1, num_symbols])
+                    if i > 1:
+
+                        probs = tf.reshape(probs + log_beam_probs[-1], [-1, beam_size * num_symbols])
+
+                    best_probs, indices = tf.nn.top_k(probs, beam_size)
+                    indices = tf.stop_gradient(tf.squeeze(tf.reshape(indices, [-1, 1])))
+                    best_probs = tf.stop_gradient(tf.reshape(best_probs, [-1, 1]))
+
+                    symbols = indices % num_symbols  # Which word in vocabulary.
+                    beam_parent = indices // num_symbols  # Which hypothesis it came from.
+                    beam_symbols.append(symbols)
+                    beam_path.append(beam_parent)
+                    log_beam_probs.append(best_probs)
+
+                    emb_prev = embedding_ops.embedding_lookup(embedding_word, symbols)
+                    emb_prev = tf.reshape(emb_prev, [-1, embedding_size])
+                    return emb_prev
+
+                if model_type == 'train':
+                    loop_function = None
+                else:
+                    loop_function =loop_function
+
+                linear = rnn_cell_impl._linear
+
+                with tf.variable_scope("rnn_decoder"):
+                    single_cell_de = tf.nn.rnn_cell.GRUCell(self._embedding_size)
+                    cell_de = tf.nn.rnn_cell.MultiRNNCell([single_cell_de] * self._layers)
+                    # cell_de = core_rnn_cell.OutputProjectionWrapper(cell_de, self._vocab_size)
+                    outputs = []
+                    prev = None
+                    #   pdb.set_trace()
+                    state = encoder_state
+                    for i, inp in enumerate(ans_emb):
+                        log_beam_probs, beam_path, beam_symbols = [], [], []
+                        if loop_function is not None and prev is not None:
+                            with tf.variable_scope("loop_function", reuse=True):
+                                inp = array_ops.stop_gradient(loop_function(prev, i,log_beam_probs, beam_path, beam_symbols))
+                        if i > 0:
+                            tf.get_variable_scope().reuse_variables()
+                        output, state = cell_de(inp, state)
+                        #  pdb.set_trace()
+                        with tf.variable_scope('OutputProjecton'):
+                            output = linear([output], self._vocab.vocab_size, True)
+                        outputs.append(output)
+                        if loop_function is not None:
+                            prev = array_ops.stop_gradient(output)
+
+                outputs = tf.transpose(outputs, perm=[1, 0, 2])
+                return outputs
+
+
+
         with tf.variable_scope('interaction'):
             # first decide wheter to speake,then choose the speaker
             # gate_decision_lastSpeaker=tf.tanh(tf.matmul(self._w_context,tf.matmul(monica_encoder[-1],tf.transpose(context_encoder[-1]))))
@@ -276,7 +341,8 @@ class MultiRolesModel():
             # next_speakers=tf.argmax(next_speaker,1)
 
            # response = speaker_atten(state_all_roles_speaker, attention_states_speaker, answer_emb, self.model_type)
-            response = speaker_noatten(state_all_roles_speaker,answer_emb,self.model_type)
+           #  response = speaker_noatten(state_all_roles_speaker,answer_emb,self.model_type)
+            response = speaker_beam(self._word_embedding,state_all_roles_speaker,answer_emb,model_type=self.model_type)
             #     else:
             #         response=[]
 
