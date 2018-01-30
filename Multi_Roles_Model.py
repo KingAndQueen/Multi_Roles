@@ -258,7 +258,7 @@ class MultiRolesModel():
             with tf.variable_scope('speaker'):
                 # pdb.set_trace()
                 num_symbols=embedding_word.get_shape()[0].value
-                embedding_size=embedding_word.get_shape[1].value
+                embedding_size=embedding_word.get_shape()[1].value
                 def loop_function(prev, i, log_beam_probs, beam_path, beam_symbols):
                     if output_projection is not None:
                         prev = nn_ops.xw_plus_b(prev, output_projection[0], output_projection[1])
