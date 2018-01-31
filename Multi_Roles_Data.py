@@ -5,10 +5,11 @@ import numpy as np
 import json
 import random
 import nltk
+import re
 NAMELIST = ['Chandler', 'Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross', 'others']
 NAME_MAP_ID = {'Chandler': 0, 'Joey': 1, 'Monica': 2, 'Phoebe': 3, 'Rachel': 4, 'Ross': 5, 'others': 6, 'pad': 7}
 ID_MAP_NAME={0:'Chandler',1:'Joey', 2:'Monica', 3:'Phoebe', 4:'Rachel', 5:'Ross',6:'others',7:'pad'}
-
+unlegal='[^A-Za-z0-9\ \']'
 class Vocab():
     def __init__(self, word2vec=None, embed_size=0):
         self.word2idx = {'<eos>': 0, '<go>': 1, '<pad>': 2, '<unk>': 3}
@@ -68,6 +69,8 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
             # name_id=vocabulary.word_to_index(name)#for word in name.split()]
             sentence = lines[lines.index(':') + 1:]
             #sentence = sentence.split()
+            sentence = re.sub(unlegal, ' ', sentence)
+            sentence = sentence.lower()
             sentence=nltk.word_tokenize(sentence)
             sentence_id = [vocabulary.word_to_index(word) for word in sentence]
             sentence_id = sentence_id[:sentence_size - 1]
@@ -161,6 +164,7 @@ def get_humorous_scene_rl(data_path, vocabulary, sentence_size):
                     # name_id=vocabulary.word_to_index(name)#for word in name.split()]
                 sentence = lines[lines.index(':') + 1:]
                 # sentence = sentence.split()
+                sentence=sentence.lower()
                 sentence = nltk.word_tokenize(sentence)
                 sentence_id = [vocabulary.word_to_index(word) for word in sentence]
                 sentence_id = sentence_id[:sentence_size - 1]
@@ -222,11 +226,11 @@ def read_tt_data(data_dir, vocabulary, sents_len):
         f.close()
         raw_data = json.loads(str(line.strip()))
         for data in raw_data:
-            sents_q = nltk.word_tokenize(data['question'])
+            sents_q = nltk.word_tokenize(data['question'].lower())
             # sents_q = data['question'].split()
             sents_q = structed(sents_q)
             sents_data.append(sents_q)
-            sents_a = nltk.word_tokenize(data['answer'])
+            sents_a = nltk.word_tokenize(data['answer'].lower())
             # sents_a = data['answer'].split()
             sents_a = structed(sents_a)
             sents_data.append(sents_a)

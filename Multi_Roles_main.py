@@ -3,6 +3,7 @@ import random
 import numpy as np
 import tensorflow as tf
 import pdb
+import pickle as pkl
 import Multi_Roles_Analyze
 import Multi_Roles_Data
 import Multi_Roles_Model
@@ -47,6 +48,10 @@ def data_process(config, vocabulary=None):
     Multi_Roles_Data.get_humorous_scene_rl(config.data_dir, vocabulary, config.sentence_size)
     print('data processed,vocab size:', vocabulary.vocab_size)
     Multi_Roles_Data.store_vocab(vocabulary, config.data_dir)
+    # all_data = train_data + valid_data + test_data
+    # train_data, eval_test_data = model_selection.train_test_split(all_data, test_size=0.2)
+    # valid_data, test_data = model_selection.train_test_split(eval_test_data, test_size=0.5)
+
     return train_data, valid_data, test_data, vocabulary, pre_train_data
 
 
@@ -87,7 +92,7 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
             #     sess.run(model.learning_rate_decay_op)
             print('-------------------------------')
             print('current_step:', current_step)
-            print('training total loss:', train_loss_)
+            print('training loss:', train_loss_)
             train_summary_writer.add_summary(summary_train, current_step)
 
             # eval_data = random.choice(data_input_eval)
@@ -97,7 +102,7 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
             test_summary_writer.add_summary(summary_eval)
             eval_loss=float(sum(eval_losses)) / len(eval_losses)
             eval_losses_all.append(eval_loss)
-            print('evaluation total loss:', eval_loss)
+            print('evaluation loss:', eval_loss)
             if eval_loss<300 and train_loss_ <300:
                 print('train perplex:',exp(train_loss_))
                 print('evaluation perplex:',exp(eval_loss))
@@ -181,9 +186,11 @@ def main(_):
     sess = tf.Session()
     print('pretrain data set %d, train data set %d, valid data set %d, test data set %d' % (
         len(pre_train_data), len(train_data), len(valid_data), len(test_data)))
+    # my_embedding = pkl.load(open('my_embedding.pkl', 'rb'))
     if config.model_type == 'train':
         print('establish the model...')
         model = Multi_Roles_Model.MultiRolesModel(config, vocab)
+        # model = Multi_Roles_Model.MultiRolesModel(config, vocab, my_embedding=my_embedding)
         analyze = Multi_Roles_Analyze.Multi_Roles_Analyze(config)
         ckpt = tf.train.get_checkpoint_state(config.checkpoints_dir)
         if ckpt and tf.train.checkpoint_exists(ckpt.model_checkpoint_path):

@@ -19,7 +19,7 @@ def add_gradient_noise(t, stddev=1e-3, name=None):
         return tf.add(t, gn, name=name)
 
 class MultiRolesModel():
-    def __init__(self, config, vocab):
+    def __init__(self, config, vocab,my_embedding=None):
         self._vocab = vocab
         self._batch_size = config.batch_size
         self._sentence_size = config.sentence_size
@@ -35,8 +35,10 @@ class MultiRolesModel():
         self._max_grad_norm = config.max_grad_norm
         self._build_inputs()
         self.rl = config.rl
-
+        self._my_embedding = my_embedding
         with tf.variable_scope('embedding'):
+            # self._word_embedding=tf.get_variable('embedding_word',shape=[self._vocab.vocab_size, config.neurons],
+			#			 initializer=tf.constant_initializer(value=self._my_embedding,dtype=tf.float32),trainable=True)
             self._word_embedding = tf.get_variable(name='embedding_word',
                                                    shape=[self._vocab.vocab_size, config.neurons])
             self._name_embedding=tf.get_variable(name='emnbedding_name',shape=[self._roles_number+1,config.neurons])
@@ -64,6 +66,7 @@ class MultiRolesModel():
             with tf.variable_scope('encoding_role_' + name):
                 encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons, reuse=tf.get_variable_scope().reuse)
                 encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
+                encoding_cell = tf.contrib.rnn.DropoutWrapper(encoding_cell, 0.5, 0.5, 1.0)
                 # for future test
                 # output, state_fw,state_bw = rnn.static_bidirectional_rnn(cell_fw=encoding_cell, cell_bw=encoding_cell,
                 # inputs=person_emb, dtype=tf.float32)
@@ -96,7 +99,8 @@ class MultiRolesModel():
             2)  # all_roles_sate.shape=[layers,batch_size,roles_number,neurons] order by namelist
 
         with tf.variable_scope('encoding_context'):
-            encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons)
+            # encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons)
+            encoding_single_layer = tf.nn.rnn_cell.LSTMCell(config.neurons)
             encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
             context = tf.concat(values=[Chandler_emb, Joey_emb, Monica_emb, Phoebe_emb, Rachel_emb, Ross_emb,others_emb], axis=0)
             context = tf.unstack(context, axis=0)
@@ -122,7 +126,7 @@ class MultiRolesModel():
         with tf.variable_scope('next_speaker'):
             next_speaker_emb=[]
             for name_emb in name_list_emb:
-                next_speaker_emb.append(tf.concat([name_emb, context_state_fw[-1]], 1))
+                next_speaker_emb.append(tf.concat([name_emb, context_state_fw[-1][0]], 1))
             next_speaker_logit, _ = _speaker_prediction(next_speaker_emb)
             next_speaker_pred = linear(next_speaker_logit, self._roles_number,
                                        True)  # next_speaker.shape=[batch_size,roles_number]
@@ -188,6 +192,7 @@ class MultiRolesModel():
                     # $ cell_de = single_cell_de
                     # if self._layers > 1:
                     cell_de = tf.nn.rnn_cell.MultiRNNCell([single_cell_de] * self._layers)
+                    cell_de = tf.contrib.rnn.DropoutWrapper(cell_de, 0.5, 0.5, 1.0)
                     # cell_de = core_rnn_cell.OutputProjectionWrapper(cell_de, self._vocab_size)
                     outputs = []
                     prev = None
@@ -200,9 +205,7 @@ class MultiRolesModel():
 
                         if i > 0:
                             tf.get_variable_scope().reuse_variables()
-                        pdb.set_trace()
                         inp = linear([inp] + attns, self._embedding_size, True)
-                        pdb.set_trace()
                         output, state = cell_de(inp, state)
                         attns = attention(state)
                         #  pdb.set_trace()
