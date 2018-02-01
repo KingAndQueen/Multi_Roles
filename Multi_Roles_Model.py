@@ -8,6 +8,8 @@ from tensorflow.python.ops import rnn_cell_impl
 from tensorflow.python.util import nest
 import pdb
 
+linear = rnn_cell_impl._linear
+
 
 def add_gradient_noise(t, stddev=1e-3, name=None):
     """
@@ -18,8 +20,9 @@ def add_gradient_noise(t, stddev=1e-3, name=None):
         gn = tf.random_normal(tf.shape(t), stddev=stddev)
         return tf.add(t, gn, name=name)
 
+
 class MultiRolesModel():
-    def __init__(self, config, vocab,my_embedding=None):
+    def __init__(self, config, vocab, my_embedding=None):
         self._vocab = vocab
         self._batch_size = config.batch_size
         self._sentence_size = config.sentence_size
@@ -38,10 +41,11 @@ class MultiRolesModel():
         self._my_embedding = my_embedding
         with tf.variable_scope('embedding'):
             # self._word_embedding=tf.get_variable('embedding_word',shape=[self._vocab.vocab_size, config.neurons],
-			#			 initializer=tf.constant_initializer(value=self._my_embedding,dtype=tf.float32),trainable=True)
+            #			 initializer=tf.constant_initializer(value=self._my_embedding,dtype=tf.float32),trainable=True)
             self._word_embedding = tf.get_variable(name='embedding_word',
                                                    shape=[self._vocab.vocab_size, config.neurons])
-            self._name_embedding=tf.get_variable(name='emnbedding_name',shape=[self._roles_number+1,config.neurons])
+            self._name_embedding = tf.get_variable(name='emnbedding_name',
+                                                   shape=[self._roles_number + 1, config.neurons])
             _Monica = tf.unstack(self._Monica, axis=1)
             Monica_emb = [tf.nn.embedding_lookup(self._word_embedding, word) for word in _Monica]
             _Joey = tf.unstack(self._Joey, axis=1)
@@ -66,12 +70,16 @@ class MultiRolesModel():
             with tf.variable_scope('encoding_role_' + name):
                 encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons, reuse=tf.get_variable_scope().reuse)
                 encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
-                encoding_cell = tf.contrib.rnn.DropoutWrapper(encoding_cell, 0.5, 0.5, 1.0)
+                encoding_cell = tf.contrib.rnn.DropoutWrapper(encoding_cell, 0.5, 0.5, 0.5)
                 # for future test
-                # output, state_fw,state_bw = rnn.static_bidirectional_rnn(cell_fw=encoding_cell, cell_bw=encoding_cell,
-                # inputs=person_emb, dtype=tf.float32)
-                output, state_fw = rnn.static_rnn(encoding_cell, person_emb, dtype=tf.float32)
-                return output, state_fw
+                output, state_fw, state_bw = rnn.static_bidirectional_rnn(cell_fw=encoding_cell, cell_bw=encoding_cell,
+                                                                          inputs=person_emb, dtype=tf.float32)
+                # output, state_fw = rnn.static_rnn(encoding_cell, person_emb, dtype=tf.float32)
+
+                state = tf.concat([state_fw, state_bw], -1)
+                state = tf.matmul(state,tf.get_variable('Wi',[3,2 * self._embedding_size, self._embedding_size],
+                                                          dtype=tf.float32,trainable=True))
+                return output, state
 
         # encoder different roles
         # encoding_roles_functions={
@@ -102,36 +110,36 @@ class MultiRolesModel():
             # encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons)
             encoding_single_layer = tf.nn.rnn_cell.LSTMCell(config.neurons)
             encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
-            context = tf.concat(values=[Chandler_emb, Joey_emb, Monica_emb, Phoebe_emb, Rachel_emb, Ross_emb,others_emb], axis=0)
+            context = tf.concat(
+                values=[Chandler_emb, Joey_emb, Monica_emb, Phoebe_emb, Rachel_emb, Ross_emb, others_emb], axis=0)
             context = tf.unstack(context, axis=0)
             # context_encoder, state_fw,state_bw = rnn.static_bidirectional_rnn(encoding_cell, encoding_cell, context,dtype=tf.float32)
             context_encoder, context_state_fw = rnn.static_rnn(encoding_cell, context, dtype=tf.float32)
-            self.context_vector=context_state_fw
+            self.context_vector = context_state_fw
             top_output_context = [array_ops.reshape(o, [-1, 1, encoding_cell.output_size]) for o in context_encoder]
             attention_states = array_ops.concat(top_output_context, 1)
-        linear = rnn_cell_impl._linear
 
         def _speaker_prediction(next_speaker_emb):
             with tf.variable_scope('speaker_prediction'):
-                encoding_single_layer = tf.nn.rnn_cell.GRUCell(2*config.neurons, reuse=tf.get_variable_scope().reuse)
+                encoding_single_layer = tf.nn.rnn_cell.GRUCell(2 * config.neurons, reuse=tf.get_variable_scope().reuse)
                 encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
                 # pdb.set_trace()
-                output=None
-                state=encoding_cell.zero_state(self._batch_size, dtype=tf.float32)
+                output = None
+                state = encoding_cell.zero_state(self._batch_size, dtype=tf.float32)
                 for emb in next_speaker_emb:
                     output, state = encoding_cell(emb, state=state)
 
             return output, state
 
         with tf.variable_scope('next_speaker'):
-            next_speaker_emb=[]
+            next_speaker_emb = []
             for name_emb in name_list_emb:
                 next_speaker_emb.append(tf.concat([name_emb, context_state_fw[-1][0]], 1))
             next_speaker_logit, _ = _speaker_prediction(next_speaker_emb)
             next_speaker_pred = linear(next_speaker_logit, self._roles_number,
                                        True)  # next_speaker.shape=[batch_size,roles_number]
 
-            next_speaker = tf.nn.softmax(next_speaker_pred) # next_speaker.shape=[batch_size,roles_number]
+            next_speaker = tf.nn.softmax(next_speaker_pred)  # next_speaker.shape=[batch_size,roles_number]
             self.next_speakers_vector = next_speaker
 
             next_speaker = tf.expand_dims(next_speaker, 0)  # next_speaker.shape=[1,batch_size,roles_number]
@@ -192,7 +200,7 @@ class MultiRolesModel():
                     # $ cell_de = single_cell_de
                     # if self._layers > 1:
                     cell_de = tf.nn.rnn_cell.MultiRNNCell([single_cell_de] * self._layers)
-                    cell_de = tf.contrib.rnn.DropoutWrapper(cell_de, 0.5, 0.5, 1.0)
+                    cell_de = tf.contrib.rnn.DropoutWrapper(cell_de, 0.5, 0.5, 0.5)
                     # cell_de = core_rnn_cell.OutputProjectionWrapper(cell_de, self._vocab_size)
                     outputs = []
                     prev = None
@@ -257,11 +265,13 @@ class MultiRolesModel():
                 outputs = tf.transpose(outputs, perm=[1, 0, 2])
                 return outputs
 
-        def speaker_beam(embedding_word, encoder_state,ans_emb,beam_size=10, model_type='train',output_projection=None):
+        def speaker_beam(embedding_word, encoder_state, ans_emb, beam_size=10, model_type='train',
+                         output_projection=None):
             with tf.variable_scope('speaker'):
                 # pdb.set_trace()
-                num_symbols=embedding_word.get_shape()[0].value
-                embedding_size=embedding_word.get_shape()[1].value
+                num_symbols = embedding_word.get_shape()[0].value
+                embedding_size = embedding_word.get_shape()[1].value
+
                 def loop_function(prev, i, log_beam_probs, beam_path, beam_symbols):
                     if output_projection is not None:
                         prev = nn_ops.xw_plus_b(prev, output_projection[0], output_projection[1])
@@ -270,7 +280,6 @@ class MultiRolesModel():
                     if i == 1:
                         probs = tf.reshape(probs[0, :], [-1, num_symbols])
                     if i > 1:
-
                         probs = tf.reshape(probs + log_beam_probs[-1], [-1, beam_size * num_symbols])
 
                     best_probs, indices = tf.nn.top_k(probs, beam_size)
@@ -290,7 +299,7 @@ class MultiRolesModel():
                 if model_type == 'train':
                     loop_function = None
                 else:
-                    loop_function =loop_function
+                    loop_function = loop_function
 
                 linear = rnn_cell_impl._linear
 
@@ -306,7 +315,8 @@ class MultiRolesModel():
                         log_beam_probs, beam_path, beam_symbols = [], [], []
                         if loop_function is not None and prev is not None:
                             with tf.variable_scope("loop_function", reuse=True):
-                                inp = array_ops.stop_gradient(loop_function(prev, i,log_beam_probs, beam_path, beam_symbols))
+                                inp = array_ops.stop_gradient(
+                                    loop_function(prev, i, log_beam_probs, beam_path, beam_symbols))
                         if i > 0:
                             tf.get_variable_scope().reuse_variables()
                         output, state = cell_de(inp, state)
@@ -319,8 +329,6 @@ class MultiRolesModel():
 
                 outputs = tf.transpose(outputs, perm=[1, 0, 2])
                 return outputs
-
-
 
         with tf.variable_scope('interaction'):
             # first decide wheter to speake,then choose the speaker
@@ -343,9 +351,10 @@ class MultiRolesModel():
             state_all_roles_speaker = tf.unstack(state_all_roles_speaker)
             # next_speakers=tf.argmax(next_speaker,1)
 
-           # response = speaker_atten(state_all_roles_speaker, attention_states_speaker, answer_emb, self.model_type)
-           #  response = speaker_noatten(state_all_roles_speaker,answer_emb,self.model_type)
-            response = speaker_beam(self._word_embedding,state_all_roles_speaker,answer_emb,model_type=self.model_type)
+            # response = speaker_atten(state_all_roles_speaker, attention_states_speaker, answer_emb, self.model_type)
+            #  response = speaker_noatten(state_all_roles_speaker,answer_emb,self.model_type)
+            response = speaker_beam(self._word_embedding, state_all_roles_speaker, answer_emb,
+                                    model_type=self.model_type)
             #     else:
             #         response=[]
 
@@ -357,15 +366,15 @@ class MultiRolesModel():
             labels = tf.concat([labels, _], axis=1)
             true_speaker = self._speaker
 
-
             cross_entropy_speaker = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=next_speaker_pred,
-                                                                                   labels=true_speaker,name='cross_entrooy_speaker')
+                                                                                   labels=true_speaker,
+                                                                                   name='cross_entrooy_speaker')
             cross_entropy_sentence = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=response,
                                                                                     labels=labels,
                                                                                     name="cross_entropy_sents")
             cross_entropy_speaker = tf.reduce_mean(cross_entropy_speaker)
 
-            cross_entropy_sentence = tf.multiply(cross_entropy_sentence, self._weight)  #batch_size * sents_size
+            cross_entropy_sentence = tf.multiply(cross_entropy_sentence, self._weight)  # batch_size * sents_size
 
             cross_entropy_sentence = tf.reduce_sum(cross_entropy_sentence, axis=1)
             weight_sum = tf.reduce_sum(self._weight, axis=1)
@@ -375,7 +384,7 @@ class MultiRolesModel():
                 cross_entropy_sentence = cross_entropy_sentence * self.rl_reward
             cross_entropy_sentence_sum = tf.reduce_mean(cross_entropy_sentence, name="cross_entropy_sum")
 
-            self.loss = cross_entropy_sentence_sum #+ cross_entropy_speaker
+            self.loss = cross_entropy_sentence_sum  # + cross_entropy_speaker
             # self.loss = 0.4*cross_entropy_sentence_sum + 0.6*cross_entropy_speaker
         grads_and_vars = []
         # grads_and_vars=self._opt.compute_gradients(self.loss)
@@ -507,7 +516,7 @@ class MultiRolesModel():
             try:
                 loss, _, summary = sess.run(output_list, feed_dict=feed_dict)
             except:
-                 pdb.set_trace()
+                pdb.set_trace()
 
             return loss, _, summary
         if step_type == 'test':
@@ -515,14 +524,14 @@ class MultiRolesModel():
             try:
                 loss, response, summary, next_speakers_vector = sess.run(output_list, feed_dict=feed_dict)
             except:
-                 pdb.set_trace()
+                pdb.set_trace()
             return loss, response, summary, next_speakers_vector
         if step_type == 'rl_compute':
-            output_list = [ self.context_vector]
+            output_list = [self.context_vector]
             try:
-                context_vector=sess.run(output_list, feed_dict=feed_dict)
+                context_vector = sess.run(output_list, feed_dict=feed_dict)
             except:
-                 pdb.set_trace()
+                pdb.set_trace()
             return context_vector
         if step_type == 'rl_learn':
             # pdb.set_trace()
@@ -533,4 +542,3 @@ class MultiRolesModel():
 
         print('step_type is wrong!>>>')
         return None
-
