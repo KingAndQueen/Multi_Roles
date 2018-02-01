@@ -101,7 +101,7 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
                 eval_losses.append(eval_loss_)
             test_summary_writer.add_summary(summary_eval)
             eval_loss=float(sum(eval_losses)) / len(eval_losses)
-            eval_losses_all.append(eval_loss)
+
             print('evaluation loss:', eval_loss)
             if eval_loss<300 and train_loss_ <300:
                 print('train perplex:',exp(train_loss_))
@@ -114,6 +114,7 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
             if len(eval_losses_all) > config.stop_limit - 1 and eval_loss > max(eval_losses_all[-1 * config.stop_limit:]):
                 print('----End training for evaluation increase----')
                 break
+            eval_losses_all.append(eval_loss)
         current_step += 1
         analyze.record_result(config, current_step, eval_loss, loss)
 
