@@ -43,8 +43,8 @@ def data_process(config, vocabulary=None):
         vocabulary = Multi_Roles_Data.Vocab()
     train_data, valid_data, test_data = Multi_Roles_Data.get_data(config.data_dir, vocabulary, config.sentence_size,
                                                                   config.roles_number, config.rl)
-    # pre_train_data = Multi_Roles_Data.read_tt_data(config.data_dir, vocabulary, config.sentence_size)
-    pre_train_data =[]
+    pre_train_data = Multi_Roles_Data.read_tt_data(config.data_dir, vocabulary, config.sentence_size)
+    # pre_train_data =[]
     Multi_Roles_Data.get_humorous_scene_rl(config.data_dir, vocabulary, config.sentence_size)
     print('data processed,vocab size:', vocabulary.vocab_size)
     Multi_Roles_Data.store_vocab(vocabulary, config.data_dir)
@@ -200,7 +200,7 @@ def main(_):
         else:
             print("Created model with fresh parameters....")
             sess.run(tf.global_variables_initializer())
-        # train_model(sess, model, analyze, pre_train_data, valid_data,pretrain_epoch=10)
+        train_model(sess, model, analyze, pre_train_data, valid_data,pretrain_epoch=10)
         train_model(sess, model, analyze, train_data, valid_data)
         del model
     if config.model_type == 'test' or config.model_type=='train':
