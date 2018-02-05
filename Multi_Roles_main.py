@@ -48,9 +48,9 @@ def data_process(config, vocabulary=None):
     Multi_Roles_Data.get_humorous_scene_rl(config.data_dir, vocabulary, config.sentence_size)
     print('data processed,vocab size:', vocabulary.vocab_size)
     Multi_Roles_Data.store_vocab(vocabulary, config.data_dir)
-    # all_data = train_data + valid_data + test_data
-    # train_data, eval_test_data = model_selection.train_test_split(all_data, test_size=0.2)
-    # valid_data, test_data = model_selection.train_test_split(eval_test_data, test_size=0.5)
+    all_data = train_data + valid_data + test_data
+    train_data, eval_test_data = model_selection.train_test_split(all_data, test_size=0.2)
+    valid_data, test_data = model_selection.train_test_split(eval_test_data, test_size=0.5)
 
     return train_data, valid_data, test_data, vocabulary, pre_train_data
 
@@ -202,11 +202,12 @@ def main(_):
             sess.run(tf.global_variables_initializer())
         train_model(sess, model, analyze, pre_train_data, valid_data,pretrain_epoch=10)
         train_model(sess, model, analyze, train_data, valid_data)
-        del model
-    if config.model_type == 'test' or config.model_type=='train':
+        config.model_type = 'test'
+        test_model(sess, model, analyze, test_data, vocab)
+
+    if config.model_type == 'test' :
         print('establish the model...')
         # config.batch_size = len(test_data)
-        config.model_type='test'
         model = Multi_Roles_Model.MultiRolesModel(config, vocab)
         analyze = Multi_Roles_Analyze.Multi_Roles_Analyze(config)
         print('Reload model from checkpoints.....')
