@@ -88,12 +88,12 @@ class MultiRolesModel():
         #
         # }
         monica_encoder, monica_state = _encoding_roles(Monica_emb,
-                                                       'Monica',1)  # monica_sate.shape=layers*[batch_size,neurons]
-        joey_encoder, joey_state = _encoding_roles(Joey_emb, 'Joey',1)
-        chandler_encoder, chandler_state = _encoding_roles(Chandler_emb, 'Chandler',1)
-        phoebe_encoder, phoebe_state = _encoding_roles(Phoebe_emb, 'Phoebe',2)
-        rachel_encoder, rachel_state = _encoding_roles(Rachel_emb, 'Rachel',2)
-        ross_encoder, ross_state = _encoding_roles(Ross_emb, 'Ross',2)
+                                                       'Monica',0)  # monica_sate.shape=layers*[batch_size,neurons]
+        joey_encoder, joey_state = _encoding_roles(Joey_emb, 'Joey',0)
+        chandler_encoder, chandler_state = _encoding_roles(Chandler_emb, 'Chandler',0)
+        phoebe_encoder, phoebe_state = _encoding_roles(Phoebe_emb, 'Phoebe',1)
+        rachel_encoder, rachel_state = _encoding_roles(Rachel_emb, 'Rachel',1)
+        ross_encoder, ross_state = _encoding_roles(Ross_emb, 'Ross',1)
         others_encoder, others_state = _encoding_roles(others_emb, 'others',2)
 
         monica_state = tf.expand_dims(tf.stack(monica_state), 2)  # monica_sate.shape=[layers,batch_size,1,neurons]
@@ -108,7 +108,7 @@ class MultiRolesModel():
             2)  # all_roles_sate.shape=[layers,batch_size,roles_number,neurons] order by namelist
 
         with tf.variable_scope('encoding_context'):
-          with tf.device('/device:GPU:1'):
+          with tf.device('/device:GPU:2'):
             # encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons)
             encoding_single_layer = tf.nn.rnn_cell.LSTMCell(config.neurons)
             encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
@@ -270,7 +270,7 @@ class MultiRolesModel():
         def speaker_beam(embedding_word, encoder_state, ans_emb, beam_size=10, model_type='train',
                          output_projection=None):
             with tf.variable_scope('speaker'):
-              with tf.device('/device:GPU:1'):
+              with tf.device('/device:GPU:2'):
                 # pdb.set_trace()
                 num_symbols = embedding_word.get_shape()[0].value
                 embedding_size = embedding_word.get_shape()[1].value
@@ -362,6 +362,7 @@ class MultiRolesModel():
             #         response=[]
 
         with tf.variable_scope('loss_function'):
+          with tf.device('/device:GPU:2'):
             # Our targets are decoder inputs shifted by one.
             # targets = [self.decoder_inputs[i + 1]
             #           for i in xrange(len(self.decoder_inputs) - 1)]
