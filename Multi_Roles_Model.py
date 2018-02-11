@@ -108,6 +108,7 @@ class MultiRolesModel():
             2)  # all_roles_sate.shape=[layers,batch_size,roles_number,neurons] order by namelist
 
         with tf.variable_scope('encoding_context'):
+          with tf.device('/device:GPU:1'):
             # encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons)
             encoding_single_layer = tf.nn.rnn_cell.LSTMCell(config.neurons)
             encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
@@ -269,6 +270,7 @@ class MultiRolesModel():
         def speaker_beam(embedding_word, encoder_state, ans_emb, beam_size=10, model_type='train',
                          output_projection=None):
             with tf.variable_scope('speaker'):
+              with tf.device('/device:GPU:1'):
                 # pdb.set_trace()
                 num_symbols = embedding_word.get_shape()[0].value
                 embedding_size = embedding_word.get_shape()[1].value
