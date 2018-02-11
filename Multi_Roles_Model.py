@@ -66,8 +66,9 @@ class MultiRolesModel():
             # word_embedding may be too big for name
             name_list_emb = [tf.nn.embedding_lookup(self._name_embedding, word) for word in _name_list]
 
-        def _encoding_roles(person_emb, name=''):
-            with tf.variable_scope('encoding_role_' + name):
+        def _encoding_roles(person_emb, name='',GPU_id=0):
+            with tf.device('/device:GPU:%d' %GPU_id):
+              with tf.variable_scope('encoding_role_' + name):
                 encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons, reuse=tf.get_variable_scope().reuse)
                 encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
                 encoding_cell = tf.contrib.rnn.DropoutWrapper(encoding_cell, 0.5, 0.5, 0.5)
@@ -87,13 +88,13 @@ class MultiRolesModel():
         #
         # }
         monica_encoder, monica_state = _encoding_roles(Monica_emb,
-                                                       'Monica')  # monica_sate.shape=layers*[batch_size,neurons]
-        joey_encoder, joey_state = _encoding_roles(Joey_emb, 'Joey')
-        chandler_encoder, chandler_state = _encoding_roles(Chandler_emb, 'Chandler')
-        phoebe_encoder, phoebe_state = _encoding_roles(Phoebe_emb, 'Phoebe')
-        rachel_encoder, rachel_state = _encoding_roles(Rachel_emb, 'Rachel')
-        ross_encoder, ross_state = _encoding_roles(Ross_emb, 'Ross')
-        others_encoder, others_state = _encoding_roles(others_emb, 'others')
+                                                       'Monica',0)  # monica_sate.shape=layers*[batch_size,neurons]
+        joey_encoder, joey_state = _encoding_roles(Joey_emb, 'Joey',0)
+        chandler_encoder, chandler_state = _encoding_roles(Chandler_emb, 'Chandler',0)
+        phoebe_encoder, phoebe_state = _encoding_roles(Phoebe_emb, 'Phoebe',1)
+        rachel_encoder, rachel_state = _encoding_roles(Rachel_emb, 'Rachel',1)
+        ross_encoder, ross_state = _encoding_roles(Ross_emb, 'Ross',1)
+        others_encoder, others_state = _encoding_roles(others_emb, 'others',1)
 
         monica_state = tf.expand_dims(tf.stack(monica_state), 2)  # monica_sate.shape=[layers,batch_size,1,neurons]
         joey_state = tf.expand_dims(tf.stack(joey_state), 2)
