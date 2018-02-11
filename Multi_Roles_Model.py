@@ -91,10 +91,10 @@ class MultiRolesModel():
                                                        'Monica',1)  # monica_sate.shape=layers*[batch_size,neurons]
         joey_encoder, joey_state = _encoding_roles(Joey_emb, 'Joey',1)
         chandler_encoder, chandler_state = _encoding_roles(Chandler_emb, 'Chandler',1)
-        phoebe_encoder, phoebe_state = _encoding_roles(Phoebe_emb, 'Phoebe',1)
-        rachel_encoder, rachel_state = _encoding_roles(Rachel_emb, 'Rachel',1)
-        ross_encoder, ross_state = _encoding_roles(Ross_emb, 'Ross',1)
-        others_encoder, others_state = _encoding_roles(others_emb, 'others',1)
+        phoebe_encoder, phoebe_state = _encoding_roles(Phoebe_emb, 'Phoebe',2)
+        rachel_encoder, rachel_state = _encoding_roles(Rachel_emb, 'Rachel',2)
+        ross_encoder, ross_state = _encoding_roles(Ross_emb, 'Ross',2)
+        others_encoder, others_state = _encoding_roles(others_emb, 'others',2)
 
         monica_state = tf.expand_dims(tf.stack(monica_state), 2)  # monica_sate.shape=[layers,batch_size,1,neurons]
         joey_state = tf.expand_dims(tf.stack(joey_state), 2)
@@ -516,10 +516,10 @@ class MultiRolesModel():
                      self._speaker: data_dict['speaker']}
         if step_type == 'train':
             output_list = [self.loss, self.train_op, self.merged]
-            try:
-                loss, _, summary = sess.run(output_list, feed_dict=feed_dict)
-            except:
-                pdb.set_trace()
+            # try:
+            loss, _, summary = sess.run(output_list, feed_dict=feed_dict)
+            # except:
+            #     pdb.set_trace()
 
             return loss, _, summary
         if step_type == 'test':
