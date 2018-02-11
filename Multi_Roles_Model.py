@@ -88,9 +88,9 @@ class MultiRolesModel():
         #
         # }
         monica_encoder, monica_state = _encoding_roles(Monica_emb,
-                                                       'Monica',0)  # monica_sate.shape=layers*[batch_size,neurons]
-        joey_encoder, joey_state = _encoding_roles(Joey_emb, 'Joey',0)
-        chandler_encoder, chandler_state = _encoding_roles(Chandler_emb, 'Chandler',0)
+                                                       'Monica',1)  # monica_sate.shape=layers*[batch_size,neurons]
+        joey_encoder, joey_state = _encoding_roles(Joey_emb, 'Joey',1)
+        chandler_encoder, chandler_state = _encoding_roles(Chandler_emb, 'Chandler',1)
         phoebe_encoder, phoebe_state = _encoding_roles(Phoebe_emb, 'Phoebe',1)
         rachel_encoder, rachel_state = _encoding_roles(Rachel_emb, 'Rachel',1)
         ross_encoder, ross_state = _encoding_roles(Ross_emb, 'Ross',1)
