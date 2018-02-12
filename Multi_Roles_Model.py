@@ -390,25 +390,25 @@ class MultiRolesModel():
 
             self.loss = cross_entropy_sentence_sum  # + cross_entropy_speaker
             # self.loss = 0.4*cross_entropy_sentence_sum + 0.6*cross_entropy_speaker
-        with tf.device('/device:GPU:2'):
-            grads_and_vars = []
+
+        grads_and_vars = []
             # grads_and_vars=self._opt.compute_gradients(self.loss)
-            grads_and_vars.append(self._opt.compute_gradients(cross_entropy_sentence_sum))
-            grads_and_vars.append(self._opt.compute_gradients(cross_entropy_speaker))
-            grads_and_vars = self._combine_gradients(grads_and_vars)
+        grads_and_vars.append(self._opt.compute_gradients(cross_entropy_sentence_sum))
+        grads_and_vars.append(self._opt.compute_gradients(cross_entropy_speaker))
+        grads_and_vars = self._combine_gradients(grads_and_vars)
 
-            grads_and_vars = [(tf.clip_by_norm(g, self._max_grad_norm), v) for g, v in grads_and_vars]
-            grads_and_vars = [(add_gradient_noise(g), v) for g, v in grads_and_vars]
+        grads_and_vars = [(tf.clip_by_norm(g, self._max_grad_norm), v) for g, v in grads_and_vars]
+        grads_and_vars = [(add_gradient_noise(g), v) for g, v in grads_and_vars]
 
-            self.train_op = self._opt.apply_gradients(grads_and_vars=grads_and_vars, name='train_op')
+        self.train_op = self._opt.apply_gradients(grads_and_vars=grads_and_vars, name='train_op')
 
-            self.saver = tf.train.Saver(tf.global_variables(), max_to_keep=1)
+        self.saver = tf.train.Saver(tf.global_variables(), max_to_keep=1)
 
-            self.response = tf.argmax(response, axis=2)
-            self.loss_summary = tf.summary.scalar("loss", self.loss)
-            self.learning_rate_summary = tf.summary.scalar("learning_rate",
+        self.response = tf.argmax(response, axis=2)
+        self.loss_summary = tf.summary.scalar("loss", self.loss)
+        self.learning_rate_summary = tf.summary.scalar("learning_rate",
                                                            self._learn_rate)
-            self.merged = tf.summary.merge_all()
+        self.merged = tf.summary.merge_all()
 
     def _combine_gradients(self, tower_grads):
         combine_grads = []
