@@ -91,10 +91,10 @@ class MultiRolesModel():
                                                        'Monica',0)  # monica_sate.shape=layers*[batch_size,neurons]
         joey_encoder, joey_state = _encoding_roles(Joey_emb, 'Joey',0)
         chandler_encoder, chandler_state = _encoding_roles(Chandler_emb, 'Chandler',0)
-        phoebe_encoder, phoebe_state = _encoding_roles(Phoebe_emb, 'Phoebe',1)
+        phoebe_encoder, phoebe_state = _encoding_roles(Phoebe_emb, 'Phoebe',0)
         rachel_encoder, rachel_state = _encoding_roles(Rachel_emb, 'Rachel',1)
         ross_encoder, ross_state = _encoding_roles(Ross_emb, 'Ross',1)
-        others_encoder, others_state = _encoding_roles(others_emb, 'others',2)
+        others_encoder, others_state = _encoding_roles(others_emb, 'others',1)
 
         monica_state = tf.expand_dims(tf.stack(monica_state), 2)  # monica_sate.shape=[layers,batch_size,1,neurons]
         joey_state = tf.expand_dims(tf.stack(joey_state), 2)
@@ -108,7 +108,7 @@ class MultiRolesModel():
             2)  # all_roles_sate.shape=[layers,batch_size,roles_number,neurons] order by namelist
 
         with tf.variable_scope('encoding_context'):
-          with tf.device('/device:GPU:2'):
+          with tf.device('/device:GPU:1'):
             # encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons)
             encoding_single_layer = tf.nn.rnn_cell.LSTMCell(config.neurons)
             encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
