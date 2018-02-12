@@ -93,8 +93,8 @@ class MultiRolesModel():
         chandler_encoder, chandler_state = _encoding_roles(Chandler_emb, 'Chandler',0)
         phoebe_encoder, phoebe_state = _encoding_roles(Phoebe_emb, 'Phoebe',0)
         rachel_encoder, rachel_state = _encoding_roles(Rachel_emb, 'Rachel',0)
-        ross_encoder, ross_state = _encoding_roles(Ross_emb, 'Ross',0)
-        others_encoder, others_state = _encoding_roles(others_emb, 'others',0)
+        ross_encoder, ross_state = _encoding_roles(Ross_emb, 'Ross',1)
+        others_encoder, others_state = _encoding_roles(others_emb, 'others',1)
 
         monica_state = tf.expand_dims(tf.stack(monica_state), 2)  # monica_sate.shape=[layers,batch_size,1,neurons]
         joey_state = tf.expand_dims(tf.stack(joey_state), 2)
