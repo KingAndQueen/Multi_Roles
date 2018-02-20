@@ -68,10 +68,10 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
                 name = 'others'
             # name_id=vocabulary.word_to_index(name)#for word in name.split()]
             sentence = lines[lines.index(':') + 1:]
-            #sentence = sentence.split()
             sentence = re.sub(unlegal, ' ', sentence)
             sentence = sentence.lower()
             sentence=nltk.word_tokenize(sentence)
+            # sentence = sentence.split()
             sentence_id = [vocabulary.word_to_index(word) for word in sentence]
             sentence_id = sentence_id[:sentence_size - 1]
             sentence_id.append(vocabulary.word_to_index('<eos>'))
@@ -163,9 +163,9 @@ def get_humorous_scene_rl(data_path, vocabulary, sentence_size):
                     name = 'others'
                     # name_id=vocabulary.word_to_index(name)#for word in name.split()]
                 sentence = lines[lines.index(':') + 1:]
-                # sentence = sentence.split()
                 sentence=sentence.lower()
                 sentence = nltk.word_tokenize(sentence)
+                # sentence = sentence.split()
                 sentence_id = [vocabulary.word_to_index(word) for word in sentence]
                 sentence_id = sentence_id[:sentence_size - 1]
                 sentence_id.append(vocabulary.word_to_index('<eos>'))
