@@ -69,24 +69,24 @@ class Multi_Roles_Analyze():
                 print('predict:%s' % value)
                 print('--------------------')
 
-    def record_result(self, config, current_step=-1, eval_loss=-1, loss=-1, file_path='./result_data.txt'):
+    def record_result(self, config, current_step=-1, train_loss=-1, eval_loss=-1, file_path='./result_data.txt'):
         if not os.path.isfile(file_path):
             result_file = open(file_path, 'a+')
             result_file.write(
                 'layers,neurons,batch_size,epoch,interpose,'
                 'learn_rate,learning_rate_decay_factor,max_grad_norm,'
-                'stop_limit,stop_step,eval_loss,train_loss,eckpoints_dir')
+                'stop_limit,stop_step,train_loss,eval_loss,eckpoints_dir')
             result_file.flush()
-        else:
-            if current_step == -1:
+
+        if current_step == -1:
                 return
-            result_file = open('./result_data.txt', 'a+')
-            result_file.write("%d,%d,%d,%d,%f,%f,%f,%d,%d,%d,%d,%d,%s\n"
+        result_file = open('./result_data.txt', 'a+')
+        result_file.write("%d,%d,%d,%d,%f,%f,%f,%d,%d,%d,%d,%d,%s\n"
                               % (config.layers, config.neurons, config.batch_size,
                                  config.epoch, config.interpose, config.learn_rate,
                                  config.learning_rate_decay_factor, config.max_grad_norm,
-                                 config.stop_limit, current_step, eval_loss, loss, config.checkpoints_dir))
-            result_file.flush()
+                                 config.stop_limit, current_step, train_loss, eval_loss, config.checkpoints_dir))
+        result_file.flush()
         result_file.close()
 
     def show_result(self, seq, vocab):

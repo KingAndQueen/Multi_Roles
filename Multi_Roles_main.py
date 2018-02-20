@@ -68,8 +68,6 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
     checkpoint_path = os.path.join(config.checkpoints_dir, 'MultiRoles.ckpt')
     train_losses = []
 
-    analyze.record_result(config)
-    loss = float()
     eval_loss = float()
     if pretrain_epoch>0:
         epoch=pretrain_epoch
@@ -116,7 +114,7 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
                 break
             eval_losses_all.append(eval_loss)
         current_step += 1
-        analyze.record_result(config, current_step, eval_loss, loss)
+    analyze.record_result(config, current_step, train_loss_,eval_loss)
 
 
 def test_model(sess, model, analyze, test_data, vocab):
