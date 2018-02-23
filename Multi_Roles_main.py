@@ -21,7 +21,7 @@ flags.DEFINE_string('device_type', 'gpu', 'device for computing')
 flags.DEFINE_boolean('pretrain',False,'whether to pre-train the model')
 flags.DEFINE_boolean('rl', False, 'rl sign for model')
 
-flags.DEFINE_integer('stop_limit', 5, 'number of evaluation loss is greater than train loss  ')
+flags.DEFINE_integer('stop_limit', 2, 'number of evaluation loss is greater than train loss  ')
 flags.DEFINE_integer('layers', 3, 'levels of rnn or cnn')
 flags.DEFINE_integer('neurons', 800, 'neuron number of one level')
 flags.DEFINE_integer('batch_size', 128, 'batch_size')
@@ -108,7 +108,7 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
                 print('evaluation perplex:',exp(eval_loss))
             print('saving current step %d checkpoints....' % current_step)
             model.saver.save(sess, checkpoint_path, global_step=current_step)
-            if len(eval_losses_all) > 2 and eval_loss > eval_losses_all[-1]:
+            if len(eval_losses_all) > 0 and eval_loss > eval_losses_all[-1]:
                 print('decay learning rate....')
                 sess.run(model.learning_rate_decay_op)
             if len(eval_losses_all) > config.stop_limit - 1 and eval_loss > max(eval_losses_all[-1 * config.stop_limit:]):
