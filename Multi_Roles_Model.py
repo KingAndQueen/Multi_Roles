@@ -71,7 +71,7 @@ class MultiRolesModel():
               with tf.variable_scope('encoding_role_' + name):
                 encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons, reuse=tf.get_variable_scope().reuse)
                 encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
-                encoding_cell = tf.contrib.rnn.DropoutWrapper(encoding_cell, 0.5, 0.5, 0.5)
+                encoding_cell = tf.contrib.rnn.DropoutWrapper(encoding_cell, 0.5, 1, 0.5)
                 # for future test
                 output, state_fw, state_bw = rnn.static_bidirectional_rnn(cell_fw=encoding_cell, cell_bw=encoding_cell,
                                                                           inputs=person_emb, dtype=tf.float32)
@@ -202,7 +202,7 @@ class MultiRolesModel():
                     # $ cell_de = single_cell_de
                     # if self._layers > 1:
                     cell_de = tf.nn.rnn_cell.MultiRNNCell([single_cell_de] * self._layers)
-                    cell_de = tf.contrib.rnn.DropoutWrapper(cell_de, 0.5, 0.5, 0.5)
+                    cell_de = tf.contrib.rnn.DropoutWrapper(cell_de, 0.5, 1, 0.5)
                     # cell_de = core_rnn_cell.OutputProjectionWrapper(cell_de, self._vocab_size)
                     outputs = []
                     prev = None
