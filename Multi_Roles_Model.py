@@ -39,12 +39,15 @@ class MultiRolesModel():
         self._build_inputs()
         self.rl = config.rl
         self._my_embedding = my_embedding
+        self.trained_embedding=config.trained_emb
         with tf.variable_scope('embedding'):
-            # self._word_embedding=tf.get_variable('embedding_word',shape=[self._vocab.vocab_size, config.neurons],
-            #			 initializer=tf.constant_initializer(value=self._my_embedding,dtype=tf.float32),trainable=True)
-            self._word_embedding = tf.get_variable(name='embedding_word',
+            if self.trained_embedding:
+                self._word_embedding=tf.get_variable('embedding_word',shape=[self._vocab.vocab_size, config.neurons],
+            			 initializer=tf.constant_initializer(value=self._my_embedding,dtype=tf.float32),trainable=True)
+            else:
+                self._word_embedding = tf.get_variable(name='embedding_word',
                                                    shape=[self._vocab.vocab_size, config.neurons])
-            self._name_embedding = tf.get_variable(name='emnbedding_name',
+            self._name_embedding = tf.get_variable(name='embedding_name',
                                                    shape=[self._roles_number + 1, config.neurons])
             _Monica = tf.unstack(self._Monica, axis=1)
             Monica_emb = [tf.nn.embedding_lookup(self._word_embedding, word) for word in _Monica]

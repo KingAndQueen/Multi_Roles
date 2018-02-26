@@ -20,7 +20,7 @@ flags.DEFINE_string('summary_path', './summary', 'path of summary for tensorboar
 flags.DEFINE_string('device_type', 'gpu', 'device for computing')
 flags.DEFINE_boolean('pretrain',False,'whether to pre-train the model')
 flags.DEFINE_boolean('rl', False, 'rl sign for model')
-
+flags.DEFINE_boolean('trained_emb',True,'whether to use trained embedding vector')
 flags.DEFINE_integer('stop_limit', 2, 'number of evaluation loss is greater than train loss  ')
 flags.DEFINE_integer('layers', 3, 'levels of rnn or cnn')
 flags.DEFINE_integer('neurons', 100, 'neuron number of one level')
@@ -187,11 +187,14 @@ def main(_):
     sess = tf.Session()
     print('pretrain data set %d, train data set %d, valid data set %d, test data set %d' % (
         len(pre_train_data), len(train_data), len(valid_data), len(test_data)))
-    # my_embedding = pkl.load(open('my_embedding.pkl', 'rb'))
+    if config.trained_emb:
+        trained_embedding = pkl.load(open('my_embedding.pkl', 'rb'))
     if config.model_type == 'train':
         print('establish the model...')
-        model = Multi_Roles_Model.MultiRolesModel(config, vocab)
-        # model = Multi_Roles_Model.MultiRolesModel(config, vocab, my_embedding=my_embedding)
+        if config.trained_emb:
+            model = Multi_Roles_Model.MultiRolesModel(config, vocab, my_embedding=trained_embedding)
+        else:
+            model = Multi_Roles_Model.MultiRolesModel(config, vocab)
         analyze = Multi_Roles_Analyze.Multi_Roles_Analyze(config)
         ckpt = tf.train.get_checkpoint_state(config.checkpoints_dir)
         if ckpt and tf.train.checkpoint_exists(ckpt.model_checkpoint_path):
