@@ -188,7 +188,7 @@ def main(_):
     print('pretrain data set %d, train data set %d, valid data set %d, test data set %d' % (
         len(pre_train_data), len(train_data), len(valid_data), len(test_data)))
     if config.trained_emb:
-        trained_embedding = pkl.load(open('my_embedding.pkl', 'rb'))
+        trained_embedding = pkl.load(open(config.data_dir+'my_embedding.pkl', 'rb'))
     if config.model_type == 'train':
         print('establish the model...')
         if config.trained_emb:
