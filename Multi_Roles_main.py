@@ -21,14 +21,14 @@ flags.DEFINE_string('device_type', 'gpu', 'device for computing')
 flags.DEFINE_boolean('pretrain',False,'whether to pre-train the model')
 flags.DEFINE_boolean('rl', False, 'rl sign for model')
 flags.DEFINE_boolean('trained_emb',True,'whether to use trained embedding vector')
-flags.DEFINE_integer('stop_limit', 3, 'number of evaluation loss is greater than train loss  ')
+flags.DEFINE_integer('stop_limit', 5, 'number of evaluation loss is greater than train loss  ')
 flags.DEFINE_integer('layers', 3, 'levels of rnn or cnn')
 flags.DEFINE_integer('neurons', 100, 'neuron number of one level')
 flags.DEFINE_integer('batch_size', 128, 'batch_size')
 flags.DEFINE_integer('roles_number', 7, 'number of roles in the data')
 flags.DEFINE_integer('epoch', 5000, 'training times')
 flags.DEFINE_integer('check_epoch',200, 'evaluation times')
-flags.DEFINE_integer('sentence_size', 20, 'length of sentence')
+flags.DEFINE_integer('sentence_size', 20, 'length of word in a sentence')
 flags.DEFINE_float('interpose', 0.5, 'value for gru gate to decide interpose')
 flags.DEFINE_float('learn_rate', 0.01, 'value for gru gate to decide interpose')
 flags.DEFINE_float("learning_rate_decay_factor", 0.5, 'if loss not decrease, multiple the lr with factor')
@@ -51,8 +51,8 @@ def data_process(config, vocabulary=None):
     print('data processed,vocab size:', vocabulary.vocab_size)
     Multi_Roles_Data.store_vocab(vocabulary, config.data_dir)
     all_data = train_data + valid_data + test_data
-    train_data, eval_test_data = model_selection.train_test_split(all_data, test_size=0.2)
-    valid_data, test_data = model_selection.train_test_split(eval_test_data, test_size=0.5)
+    train_data, eval_test_data = model_selection.train_test_split(all_data, test_size=0.1)
+    valid_data, test_data = model_selection.train_test_split(eval_test_data, test_size=0.1)
 
     return train_data, valid_data, test_data, vocabulary, pre_train_data
 
