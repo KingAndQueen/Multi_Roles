@@ -108,21 +108,32 @@ class MultiRolesModel():
         others_state = tf.expand_dims(tf.stack(others_state), 2)
         state_all_roles = tf.concat(
             [chandler_state, joey_state, monica_state, phoebe_state, rachel_state, ross_state, others_state],
-            2)  # all_roles_sate.shape=[layers,batch_size,roles_number,neurons] order by namelist
+            2)  # all_roles_state.shape=[layers,batch_size,roles_number,neurons] order by namelist
 
-        with tf.variable_scope('encoding_context'):
+        with tf.variable_scope('rnn_encoding_context'):
           #with tf.device('/device:GPU:1'):
             # encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons)
             encoding_single_layer = tf.nn.rnn_cell.LSTMCell(config.neurons)
             encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
-            context = tf.concat(
-                values=[Chandler_emb, Joey_emb, Monica_emb, Phoebe_emb, Rachel_emb, Ross_emb, others_emb], axis=0)
-            context = tf.unstack(context, axis=0)
+            context = tf.concat(values=[Chandler_emb, Joey_emb, Monica_emb, Phoebe_emb, Rachel_emb, Ross_emb, others_emb], axis=0)
+            # context.shape=[(role_number*sentence_lens),batch_size,neurons]
+            context = tf.unstack(context, axis=0) #context.shape=(role_number*sentence_lens) *[batch_size,neurons]
             # context_encoder, state_fw,state_bw = rnn.static_bidirectional_rnn(encoding_cell, encoding_cell, context,dtype=tf.float32)
             context_encoder, context_state_fw = rnn.static_rnn(encoding_cell, context, dtype=tf.float32)
+          # context_encoder.shape same with context (role_number*sentence_lens) *[batch_size,neurons]
             self.context_vector = context_state_fw
-            top_output_context = [array_ops.reshape(o, [-1, 1, encoding_cell.output_size]) for o in context_encoder]
-            attention_states = array_ops.concat(top_output_context, 1)
+        #     top_output_context = [array_ops.reshape(o, [-1, 1, encoding_cell.output_size]) for o in context_encoder]
+        #     # top_output_context.shape=(role_number*sentence_lens)*[batch,1,neurons]
+        #     attention_states = array_ops.concat(top_output_context, 1)
+        #     #[batch,(role_number*sentence_lens),neurons]
+        #     attention_states_speaker = tf.split(attention_states, [-1, len(Monica_emb)], axis=1)[-1]
+
+        with tf.variable_scope('cnn_encoding_context'):
+            context=tf.stack([Chandler_emb, Joey_emb, Monica_emb, Phoebe_emb, Rachel_emb, Ross_emb, others_emb])
+            context=tf.transpose(context,[2,1,3,0])
+            my_filter=tf.Variable(tf.random_normal([2,self._embedding_size,7,1]))
+            context_cnn=tf.nn.conv2d(context,my_filter,strides=[1,1,1,1],padding='SAME')
+            attention_states_speaker=tf.squeeze(context_cnn)
 
         def _speaker_prediction(next_speaker_emb):
             with tf.variable_scope('speaker_prediction'):
@@ -349,7 +360,7 @@ class MultiRolesModel():
             # decision=tf.sigmoid(tf.add(tf.squeeze(decision_contest),tf.squeeze(gate_decision_lastSpeaker)))
             #    if decision > self._interpose:
 
-            attention_states_speaker = tf.split(attention_states, [-1, len(Monica_emb)], axis=1)[-1]
+
 
             state_all_roles_speaker = tf.multiply(state_all_roles,
                                                   next_speaker)  # state_all_roles_speaker.shape=[layers,batch_size,roles_number,neurons]
