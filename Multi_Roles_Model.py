@@ -10,7 +10,6 @@ import pdb
 
 linear = rnn_cell_impl._linear
 
-
 def add_gradient_noise(t, stddev=1e-3, name=None):
     """
     Adds gradient noise as described in http://arxiv.org/abs/1511.06807 [2]..
@@ -357,11 +356,14 @@ class MultiRolesModel():
             state_all_roles_speaker = tf.reduce_sum(state_all_roles_speaker, 2)
             state_all_roles_speaker = tf.unstack(state_all_roles_speaker)
             # next_speakers=tf.argmax(next_speaker,1)
-
-            # response = speaker_atten(state_all_roles_speaker, attention_states_speaker, answer_emb, self.model_type)
-            #  response = speaker_noatten(state_all_roles_speaker,answer_emb,self.model_type)
-            response = speaker_beam(self._word_embedding, state_all_roles_speaker, answer_emb,
+            if config.attention:
+                response = speaker_atten(state_all_roles_speaker, attention_states_speaker, answer_emb, self.model_type)
+            if not config.attention:
+                if config.beam:
+                    response = speaker_beam(self._word_embedding, state_all_roles_speaker, answer_emb,
                                     model_type=self.model_type)
+                else:
+                    response = speaker_noatten(state_all_roles_speaker, answer_emb, self.model_type)
             #     else:
             #         response=[]
 
