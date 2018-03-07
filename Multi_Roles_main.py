@@ -107,10 +107,11 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
                 print('train perplex:',exp(train_loss_))
                 print('evaluation perplex:',exp(eval_loss))
             print('saving current step %d checkpoints....' % current_step)
-            model.saver.save(sess, checkpoint_path, global_step=current_step)
+            # model.saver.save(sess, checkpoint_path, global_step=current_step)
             if len(eval_losses_all) > 0 and eval_loss > eval_losses_all[-1]:
                 print('decay learning rate....')
                 sess.run(model.learning_rate_decay_op)
+                model.saver.save(sess, checkpoint_path, global_step=current_step)
             if len(eval_losses_all) > config.stop_limit and eval_loss > sum(eval_losses_all[-1 * config.stop_limit:])/config.stop_limit:
                 print('----End training for evaluation increase----')
                 break
