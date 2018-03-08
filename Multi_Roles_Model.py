@@ -7,7 +7,7 @@ from tensorflow.python.ops import rnn
 from tensorflow.python.ops import rnn_cell_impl
 from tensorflow.python.util import nest
 import pdb
-
+SEED = 66478
 linear = rnn_cell_impl._linear
 
 def add_gradient_noise(t, stddev=1e-3, name=None):
@@ -32,7 +32,7 @@ class MultiRolesModel():
         self._interpose = config.interpose
         self._embedding_size = config.neurons
         self._layers = config.layers
-        self._build_vars()
+        self._build_vars(config)
         self.model_type = config.model_type
         self._roles_number = config.roles_number
         self._max_grad_norm = config.max_grad_norm
@@ -131,8 +131,8 @@ class MultiRolesModel():
         with tf.variable_scope('cnn_encoding_context'):
             context=tf.stack([Chandler_emb, Joey_emb, Monica_emb, Phoebe_emb, Rachel_emb, Ross_emb, others_emb])
             context=tf.transpose(context,[2,1,3,0])
-            my_filter=tf.Variable(tf.random_normal([2,self._embedding_size,7,1]))
-            context_cnn=tf.nn.conv2d(context,my_filter,strides=[1,1,1,1],padding='SAME')
+            contex_filter=tf.Variable(tf.random_normal([2,self._embedding_size,7,1]))
+            context_cnn=tf.nn.conv2d(context,contex_filter,strides=[1,1,1,1],padding='SAME')
             attention_states_speaker=tf.squeeze(context_cnn)
 
         def _speaker_prediction(next_speaker_emb):
@@ -358,25 +358,52 @@ class MultiRolesModel():
             # gate_input=tf.transpose(gate_input)
             # decision_contest, state_gate = rnn.static_rnn(cell=gate_GRU,inputs=[gate_input],dtype=tf.float32)
             # decision=tf.sigmoid(tf.add(tf.squeeze(decision_contest),tf.squeeze(gate_decision_lastSpeaker)))
-            #    if decision > self._interpose:
 
 
 
-            state_all_roles_speaker = tf.multiply(state_all_roles,
+
+            state_all_roles_speaker_ = tf.multiply(state_all_roles,
                                                   next_speaker)  # state_all_roles_speaker.shape=[layers,batch_size,roles_number,neurons]
-            state_all_roles_speaker = tf.reduce_sum(state_all_roles_speaker, 2)
-            state_all_roles_speaker = tf.unstack(state_all_roles_speaker)
+            state_all_roles_speaker_matrix = tf.reduce_sum(state_all_roles_speaker_, 2)
+            state_all_roles_speaker = tf.unstack(state_all_roles_speaker_matrix)
             # next_speakers=tf.argmax(next_speaker,1)
-            if config.attention:
-                response = speaker_atten(state_all_roles_speaker, attention_states_speaker, answer_emb, self.model_type)
-            if not config.attention:
-                if config.beam:
-                    response = speaker_beam(self._word_embedding, state_all_roles_speaker, answer_emb,
-                                    model_type=self.model_type)
+
+            #state_all_roles_speaker_matrix.shape=[batch,neurons,layers]
+            state_concate=tf.transpose(state_all_roles,[1,2,3,0])
+            state_concate=tf.reshape(state_concate,[config.batch_size,config.roles_number,-1])
+            state_concate=tf.expand_dims(state_concate,-1)
+            state_concate=tf.tile(state_concate,[1,1,1,config.sentence_size])
+            state_concate = tf.transpose(state_concate,[0,3,2,1])
+            answer_concate=tf.stack(answer_emb)
+            answer_concate=tf.expand_dims(answer_concate,-1)
+            answer_concate=tf.tile(answer_concate,[1,1,1,config.roles_number])
+            answer_concate=tf.transpose(answer_concate,[1,0,2,3])
+            state_answer_concate=tf.concat([state_concate,answer_concate],2)
+
+
+            state_filter = tf.Variable(tf.random_normal([2,self._embedding_size, 7,1]))
+            state_conv = tf.nn.conv2d(state_answer_concate, state_filter, strides=[1, 1, 1, 1], padding='SAME')
+            state_pool=tf.nn.max_pool(state_conv,[1,2,2,1],[1,1,4,1],'SAME')
+
+            state_emb=tf.squeeze(state_pool)
+            state_emb=tf.transpose(state_emb,[1,0,2])
+            state_emb=tf.unstack(state_emb,axis=0)
+            answer_emb=state_emb
+
+            # state_emb=tf.nn.relu(tf.matmul(state_pool, fc1_weights) + fc1_biases)
+            # Add a 50% dropout during training only. Dropout also scales
+            # activations such that no rescaling is needed at evaluation time.
+
+            if config.beam:
+                response = speaker_beam(self._word_embedding, state_all_roles_speaker, answer_emb,
+                                                model_type=self.model_type)
+            else:
+                if config.attention:
+                    response = speaker_atten(state_all_roles_speaker, attention_states_speaker, answer_emb,
+                                             self.model_type)
                 else:
                     response = speaker_noatten(state_all_roles_speaker, answer_emb, self.model_type)
-            #     else:
-            #         response=[]
+
 
         with tf.variable_scope('loss_function'):
          # with tf.device('/device:GPU:1'):
@@ -460,12 +487,17 @@ class MultiRolesModel():
         self._name_list = tf.placeholder(tf.int32, [self._batch_size, self._roles_number], name='name_list')
         self._speaker = tf.placeholder(tf.int32, [self._batch_size], name='true_speaker')
 
-    def _build_vars(self):
+    def _build_vars(self,config):
 
         self.rl_reward = tf.get_variable('rl_reward', [1], dtype=tf.float32, trainable=False)
-
+        # fc1_weights = tf.Variable(  # fully connected.
+        #     tf.truncated_normal([50,config.neurons],
+        #                         stddev=0.1,
+        #                         seed=SEED
+        #                         ))
+        # fc1_biases = tf.Variable(tf.constant(0.1, shape=[config.neurons], dtype=tf.float32))
         # init=tf.random_normal_initializer(stddev=0.1)
-        # self._w_context=init([1,self._batch_size])
+        self._w_context= tf.Variable(tf.truncated_normal([config.batch_size,1,1,config.sentence_size],stddev=0.1,seed=SEED ))
         # self._w_attention=init([1,self._batch_size])
         #   self._w_transt=init([self._embedding_size,2*self._embedding_size])
 
