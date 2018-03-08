@@ -418,9 +418,7 @@ class MultiRolesModel():
         grads_and_vars = [(add_gradient_noise(g), v) for g, v in grads_and_vars]
 
         self.train_op = self._opt.apply_gradients(grads_and_vars=grads_and_vars, name='train_op')
-
         self.saver = tf.train.Saver(tf.global_variables(), max_to_keep=1)
-
         self.response = tf.argmax(response, axis=2)
         self.loss_summary = tf.summary.scalar("loss", self.loss)
         self.learning_rate_summary = tf.summary.scalar("learning_rate",
