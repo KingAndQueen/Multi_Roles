@@ -7,7 +7,7 @@ from tensorflow.python.ops import rnn
 from tensorflow.python.ops import rnn_cell_impl
 from tensorflow.python.util import nest
 import pdb
-SEED = 66478
+# SEED = 66478
 linear = rnn_cell_impl._linear
 
 def add_gradient_noise(t, stddev=1e-3, name=None):
@@ -497,7 +497,7 @@ class MultiRolesModel():
         #                         ))
         # fc1_biases = tf.Variable(tf.constant(0.1, shape=[config.neurons], dtype=tf.float32))
         # init=tf.random_normal_initializer(stddev=0.1)
-        self._w_context= tf.Variable(tf.truncated_normal([config.batch_size,1,1,config.sentence_size],stddev=0.1,seed=SEED ))
+        # self._w_context= tf.Variable(tf.truncated_normal([config.batch_size,1,1,config.sentence_size],stddev=0.1,seed=SEED ))
         # self._w_attention=init([1,self._batch_size])
         #   self._w_transt=init([self._embedding_size,2*self._embedding_size])
 
