@@ -115,11 +115,11 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
             #     sess.run(model.learning_rate_decay_op)
             #     model.saver.save(sess, checkpoint_path, global_step=current_step)
             if len(eval_losses_all) > config.stop_limit and eval_loss > sum(eval_losses_all[-1 * config.stop_limit:])/config.stop_limit:
-                model.saver.save(sess, checkpoint_path, global_step=current_step)
                 print('----End training for evaluation increase----')
                 break
             eval_losses_all.append(eval_loss)
         current_step += 1
+    model.saver.save(sess, checkpoint_path, global_step=current_step)
     analyze.record_result(config, current_step, train_loss_,eval_loss)
 
 
