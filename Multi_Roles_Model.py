@@ -28,7 +28,7 @@ class MultiRolesModel():
         self._learn_rate = tf.Variable(float(config.learn_rate), trainable=False, dtype=tf.float32)
         self.learning_rate_decay_op = tf.assign(self._learn_rate, self._learn_rate * config.learning_rate_decay_factor)
         # self._opt = tf.train.GradientDescentOptimizer(learning_rate=self._learn_rate)
-        self._opt=tf.train.AdamOptimizer()
+        self._opt=tf.train.AdamOptimizer(learning_rate=self._learn_rate)
         self._interpose = config.interpose
         self._embedding_size = config.neurons
         self._layers = config.layers

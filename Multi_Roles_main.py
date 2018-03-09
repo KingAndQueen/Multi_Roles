@@ -32,7 +32,7 @@ flags.DEFINE_integer('epoch', 5000, 'training times')
 flags.DEFINE_integer('check_epoch',200, 'evaluation times')
 flags.DEFINE_integer('sentence_size', 20, 'length of word in a sentence')
 flags.DEFINE_float('interpose', 0.5, 'value for gru gate to decide interpose')
-flags.DEFINE_float('learn_rate', 0.01, 'value for gru gate to decide interpose')
+flags.DEFINE_float('learn_rate', 0.0001, 'value for gru gate to decide interpose')
 flags.DEFINE_float("learning_rate_decay_factor", 0.5, 'if loss not decrease, multiple the lr with factor')
 flags.DEFINE_float("max_grad_norm", 5, 'Clip gradients to this norm')
 
