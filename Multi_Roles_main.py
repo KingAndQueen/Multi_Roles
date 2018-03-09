@@ -54,7 +54,7 @@ def data_process(config, vocabulary=None):
     Multi_Roles_Data.store_vocab(vocabulary, config.data_dir)
     all_data = train_data + valid_data + test_data
     train_data, eval_test_data = model_selection.train_test_split(all_data, test_size=0.1)
-    valid_data, test_data = model_selection.train_test_split(eval_test_data, test_size=0.1)
+    valid_data, test_data = model_selection.train_test_split(eval_test_data, test_size=0.5)
 
     return train_data, valid_data, test_data, vocabulary, pre_train_data
 
