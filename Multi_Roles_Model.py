@@ -368,7 +368,7 @@ class MultiRolesModel():
             state_all_roles_speaker = tf.unstack(state_all_roles_speaker_matrix)
             # next_speakers=tf.argmax(next_speaker,1)
 
-            #state_all_roles_speaker_matrix.shape=[batch,neurons,layers]
+            # cnn all state of context to concat with answer_emb,but experiment is bad
             # state_concate=tf.transpose(state_all_roles,[1,2,3,0])
             # state_concate=tf.reshape(state_concate,[config.batch_size,config.roles_number,-1])
             # state_concate=tf.expand_dims(state_concate,-1)
