@@ -369,26 +369,26 @@ class MultiRolesModel():
             # next_speakers=tf.argmax(next_speaker,1)
 
             #state_all_roles_speaker_matrix.shape=[batch,neurons,layers]
-            state_concate=tf.transpose(state_all_roles,[1,2,3,0])
-            state_concate=tf.reshape(state_concate,[config.batch_size,config.roles_number,-1])
-            state_concate=tf.expand_dims(state_concate,-1)
-            state_concate=tf.tile(state_concate,[1,1,1,config.sentence_size])
-            state_concate = tf.transpose(state_concate,[0,3,2,1])
-            answer_concate=tf.stack(answer_emb)
-            answer_concate=tf.expand_dims(answer_concate,-1)
-            answer_concate=tf.tile(answer_concate,[1,1,1,config.roles_number])
-            answer_concate=tf.transpose(answer_concate,[1,0,2,3])
-            state_answer_concate=tf.concat([state_concate,answer_concate],2)
-
-
-            state_filter = tf.Variable(tf.random_normal([2,self._embedding_size, 7,1]))
-            state_conv = tf.nn.conv2d(state_answer_concate, state_filter, strides=[1, 1, 1, 1], padding='SAME')
-            state_pool=tf.nn.max_pool(state_conv,[1,2,2,1],[1,1,4,1],'SAME')
-
-            state_emb=tf.squeeze(state_pool)
-            state_emb=tf.transpose(state_emb,[1,0,2])
-            state_emb=tf.unstack(state_emb,axis=0)
-            answer_emb=state_emb
+            # state_concate=tf.transpose(state_all_roles,[1,2,3,0])
+            # state_concate=tf.reshape(state_concate,[config.batch_size,config.roles_number,-1])
+            # state_concate=tf.expand_dims(state_concate,-1)
+            # state_concate=tf.tile(state_concate,[1,1,1,config.sentence_size])
+            # state_concate = tf.transpose(state_concate,[0,3,2,1])
+            # answer_concate=tf.stack(answer_emb)
+            # answer_concate=tf.expand_dims(answer_concate,-1)
+            # answer_concate=tf.tile(answer_concate,[1,1,1,config.roles_number])
+            # answer_concate=tf.transpose(answer_concate,[1,0,2,3])
+            # state_answer_concate=tf.concat([state_concate,answer_concate],2)
+            #
+            #
+            # state_filter = tf.Variable(tf.random_normal([2,self._embedding_size, 7,1]))
+            # state_conv = tf.nn.conv2d(state_answer_concate, state_filter, strides=[1, 1, 1, 1], padding='SAME')
+            # state_pool=tf.nn.max_pool(state_conv,[1,2,2,1],[1,1,4,1],'SAME')
+            #
+            # state_emb=tf.squeeze(state_pool)
+            # state_emb=tf.transpose(state_emb,[1,0,2])
+            # state_emb=tf.unstack(state_emb,axis=0)
+            # answer_emb=state_emb
 
             # state_emb=tf.nn.relu(tf.matmul(state_pool, fc1_weights) + fc1_biases)
             # Add a 50% dropout during training only. Dropout also scales
