@@ -122,18 +122,30 @@ class MultiRolesModel():
             context_encoder, context_state_fw = rnn.static_rnn(encoding_cell, context, dtype=tf.float32)
           # context_encoder.shape same with context (role_number*sentence_lens) *[batch_size,neurons]
             self.context_vector = context_state_fw
-        #     top_output_context = [array_ops.reshape(o, [-1, 1, encoding_cell.output_size]) for o in context_encoder]
-        #     # top_output_context.shape=(role_number*sentence_lens)*[batch,1,neurons]
-        #     attention_states = array_ops.concat(top_output_context, 1)
-        #     #[batch,(role_number*sentence_lens),neurons]
-        #     attention_states_speaker = tf.split(attention_states, [-1, len(Monica_emb)], axis=1)[-1]
-
+            # top_output_context = [array_ops.reshape(o, [-1, 1, encoding_cell.output_size]) for o in context_encoder]
+            # # top_output_context.shape=(role_number*sentence_lens)*[batch,1,neurons]
+            # attention_states = array_ops.concat(top_output_context, 1)
+            # #[batch,(role_number*sentence_lens),neurons]
+            # attention_states_speaker = tf.split(attention_states, [-1, len(Monica_emb)], axis=1)[-1]
+        # pdb.set_trace()
         with tf.variable_scope('cnn_encoding_context'):
             context=tf.stack([Chandler_emb, Joey_emb, Monica_emb, Phoebe_emb, Rachel_emb, Ross_emb, others_emb])
             context=tf.transpose(context,[2,1,3,0])
-            contex_filter=tf.Variable(tf.random_normal([2,self._embedding_size,7,1]))
-            context_cnn=tf.nn.conv2d(context,contex_filter,strides=[1,1,1,1],padding='SAME')
-            attention_states_speaker=tf.squeeze(context_cnn)
+            # contex_filter=tf.Variable(tf.random_normal([3,self._embedding_size,7,3]))
+            context_cnn=[]
+            for filter_size in range(1,21):#[3,4,5]:
+                context_filter = tf.Variable(tf.random_normal([filter_size, self._embedding_size, 7, 100]))
+                context_bias=tf.get_variable("cnn_b_%s" % filter_size, shape=[100], initializer=tf.constant_initializer(value=0.1, dtype=tf.float32))
+                context_conv=tf.nn.conv2d(context,context_filter,strides=[1,1,1,1],padding='VALID')
+                cnn_h = tf.nn.relu(tf.nn.bias_add(context_conv, context_bias), name="relu")
+                pooled = tf.nn.max_pool(cnn_h,ksize=[1, self._sentence_size - filter_size + 1, 1, 1],strides=[1, 1, 1, 1],padding='VALID',name="pool")
+                # pooled=tf.squeeze(pooled)
+                context_cnn.append(pooled)
+            # pdb.set_trace()
+            context_cnn_flat=tf.concat(context_cnn, 1)
+            context_cnn_flat=tf.squeeze(context_cnn_flat)
+            context_cnn_drop = tf.nn.dropout(context_cnn_flat, 0.5)
+            attention_states_speaker= context_cnn_drop
 
         def _speaker_prediction(next_speaker_emb):
             with tf.variable_scope('speaker_prediction'):
@@ -360,8 +372,6 @@ class MultiRolesModel():
             # decision=tf.sigmoid(tf.add(tf.squeeze(decision_contest),tf.squeeze(gate_decision_lastSpeaker)))
 
 
-
-
             state_all_roles_speaker_ = tf.multiply(state_all_roles,
                                                   next_speaker)  # state_all_roles_speaker.shape=[layers,batch_size,roles_number,neurons]
             state_all_roles_speaker_matrix = tf.reduce_sum(state_all_roles_speaker_, 2)
@@ -420,7 +430,7 @@ class MultiRolesModel():
             cross_entropy_sentence = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=response,
                                                                                     labels=labels,
                                                                                     name="cross_entropy_sents")
-            cross_entropy_speaker = tf.reduce_mean(cross_entropy_speaker)
+            cross_entropy_speaker = tf.reduce_mean(cross_entropy_speaker,name="cross_entropy_speaker")
 
             cross_entropy_sentence = tf.multiply(cross_entropy_sentence, self._weight)  # batch_size * sents_size
 
@@ -430,7 +440,7 @@ class MultiRolesModel():
 
             if self.rl:
                 cross_entropy_sentence = cross_entropy_sentence * self.rl_reward
-            cross_entropy_sentence_sum = tf.reduce_mean(cross_entropy_sentence, name="cross_entropy_sum")
+            cross_entropy_sentence_sum = tf.reduce_mean(cross_entropy_sentence, name="cross_entropy_sentences")
 
             self.loss = cross_entropy_sentence_sum  # + cross_entropy_speaker
             # self.loss = 0.4*cross_entropy_sentence_sum + 0.6*cross_entropy_speaker
@@ -438,6 +448,7 @@ class MultiRolesModel():
         grads_and_vars = []
             # grads_and_vars=self._opt.compute_gradients(self.loss)
         grads_and_vars.append(self._opt.compute_gradients(cross_entropy_sentence_sum))
+        pdb.set_trace()
         grads_and_vars.append(self._opt.compute_gradients(cross_entropy_speaker))
         grads_and_vars = self._combine_gradients(grads_and_vars)
 
@@ -463,7 +474,7 @@ class MultiRolesModel():
                 grads.append(expanded_g)
 
             # Average over the 'tower' dimension.
-            if len(grads) == 0: pdb.set_trace()
+            if len(grads) == 0: pdb.set_trace() # some variable get none grads
             grad = tf.concat(grads, 0)
             grad = tf.reduce_sum(grad, 0)
             # Keep in mind that the Variables are redundant because they are shared
