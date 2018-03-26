@@ -448,7 +448,7 @@ class MultiRolesModel():
         grads_and_vars = []
             # grads_and_vars=self._opt.compute_gradients(self.loss)
         grads_and_vars.append(self._opt.compute_gradients(cross_entropy_sentence_sum))
-        pdb.set_trace()
+        # pdb.set_trace()
         grads_and_vars.append(self._opt.compute_gradients(cross_entropy_speaker))
         grads_and_vars = self._combine_gradients(grads_and_vars)
 
