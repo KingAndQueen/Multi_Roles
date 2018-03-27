@@ -109,7 +109,7 @@ class MultiRolesModel():
         state_all_roles = tf.concat(
             [chandler_state, joey_state, monica_state, phoebe_state, rachel_state, ross_state, others_state],
             2)  # all_roles_state.shape=[layers,batch_size,roles_number,neurons] order by namelist
-
+        encode_all_roles=tf.stack([monica_encoder,joey_encoder,chandler_encoder,phoebe_encoder,rachel_encoder,ross_encoder,others_encoder])
         with tf.variable_scope('rnn_encoding_context'):
           #with tf.device('/device:GPU:1'):
             # encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons)
@@ -129,9 +129,9 @@ class MultiRolesModel():
             # attention_states_speaker = tf.split(attention_states, [-1, len(Monica_emb)], axis=1)[-1]
         # pdb.set_trace()
         with tf.variable_scope('cnn_encoding_context'):
-            context=tf.stack([Chandler_emb, Joey_emb, Monica_emb, Phoebe_emb, Rachel_emb, Ross_emb, others_emb])
+            # context=tf.stack([Chandler_emb, Joey_emb, Monica_emb, Phoebe_emb, Rachel_emb, Ross_emb, others_emb])
+            context=encode_all_roles
             context=tf.transpose(context,[2,1,3,0])
-            # contex_filter=tf.Variable(tf.random_normal([3,self._embedding_size,7,3]))
             context_cnn=[]
             for filter_size in range(1,21):#[3,4,5]:
                 context_filter = tf.Variable(tf.random_normal([filter_size, self._embedding_size, 7, 100]))
@@ -360,17 +360,6 @@ class MultiRolesModel():
                 return outputs
 
         with tf.variable_scope('interaction'):
-            # first decide wheter to speake,then choose the speaker
-            # gate_decision_lastSpeaker=tf.tanh(tf.matmul(self._w_context,tf.matmul(monica_encoder[-1],tf.transpose(context_encoder[-1]))))
-            # gate_GRU = tf.nn.rnn_cell.GRUCell(1)
-            # temp1=tf.squeeze(top_output_context[-1])
-            # temp2=tf.transpose(monica_encoder[-1])
-            # gate_input=tf.matmul(self._w_attention,tf.matmul(temp1,temp2))
-            # #gate_input=tf.unstack(gate_input,axis=1)
-            # gate_input=tf.transpose(gate_input)
-            # decision_contest, state_gate = rnn.static_rnn(cell=gate_GRU,inputs=[gate_input],dtype=tf.float32)
-            # decision=tf.sigmoid(tf.add(tf.squeeze(decision_contest),tf.squeeze(gate_decision_lastSpeaker)))
-
 
             state_all_roles_speaker_ = tf.multiply(state_all_roles,
                                                   next_speaker)  # state_all_roles_speaker.shape=[layers,batch_size,roles_number,neurons]
