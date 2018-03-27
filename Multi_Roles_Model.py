@@ -83,6 +83,7 @@ class MultiRolesModel():
                 state = tf.concat([state_fw, state_bw], -1)
                 state = tf.matmul(state,tf.get_variable('Wi',[3,2 * self._embedding_size, self._embedding_size],
                                                           dtype=tf.float32,trainable=True))
+
                 return output, state
 
         # encoder different roles
@@ -110,6 +111,7 @@ class MultiRolesModel():
             [chandler_state, joey_state, monica_state, phoebe_state, rachel_state, ross_state, others_state],
             2)  # all_roles_state.shape=[layers,batch_size,roles_number,neurons] order by namelist
         encode_all_roles=tf.stack([monica_encoder,joey_encoder,chandler_encoder,phoebe_encoder,rachel_encoder,ross_encoder,others_encoder])
+
         with tf.variable_scope('rnn_encoding_context'):
           #with tf.device('/device:GPU:1'):
             # encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons)
@@ -133,15 +135,16 @@ class MultiRolesModel():
             context=encode_all_roles
             context=tf.transpose(context,[2,1,3,0])
             context_cnn=[]
+            pdb.set_trace()
             for filter_size in range(1,21):#[3,4,5]:
-                context_filter = tf.Variable(tf.random_normal([filter_size, self._embedding_size, 7, 100]))
+                context_filter = tf.Variable(tf.random_normal([filter_size, 2*self._embedding_size, 7, 100]))
                 context_bias=tf.get_variable("cnn_b_%s" % filter_size, shape=[100], initializer=tf.constant_initializer(value=0.1, dtype=tf.float32))
                 context_conv=tf.nn.conv2d(context,context_filter,strides=[1,1,1,1],padding='VALID')
                 cnn_h = tf.nn.relu(tf.nn.bias_add(context_conv, context_bias), name="relu")
                 pooled = tf.nn.max_pool(cnn_h,ksize=[1, self._sentence_size - filter_size + 1, 1, 1],strides=[1, 1, 1, 1],padding='VALID',name="pool")
                 # pooled=tf.squeeze(pooled)
                 context_cnn.append(pooled)
-            # pdb.set_trace()
+            pdb.set_trace()
             context_cnn_flat=tf.concat(context_cnn, 1)
             context_cnn_flat=tf.squeeze(context_cnn_flat)
             context_cnn_drop = tf.nn.dropout(context_cnn_flat, 0.5)
