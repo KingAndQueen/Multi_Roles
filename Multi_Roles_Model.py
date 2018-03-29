@@ -70,8 +70,8 @@ class MultiRolesModel():
             name_list_emb = [tf.nn.embedding_lookup(self._name_embedding, word) for word in _name_list]
 
         def _encoding_roles(person_emb, name='',GPU_id=0):
-            with tf.device('/device:GPU:%d' %GPU_id):
-              with tf.variable_scope('encoding_role_' + name):
+            # with tf.device('/device:GPU:%d' %GPU_id):
+            with tf.variable_scope('encoding_role_' + name):
                 encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons, reuse=tf.get_variable_scope().reuse)
                 encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
                 encoding_cell = tf.contrib.rnn.DropoutWrapper(encoding_cell, 0.5, 1, 0.5)
@@ -136,10 +136,11 @@ class MultiRolesModel():
             context=tf.transpose(context,[2,1,3,0])
             context_cnn=[]
 
-            for filter_size in range(1,21):#[3,4,5]:
+            for filter_size in [3]:#range(1,self._sentence_size+1):#[3,4,5]:
                 context_filter = tf.Variable(tf.random_normal([filter_size, 2*self._embedding_size, 7, 100]))
                 context_bias=tf.get_variable("cnn_b_%s" % filter_size, shape=[100], initializer=tf.constant_initializer(value=0.1, dtype=tf.float32))
                 context_conv=tf.nn.conv2d(context,context_filter,strides=[1,1,1,1],padding='VALID')
+                pdb.set_trace() #context_conv.shape=[batch,sentence_size-filter_x+1,2*embedding_size/filter_y,filter_channel_out]
                 cnn_h = tf.nn.relu(tf.nn.bias_add(context_conv, context_bias), name="relu")
                 pooled = tf.nn.max_pool(cnn_h,ksize=[1, self._sentence_size - filter_size + 1, 1, 1],strides=[1, 1, 1, 1],padding='VALID',name="pool")
                 # pooled=tf.squeeze(pooled)
@@ -368,7 +369,6 @@ class MultiRolesModel():
                                                   next_speaker)  # state_all_roles_speaker.shape=[layers,batch_size,roles_number,neurons]
             state_all_roles_speaker_matrix = tf.reduce_sum(state_all_roles_speaker_, 2)
             state_all_roles_speaker = tf.unstack(state_all_roles_speaker_matrix)
-            # next_speakers=tf.argmax(next_speaker,1)
 
             # cnn all state of context to concat with answer_emb,but experiment is bad
             # state_concate=tf.transpose(state_all_roles,[1,2,3,0])
@@ -396,7 +396,9 @@ class MultiRolesModel():
             # Add a 50% dropout during training only. Dropout also scales
             # activations such that no rescaling is needed at evaluation time.
 
+
             if config.beam:
+                answer_emb[0] = attention_states_speaker
                 response = speaker_beam(self._word_embedding, state_all_roles_speaker, answer_emb,
                                                 model_type=self.model_type)
             else:
