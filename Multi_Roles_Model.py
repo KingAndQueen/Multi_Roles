@@ -140,7 +140,7 @@ class MultiRolesModel():
                 context_filter = tf.Variable(tf.random_normal([filter_size, 2*self._embedding_size, 7, 100]))
                 context_bias=tf.get_variable("cnn_b_%s" % filter_size, shape=[100], initializer=tf.constant_initializer(value=0.1, dtype=tf.float32))
                 context_conv=tf.nn.conv2d(context,context_filter,strides=[1,1,1,1],padding='VALID')
-                pdb.set_trace() #context_conv.shape=[batch,sentence_size-filter_x+1,2*embedding_size/filter_y,filter_channel_out]
+               # pdb.set_trace() #context_conv.shape=[batch,sentence_size-filter_x+1,2*embedding_size/filter_y,filter_channel_out]
                 cnn_h = tf.nn.relu(tf.nn.bias_add(context_conv, context_bias), name="relu")
                 pooled = tf.nn.max_pool(cnn_h,ksize=[1, self._sentence_size - filter_size + 1, 1, 1],strides=[1, 1, 1, 1],padding='VALID',name="pool")
                 # pooled=tf.squeeze(pooled)
