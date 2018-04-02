@@ -356,7 +356,9 @@ class MultiRolesModel():
                             #pdb.set_trace()
                         if i > 0:
                             tf.get_variable_scope().reuse_variables()
-
+                        if 1==0 and loop_function is not None:
+                            pdb.set_trace()
+                            inp=tf.tile(inp,[beam_size,1])
                         output, state = cell_de(inp, state)
                         #pdb.set_trace()
                         with tf.variable_scope('OutputProjecton'):
@@ -372,7 +374,7 @@ class MultiRolesModel():
                 if loop_function is None:
                     outputs = tf.transpose(outputs, perm=[1, 0, 2])
                 else:
-                    pdb.set_trace()
+                    #pdb.set_trace()
                     outputs=tf.expand_dims(tf.stack(outputs),axis=0)
 
                 return outputs
