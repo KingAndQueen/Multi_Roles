@@ -147,7 +147,8 @@ class MultiRolesModel():
                 context_cnn.append(pooled)
 
             context_cnn_flat=tf.concat(context_cnn, 1)
-            context_cnn_flat=tf.squeeze(context_cnn_flat)
+            pdb.set_trace()
+            context_cnn_flat=tf.squeeze(context_cnn_flat,[1,2])
             context_cnn_drop = tf.nn.dropout(context_cnn_flat, 0.5)
             attention_states_speaker= context_cnn_drop
 
@@ -352,6 +353,7 @@ class MultiRolesModel():
                                     loop_function(prev, i, log_beam_probs, beam_path, beam_symbols))
                         if i > 0:
                             tf.get_variable_scope().reuse_variables()
+                        #pdb.set_trace()
                         output, state = cell_de(inp, state)
                         #  pdb.set_trace()
                         with tf.variable_scope('OutputProjecton'):
