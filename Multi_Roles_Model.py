@@ -353,8 +353,7 @@ class MultiRolesModel():
                                 inp = array_ops.stop_gradient(
                                     loop_function(prev, i, log_beam_probs, beam_path, beam_symbols))
                            # input_size = inp.get_shape().with_rank(2)[1]
-
-                            pdb.set_trace()
+                            #pdb.set_trace()
                         if i > 0:
                             tf.get_variable_scope().reuse_variables()
 
