@@ -345,7 +345,13 @@ class MultiRolesModel():
                     outputs = []
                     prev = None
                     #   pdb.set_trace()
-                    state = encoder_state
+                    if loop_function is not None:
+                        state_layers=[]
+                        for state_ in encoder_state:
+                            state_layers.append(tf.tile(state_,[beam_size,1]))
+                        state=state_layers
+                    else:
+                        state = encoder_state
                     log_beam_probs, beam_path, beam_symbols = [], [], []
                     for i, inp in enumerate(ans_emb):
                         if loop_function is not None and prev is not None:
@@ -357,10 +363,10 @@ class MultiRolesModel():
                         if i > 0:
                             tf.get_variable_scope().reuse_variables()
                         if i==0 and loop_function is not None:
-                            # pdb.set_trace()
                             inp=tf.tile(inp,[beam_size,1])
-                        output, state = cell_de(inp, state)
                         #pdb.set_trace()
+                        output, state = cell_de(inp, state)
+
                         with tf.variable_scope('OutputProjecton'):
                             output = linear([output], self._vocab.vocab_size, True)
 
@@ -496,16 +502,16 @@ class MultiRolesModel():
         return combine_grads
 
     def _build_inputs(self):
-        self._Monica = tf.placeholder(tf.int32, [None, self._sentence_size], name='Monica')
-        self._Joey = tf.placeholder(tf.int32, [None, self._sentence_size], name='Joey')
-        self._Chandler = tf.placeholder(tf.int32, [None, self._sentence_size], name='Chandler')
-        self._Phoebe = tf.placeholder(tf.int32, [None, self._sentence_size], name='Phoebe')
-        self._Rachel = tf.placeholder(tf.int32, [None, self._sentence_size], name='Rachel')
-        self._Ross = tf.placeholder(tf.int32, [None, self._sentence_size], name='Ross')
-        self._others = tf.placeholder(tf.int32, [None, self._sentence_size], name='others')
-        self._weight = tf.placeholder(tf.float32, [None, self._sentence_size], name='weight')
-        self._answers = tf.placeholder(tf.int32, [None, self._sentence_size], name='answer')
-        self._name_list = tf.placeholder(tf.int32, [None, self._roles_number], name='name_list')
+        self._Monica = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Monica')
+        self._Joey = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Joey')
+        self._Chandler = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Chandler')
+        self._Phoebe = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Phoebe')
+        self._Rachel = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Rachel')
+        self._Ross = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Ross')
+        self._others = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='others')
+        self._weight = tf.placeholder(tf.float32, [self._batch_size, self._sentence_size], name='weight')
+        self._answers = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='answer')
+        self._name_list = tf.placeholder(tf.int32, [self._batch_size, self._roles_number], name='name_list')
         self._speaker = tf.placeholder(tf.int32, [self._batch_size], name='true_speaker')
 
     def _build_vars(self,config):
