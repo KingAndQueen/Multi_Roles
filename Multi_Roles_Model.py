@@ -358,14 +358,23 @@ class MultiRolesModel():
                             tf.get_variable_scope().reuse_variables()
 
                         output, state = cell_de(inp, state)
-                        #  pdb.set_trace()
+                        #pdb.set_trace()
                         with tf.variable_scope('OutputProjecton'):
                             output = linear([output], self._vocab.vocab_size, True)
-                        outputs.append(output)
+
                         if loop_function is not None:
                             prev = array_ops.stop_gradient(output)
+                            outputs.append(output[0])
+                        else:
+                            outputs.append(output)
 
-                outputs = tf.transpose(outputs, perm=[1, 0, 2])
+
+                if loop_function is None:
+                    outputs = tf.transpose(outputs, perm=[1, 0, 2])
+                else:
+                    pdb.set_trace()
+                    outputs=tf.expand_dims(tf.stack(outputs),axis=0)
+
                 return outputs
 
         with tf.variable_scope('interaction'):
