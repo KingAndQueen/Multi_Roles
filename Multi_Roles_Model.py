@@ -147,7 +147,6 @@ class MultiRolesModel():
                 context_cnn.append(pooled)
 
             context_cnn_flat=tf.concat(context_cnn, 1)
-            pdb.set_trace()
             context_cnn_flat=tf.squeeze(context_cnn_flat,[1,2])
             context_cnn_drop = tf.nn.dropout(context_cnn_flat, 0.5)
             attention_states_speaker= context_cnn_drop
