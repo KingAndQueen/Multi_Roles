@@ -228,6 +228,7 @@ def main(_):
         print('test role affect')
         config.batch_size = 1
         config.model_type='test'
+        config.trained_embedding=False
         print('establish the model...')
         model = Multi_Roles_Model.MultiRolesModel(config, vocab)
         analyze = Multi_Roles_Analyze.Multi_Roles_Analyze(config)
