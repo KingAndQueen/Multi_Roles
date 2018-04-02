@@ -225,7 +225,7 @@ def main(_):
         test_model(sess, model, analyze, test_data, vocab)
 
     if config.model_type=='role_test':
-        print('test role affect')
+        print('Test role affect.......')
         config.batch_size = 1
         config.model_type='test'
         config.trained_emb=False
