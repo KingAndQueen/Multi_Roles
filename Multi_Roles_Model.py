@@ -299,6 +299,7 @@ class MultiRolesModel():
 
         def speaker_beam(embedding_word, encoder_state, ans_emb, beam_size=10, model_type='train',
                          output_projection=None):
+            #beam is only working on test with batch_size=1
             with tf.variable_scope('speaker'):
              # with tf.device('/device:GPU:1'):
                 # pdb.set_trace()
@@ -306,6 +307,7 @@ class MultiRolesModel():
                 embedding_size = embedding_word.get_shape()[1].value
 
                 def loop_function(prev, i, log_beam_probs, beam_path, beam_symbols):
+                    # beam search is only working on test or role_test with batch_size=1
                     if output_projection is not None:
                         prev = nn_ops.xw_plus_b(prev, output_projection[0], output_projection[1])
 
@@ -344,15 +346,18 @@ class MultiRolesModel():
                     prev = None
                     #   pdb.set_trace()
                     state = encoder_state
+                    log_beam_probs, beam_path, beam_symbols = [], [], []
                     for i, inp in enumerate(ans_emb):
-                        log_beam_probs, beam_path, beam_symbols = [], [], []
                         if loop_function is not None and prev is not None:
                             with tf.variable_scope("loop_function", reuse=True):
                                 inp = array_ops.stop_gradient(
                                     loop_function(prev, i, log_beam_probs, beam_path, beam_symbols))
+                           # input_size = inp.get_shape().with_rank(2)[1]
+
+                            pdb.set_trace()
                         if i > 0:
                             tf.get_variable_scope().reuse_variables()
-                        #pdb.set_trace()
+
                         output, state = cell_de(inp, state)
                         #  pdb.set_trace()
                         with tf.variable_scope('OutputProjecton'):
@@ -481,16 +486,16 @@ class MultiRolesModel():
         return combine_grads
 
     def _build_inputs(self):
-        self._Monica = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Monica')
-        self._Joey = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Joey')
-        self._Chandler = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Chandler')
-        self._Phoebe = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Phoebe')
-        self._Rachel = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Rachel')
-        self._Ross = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='Ross')
-        self._others = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='others')
-        self._weight = tf.placeholder(tf.float32, [self._batch_size, self._sentence_size], name='weight')
-        self._answers = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='answer')
-        self._name_list = tf.placeholder(tf.int32, [self._batch_size, self._roles_number], name='name_list')
+        self._Monica = tf.placeholder(tf.int32, [None, self._sentence_size], name='Monica')
+        self._Joey = tf.placeholder(tf.int32, [None, self._sentence_size], name='Joey')
+        self._Chandler = tf.placeholder(tf.int32, [None, self._sentence_size], name='Chandler')
+        self._Phoebe = tf.placeholder(tf.int32, [None, self._sentence_size], name='Phoebe')
+        self._Rachel = tf.placeholder(tf.int32, [None, self._sentence_size], name='Rachel')
+        self._Ross = tf.placeholder(tf.int32, [None, self._sentence_size], name='Ross')
+        self._others = tf.placeholder(tf.int32, [None, self._sentence_size], name='others')
+        self._weight = tf.placeholder(tf.float32, [None, self._sentence_size], name='weight')
+        self._answers = tf.placeholder(tf.int32, [None, self._sentence_size], name='answer')
+        self._name_list = tf.placeholder(tf.int32, [None, self._roles_number], name='name_list')
         self._speaker = tf.placeholder(tf.int32, [self._batch_size], name='true_speaker')
 
     def _build_vars(self,config):
