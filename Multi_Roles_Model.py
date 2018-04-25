@@ -7,6 +7,7 @@ from tensorflow.python.ops import rnn
 from tensorflow.python.ops import rnn_cell_impl
 from tensorflow.python.util import nest
 import pdb
+
 # SEED = 66478
 linear = rnn_cell_impl._linear
 
@@ -148,8 +149,23 @@ class MultiRolesModel():
 
             context_cnn_flat=tf.concat(context_cnn, 1)
             context_cnn_flat=tf.squeeze(context_cnn_flat,[1,2])
-            context_cnn_drop = tf.nn.dropout(context_cnn_flat, 0.5)
-            attention_states_speaker= context_cnn_drop
+
+            weights_initializer = tf.truncated_normal_initializer(
+                stddev=0.1)
+            regularizer = tf.contrib.layers.l2_regularizer(0.1)
+           # pdb.set_trace()
+            num_units_in=context_cnn_flat.get_shape()[1]
+            weights = tf.get_variable('weights',
+                                    shape=[num_units_in,self._embedding_size/2 ], #100 to 50, half the neurons
+                                    initializer=weights_initializer,
+                                    regularizer=regularizer)
+            biases = tf.get_variable('biases',
+                                   shape=[self._embedding_size/2],
+                                   initializer=tf.zeros_initializer)
+            context_cnn = tf.nn.xw_plus_b(context_cnn_flat, weights, biases)
+
+            #context_cnn_drop = tf.nn.dropout(context_cnn_flat, 0.5)
+            attention_states_speaker= context_cnn #use the unhalfed context_cnn
 
         def _speaker_prediction(next_speaker_emb):
             with tf.variable_scope('speaker_prediction'):
@@ -297,7 +313,7 @@ class MultiRolesModel():
                 outputs = tf.transpose(outputs, perm=[1, 0, 2])
                 return outputs
 
-        def speaker_beam(embedding_word, encoder_state, ans_emb, beam_size=10, model_type='train',
+        def speaker_beam(embedding_word, encoder_state, ans_emb,cnn_context, beam_size=10, model_type='train',
                          output_projection=None):
             #beam is only working on test with batch_size=1
             with tf.variable_scope('speaker'):
@@ -354,14 +370,34 @@ class MultiRolesModel():
                         state = encoder_state
                     log_beam_probs, beam_path, beam_symbols = [], [], []
                     for i, inp in enumerate(ans_emb):
+
                         if loop_function is not None and prev is not None:
                             with tf.variable_scope("loop_function", reuse=True):
                                 inp = array_ops.stop_gradient(
                                     loop_function(prev, i, log_beam_probs, beam_path, beam_symbols))
-                           # input_size = inp.get_shape().with_rank(2)[1]
-                            #pdb.set_trace()
                         if i > 0:
                             tf.get_variable_scope().reuse_variables()
+                        # half the inp vector
+                        #pdb.set_trace()
+                        num_emb_in = inp.get_shape()[1]
+                        weights_initializer_emb = tf.truncated_normal_initializer(
+                            stddev=0.1)
+                        regularizer_emb = tf.contrib.layers.l2_regularizer(0.1)
+                        weights_emb = tf.get_variable('weights',
+                                                  shape=[num_emb_in, self._embedding_size / 2],
+                                                  # 100 to 50, half the neurons
+                                                  initializer=weights_initializer_emb,
+                                                  regularizer=regularizer_emb)
+                        biases_emb = tf.get_variable('biases',
+                                                 shape=[self._embedding_size/2],
+                                                 initializer=tf.zeros_initializer)
+                        inp = tf.nn.xw_plus_b(inp, weights_emb, biases_emb)
+                        #pdb.set_trace()
+                        # concat embeding and context
+                        inp=tf.concat([inp,cnn_context],1)
+                           # input_size = inp.get_shape().with_rank(2)[1]
+                            #pdb.set_trace()
+
                         if i==0 and loop_function is not None:
                             inp=tf.tile(inp,[beam_size,1])
                         #pdb.set_trace()
@@ -420,8 +456,8 @@ class MultiRolesModel():
 
 
             if config.beam:
-                answer_emb[0] = attention_states_speaker
-                response = speaker_beam(self._word_embedding, state_all_roles_speaker, answer_emb,
+
+                response = speaker_beam(self._word_embedding, state_all_roles_speaker, answer_emb,context_cnn,
                                                 model_type=self.model_type)
             else:
                 if config.attention:
