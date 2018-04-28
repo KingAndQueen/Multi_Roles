@@ -46,12 +46,10 @@ def data_process(config, vocabulary=None):
     train_data, valid_data, test_data = Multi_Roles_Data.get_data(config.data_dir, vocabulary, config.sentence_size,
                                                                   config.roles_number, config.rl)
 
-    pdb.set_trace()
     if config.pretrain:
         pre_train_data = Multi_Roles_Data.read_tt_data(config.data_dir, vocabulary, config.sentence_size)
-        pdb.set_trace()
         pre_train_data += Multi_Roles_Data.read_twitter_data(config.data_dir, vocabulary, config.sentence_size)
-        pdb.set_trace()
+
     else:
         pre_train_data =[]
     Multi_Roles_Data.get_humorous_scene_rl(config.data_dir, vocabulary, config.sentence_size)
