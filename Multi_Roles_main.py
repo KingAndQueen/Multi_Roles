@@ -18,9 +18,9 @@ flags.DEFINE_string('data_dir', 'data/', 'data path for model')
 flags.DEFINE_string('checkpoints_dir', 'checkpoints', 'path for save checkpoints')
 flags.DEFINE_string('summary_path', './summary', 'path of summary for tensorboard')
 flags.DEFINE_string('device_type', 'gpu', 'device for computing')
-flags.DEFINE_boolean('pretrain',False,'whether to pre-train the model')
+flags.DEFINE_boolean('pretrain',True,'whether to pre-train the model')
 flags.DEFINE_boolean('rl', False, 'rl sign for model')
-flags.DEFINE_boolean('trained_emb',True,'whether to use trained embedding vector')
+flags.DEFINE_boolean('trained_emb',False,'whether to use trained embedding vector')
 flags.DEFINE_boolean('attention',False,'whether to use attention in decoder')
 flags.DEFINE_boolean('beam',True,'whether to use beam search in decoder')
 flags.DEFINE_integer('stop_limit', 5, 'number of evaluation loss is greater than train loss  ')
@@ -45,8 +45,13 @@ def data_process(config, vocabulary=None):
         vocabulary = Multi_Roles_Data.Vocab()
     train_data, valid_data, test_data = Multi_Roles_Data.get_data(config.data_dir, vocabulary, config.sentence_size,
                                                                   config.roles_number, config.rl)
+
+    pdb.set_trace()
     if config.pretrain:
         pre_train_data = Multi_Roles_Data.read_tt_data(config.data_dir, vocabulary, config.sentence_size)
+        pdb.set_trace()
+        pre_train_data += Multi_Roles_Data.read_twitter_data(config.data_dir, vocabulary, config.sentence_size)
+        pdb.set_trace()
     else:
         pre_train_data =[]
     Multi_Roles_Data.get_humorous_scene_rl(config.data_dir, vocabulary, config.sentence_size)

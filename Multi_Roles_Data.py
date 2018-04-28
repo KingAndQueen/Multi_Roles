@@ -297,3 +297,70 @@ def get_role_test_data(test_data):
             new_name_list.append(NAME_MAP_ID['pad'])
     test_data['name_list']=[new_name_list]
     return test_data
+
+
+def read_twitter_data(data_dir, vocabulary, sents_len):
+    data_dir=data_dir+'/twitter/'
+    def structed(sents):
+        sents_id = [vocabulary.word_to_index(word) for word in sents]
+        sents_id = sents_id[:sents_len - 1]
+        sents_id.append(vocabulary.word_to_index('<eos>'))
+        padding_len = max(sents_len - len(sents_id), 0)
+        for i in range(padding_len):
+            sents_id.append(vocabulary.word_to_index('<pad>'))
+        return sents_id
+
+    if not os.path.exists(data_dir):
+        print ('twitter data_dir is not exist!')
+        return None
+    filelist = []
+    for root, dirs, files in os.walk(data_dir):
+        for name in files:
+            file_name = os.path.splitext(os.path.join(root, name))
+            if file_name[1] == '.txt':
+                filelist.append(os.path.join(root, name))
+
+    sents_data = []
+    for datafile in filelist:
+        f = open(datafile)
+        for data in f:
+            sents_new = nltk.word_tokenize(data.lower())
+            # sents_q = data['question'].split()
+            sents_new = structed(sents_new)
+            sents_data.append(sents_new)
+        f.close()
+    # pdb.set_trace()
+    scenes = []
+    scene_null = {'Chandler': '', 'Joey': '', 'Monica': '', 'Phoebe': '', 'Rachel': '', 'Ross': '', 'others': '',
+                  }
+    while len(sents_data) > 8:
+        scene = scene_null
+        name_list_ = list(NAMELIST)
+        for key, value in scene.items():
+            if value == '':
+                scene[key] = sents_data.pop()
+        ans = sents_data.pop()
+        ans.pop()
+        ans.insert(0, vocabulary.word_to_index('<go>'))
+        scene['answer'] = list(ans)
+        weight = []
+        for id in scene['answer']:
+            if id == vocabulary.word_to_index('<pad>'):
+                weight.append(0.0)
+            else:
+                weight.append(1.0)
+            scene['weight'] = weight
+        name_list = []
+        random_speaker = random.randint(0, 6)
+        speaker = name_list_.pop(random_speaker)
+        scene[speaker]=sents_len * [vocabulary.word_to_index('<pad>')]
+        for name_ in NAMELIST:
+            if name_ in name_list_:
+                name_list.append(NAME_MAP_ID[name_])
+            else:
+                name_list.append(NAME_MAP_ID['pad'])
+        scene['name_list'] = name_list
+        scene['speaker'] = NAME_MAP_ID[speaker]
+        scenes.append(dict(scene))
+
+    return scenes
