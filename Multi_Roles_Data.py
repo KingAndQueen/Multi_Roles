@@ -199,7 +199,7 @@ def get_humorous_scene_rl(data_path, vocabulary, sentence_size):
 
 
 def read_tt_data(data_dir, vocabulary, sents_len):
-    data_dir=data_dir+'/pre_train/'
+    data_dir=data_dir+'/tick_tock/'
     def structed(sents):
         sents_id = [vocabulary.word_to_index(word) for word in sents]
         sents_id = sents_id[:sents_len - 1]
@@ -210,7 +210,7 @@ def read_tt_data(data_dir, vocabulary, sents_len):
         return sents_id
 
     if not os.path.exists(data_dir):
-        print ('data_dir is not exist!')
+        print ('ticktock data_dir is not exist!')
         return None
     filelist = []
     for root, dirs, files in os.walk(data_dir):
