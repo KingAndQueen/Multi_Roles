@@ -49,7 +49,7 @@ class MultiRolesModel():
                 self._word_embedding = tf.get_variable(name='embedding_word',
                                                    shape=[self._vocab.vocab_size, config.neurons])
             self._name_embedding = tf.get_variable(name='embedding_name',
-                                                   shape=[self._roles_number + 1, config.neurons])
+                                                   shape=[self._roles_number + 1, config.neurons/2])
             _Monica = tf.unstack(self._Monica, axis=1)
             Monica_emb = [tf.nn.embedding_lookup(self._word_embedding, word) for word in _Monica]
             _Joey = tf.unstack(self._Joey, axis=1)
@@ -131,46 +131,47 @@ class MultiRolesModel():
             # #[batch,(role_number*sentence_lens),neurons]
             # attention_states_speaker = tf.split(attention_states, [-1, len(Monica_emb)], axis=1)[-1]
         # pdb.set_trace()
-        with tf.variable_scope('cnn_encoding_context'):
-            # context=tf.stack([Chandler_emb, Joey_emb, Monica_emb, Phoebe_emb, Rachel_emb, Ross_emb, others_emb])
-            context=encode_all_roles
-            context=tf.transpose(context,[2,1,3,0])
-            context_cnn=[]
 
-            for filter_size in [5]:#range(1,self._sentence_size+1):#[3,4,5]:
-                context_filter = tf.Variable(tf.random_normal([filter_size, 2*self._embedding_size, 7, 50]))
-                context_bias=tf.get_variable("cnn_b_%s" % filter_size, shape=[50], initializer=tf.constant_initializer(value=0.1, dtype=tf.float32))
-                context_conv=tf.nn.conv2d(context,context_filter,strides=[1,1,1,1],padding='VALID')
-               # pdb.set_trace() #context_conv.shape=[batch,sentence_size-filter_x+1,2*embedding_size/filter_y,filter_channel_out]
-                cnn_h = tf.nn.relu(tf.nn.bias_add(context_conv, context_bias), name="relu")
-                pooled = tf.nn.max_pool(cnn_h,ksize=[1, self._sentence_size - filter_size + 1, 1, 1],strides=[1, 1, 1, 1],padding='VALID',name="pool")
-                # pooled=tf.squeeze(pooled)
-                context_cnn.append(pooled)
-           # pdb.set_trace()
-            context_cnn_flat=tf.concat(context_cnn, 1)
-            context_cnn_flat=tf.squeeze(context_cnn_flat,[1,2])
-
-           #  weights_initializer = tf.truncated_normal_initializer(
-           #      stddev=0.1)
-           #  regularizer = tf.contrib.layers.l2_regularizer(0.1)
-           # # pdb.set_trace()
-           #  num_units_in=context_cnn_flat.get_shape()[1]
-           #  weights = tf.get_variable('weights',
-           #                          shape=[num_units_in,self._embedding_size/2 ], #100 to 50, half the neurons
-           #                          initializer=weights_initializer,
-           #                          regularizer=regularizer)
-           #  biases = tf.get_variable('biases',
-           #                         shape=[self._embedding_size/2],
-           #                         initializer=tf.zeros_initializer)
-           #  context_cnn_output = tf.nn.xw_plus_b(context_cnn_flat, weights, biases)
-
-            #context_cnn_drop = tf.nn.dropout(context_cnn_flat, 0.5)
-            context_cnn_output=context_cnn_flat
-            attention_states_speaker= context_cnn_output #use the unhalfed context_cnn
+        # with tf.variable_scope('cnn_encoding_context'):
+        #     # context=tf.stack([Chandler_emb, Joey_emb, Monica_emb, Phoebe_emb, Rachel_emb, Ross_emb, others_emb])
+        #     context=encode_all_roles
+        #     context=tf.transpose(context,[2,1,3,0])
+        #     context_cnn=[]
+        #
+        #     for filter_size in [5]:#range(1,self._sentence_size+1):#[3,4,5]:
+        #         context_filter = tf.Variable(tf.random_normal([filter_size, 2*self._embedding_size, 7, 50]))
+        #         context_bias=tf.get_variable("cnn_b_%s" % filter_size, shape=[50], initializer=tf.constant_initializer(value=0.1, dtype=tf.float32))
+        #         context_conv=tf.nn.conv2d(context,context_filter,strides=[1,1,1,1],padding='VALID')
+        #        # pdb.set_trace() #context_conv.shape=[batch,sentence_size-filter_x+1,2*embedding_size/filter_y,filter_channel_out]
+        #         cnn_h = tf.nn.relu(tf.nn.bias_add(context_conv, context_bias), name="relu")
+        #         pooled = tf.nn.max_pool(cnn_h,ksize=[1, self._sentence_size - filter_size + 1, 1, 1],strides=[1, 1, 1, 1],padding='VALID',name="pool")
+        #         # pooled=tf.squeeze(pooled)
+        #         context_cnn.append(pooled)
+        #    # pdb.set_trace()
+        #     context_cnn_flat=tf.concat(context_cnn, 1)
+        #     context_cnn_flat=tf.squeeze(context_cnn_flat,[1,2])
+        #
+        #    #  weights_initializer = tf.truncated_normal_initializer(
+        #    #      stddev=0.1)
+        #    #  regularizer = tf.contrib.layers.l2_regularizer(0.1)
+        #    # # pdb.set_trace()
+        #    #  num_units_in=context_cnn_flat.get_shape()[1]
+        #    #  weights = tf.get_variable('weights',
+        #    #                          shape=[num_units_in,self._embedding_size/2 ], #100 to 50, half the neurons
+        #    #                          initializer=weights_initializer,
+        #    #                          regularizer=regularizer)
+        #    #  biases = tf.get_variable('biases',
+        #    #                         shape=[self._embedding_size/2],
+        #    #                         initializer=tf.zeros_initializer)
+        #    #  context_cnn_output = tf.nn.xw_plus_b(context_cnn_flat, weights, biases)
+        #
+        #     #context_cnn_drop = tf.nn.dropout(context_cnn_flat, 0.5)
+        #     context_cnn_output=context_cnn_flat
+        #     attention_states_speaker= context_cnn_output #use the unhalfed context_cnn
 
         def _speaker_prediction(next_speaker_emb):
             with tf.variable_scope('speaker_prediction'):
-                encoding_single_layer = tf.nn.rnn_cell.GRUCell(2 * config.neurons, reuse=tf.get_variable_scope().reuse)
+                encoding_single_layer = tf.nn.rnn_cell.GRUCell(1.5 * config.neurons, reuse=tf.get_variable_scope().reuse)
                 encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
                 # pdb.set_trace()
                 output = None
@@ -190,6 +191,9 @@ class MultiRolesModel():
 
             next_speaker = tf.nn.softmax(next_speaker_pred)  # next_speaker.shape=[batch_size,roles_number]
             self.next_speakers_vector = next_speaker
+            # pdb.set_trace()
+            next_spaeker_token=tf.argmax(next_speaker,1)
+            next_speaker_embedding=embedding_ops.embedding_lookup(self._name_embedding,next_spaeker_token)
 
             next_speaker = tf.expand_dims(next_speaker, 0)  # next_speaker.shape=[1,batch_size,roles_number]
             next_speaker = tf.expand_dims(next_speaker, -1)  # next_speaker.shape=[1,batch_size,roles_number,1]
@@ -458,7 +462,7 @@ class MultiRolesModel():
 
             if config.beam:
 
-                response = speaker_beam(self._word_embedding, state_all_roles_speaker, answer_emb,context_cnn_output,
+                response = speaker_beam(self._word_embedding, state_all_roles_speaker, answer_emb,next_speaker_embedding, #context_cnn_output,
                                                 model_type=self.model_type)
             else:
                 if config.attention:
