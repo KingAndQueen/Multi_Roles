@@ -388,7 +388,7 @@ class MultiRolesModel():
                         if i > 0:
                             tf.get_variable_scope().reuse_variables()
                         # half the inp vector
-                        pdb.set_trace()
+                        # pdb.set_trace()
                         # concat embeding and context
                         inp = tf.concat([inp, next_speaker_embedding,context_cnn_output], 1)
                         num_emb_in = inp.get_shape()[1]
@@ -403,7 +403,7 @@ class MultiRolesModel():
                                                  shape=[self._embedding_size],
                                                  initializer=tf.zeros_initializer)
                         inp = tf.nn.xw_plus_b(inp, weights_emb, biases_emb)
-                        pdb.set_trace()
+                        # pdb.set_trace()
 
                            # input_size = inp.get_shape().with_rank(2)[1]
                             #pdb.set_trace()
