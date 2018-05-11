@@ -390,19 +390,20 @@ class MultiRolesModel():
                         # half the inp vector
                         # pdb.set_trace()
                         # concat embeding and context
-                        inp = tf.concat([inp, next_speaker_embedding], 1)
+                        # inp = tf.concat([inp, next_speaker_embedding], 1)
                         num_emb_in = inp.get_shape()[1]
                         weights_initializer_emb = tf.truncated_normal_initializer(
                             stddev=0.1)
                         regularizer_emb = tf.contrib.layers.l2_regularizer(0.1)
                         weights_emb = tf.get_variable('weights',
-                                                  shape=[num_emb_in, self._embedding_size ],
+                                                  shape=[num_emb_in, self._embedding_size/2 ],
                                                   initializer=weights_initializer_emb,
                                                   regularizer=regularizer_emb)
                         biases_emb = tf.get_variable('biases',
-                                                 shape=[self._embedding_size],
+                                                 shape=[self._embedding_size/2],
                                                  initializer=tf.zeros_initializer)
                         inp = tf.nn.xw_plus_b(inp, weights_emb, biases_emb)
+                        inp = tf.concat([inp, next_speaker_embedding], 1)
                         # pdb.set_trace()
 
                            # input_size = inp.get_shape().with_rank(2)[1]
