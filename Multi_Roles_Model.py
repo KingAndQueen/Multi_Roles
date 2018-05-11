@@ -205,19 +205,20 @@ class MultiRolesModel():
 
         def speaker_atten(encoder_state, attention_states, ans_emb, model_type='train'):
             with tf.variable_scope('speaker'):
-                num_heads = 1
+                num_heads = 2
                 batch_size = ans_emb[0].get_shape()[0]
                 attn_length = attention_states.get_shape()[1].value
                 attn_size = attention_states.get_shape()[2].value
                 hidden = array_ops.reshape(attention_states, [-1, attn_length, 1, attn_size])
+                # (128,20,100)--> hidden= (128,20,1,100)
                 hidden_features = []
                 v = []
                 attention_vec_size = attn_size
                 for a in range(num_heads):
                     k = tf.get_variable('AttnW_%d' % a, [1, 1, attn_size, attention_vec_size])
-                    hidden_features.append(nn_ops.conv2d(hidden, k, [1, 1, 1, 1], 'SAME'))
-                    v.append(tf.get_variable('AttnV_%d' % a, [attention_vec_size]))
-
+                    hidden_features.append(nn_ops.conv2d(hidden, k, [1, 1, 1, 1], 'SAME')) # hidden_features=(128,20,1,100)
+                    v.append(tf.get_variable('AttnV_%d' % a, [attention_vec_size])) #[100]
+                # pdb.set_trace()
                 def attention(query):
                     ds = []
                     if nest.is_sequence(query):
@@ -231,10 +232,11 @@ class MultiRolesModel():
                         with tf.variable_scope('Attention_%d' % a):
                             y = linear(query, attention_vec_size, True)
                             y = array_ops.reshape(y, [-1, 1, 1, attention_vec_size])
-                            s = math_ops.reduce_sum(v[a] * math_ops.tanh(hidden_features[a] + y), [2, 3])
-                            a = nn_ops.softmax(s)
-                            d = math_ops.reduce_sum(array_ops.reshape(a, [-1, attn_length, 1, 1]) * hidden, [1, 2])
+                            s = math_ops.reduce_sum(v[a] * math_ops.tanh(hidden_features[a] + y), [2, 3])#shape=(128, 20)
+                            a = nn_ops.softmax(s) #shape=(128, 20)
+                            d = math_ops.reduce_sum(array_ops.reshape(a, [-1, attn_length, 1, 1]) * hidden, [1, 2]) #(128,100)
                             ds.append(array_ops.reshape(d, [-1, attn_size]))
+                            # pdb.set_trace()
                     return ds
 
                 def extract_argmax_and_embed(prev, _):
