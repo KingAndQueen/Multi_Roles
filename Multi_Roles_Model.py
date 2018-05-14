@@ -134,29 +134,30 @@ class MultiRolesModel():
             attention_states_speaker = tf.split(attention_states, [-1, len(Monica_emb)], axis=1)[-1]
             # pdb.set_trace()
 
-        # with tf.variable_scope('cnn_encoding_context'):
-        #     # pdb.set_trace()
-        #     # context=tf.stack([Chandler_emb, Joey_emb, Monica_emb, Phoebe_emb, Rachel_emb, Ross_emb, others_emb])
-        #     context=encode_all_roles
-        #     context=tf.transpose(context,[2,1,3,0])
-        #     context_cnn=[]
-        #     out_channel=1
-        #
-        #     for filter_size in [1]:#range(1,self._sentence_size+1):#[3,4,5]:
-        #         filter_ = [filter_size, 101, 7, out_channel]
-        #         context_filter = tf.Variable(tf.random_normal(filter_))#[filter_size, self._embedding_size, 7, out_channel]))
-        #         context_bias=tf.get_variable("cnn_b_%s" % filter_size, shape=[out_channel], initializer=tf.constant_initializer(value=0.1, dtype=tf.float32))
-        #         context_conv=tf.nn.conv2d(context,context_filter,strides=[1,1,1,1],padding='VALID')
-        #         #pdb.set_trace() #context_conv.shape=[batch,sentence_size-filter_x+1,2*embedding_size/filter_y,filter_channel_out]
-        #         cnn_h = tf.nn.relu(tf.nn.bias_add(context_conv, context_bias), name="relu")
-        #         #pooled = tf.nn.max_pool(cnn_h,ksize=[1,self._sentence_size - filter_size + 1, 1, 1],strides=[1, 1, 1, 1],padding='VALID',name="pool")
-        #
-        #         # pooled=tf.squeeze(pooled)
-        #         context_cnn.append(cnn_h)
-        #     # pdb.set_trace()
-        #     context_cnn_flat=tf.concat(context_cnn, 1)
-        #     context_cnn_flat=tf.squeeze(context_cnn_flat,[3])
-        #     context_cnn_output=context_cnn_flat
+        with tf.variable_scope('cnn_encoding_context'):
+            # pdb.set_trace()
+            context=tf.stack([tf.stack(Chandler_emb), tf.stack(Joey_emb), tf.stack(Monica_emb), tf.stack(Phoebe_emb), tf.stack(Rachel_emb), tf.stack(Ross_emb), tf.stack(others_emb)])
+            #context=encode_all_roles
+
+            context=tf.transpose(context,[2,1,3,0])
+            context_cnn=[]
+            out_channel=1
+
+            for filter_size in range(1,self._sentence_size+1):#[3,4,5]:
+                # filter_ = [filter_size, 100, 7, out_channel]
+                context_filter = tf.Variable(tf.random_normal([filter_size,1,7,out_channel]))#[filter_size, self._embedding_size, 7, out_channel]))
+                context_bias=tf.get_variable("cnn_b_%s" % filter_size, shape=[out_channel], initializer=tf.constant_initializer(value=0.1, dtype=tf.float32))
+                context_conv=tf.nn.conv2d(context,context_filter,strides=[1,1,1,1],padding='VALID')
+                # pdb.set_trace() #context_conv.shape=[batch,sentence_size-filter_x+1,2*embedding_size/filter_y,filter_channel_out]
+                cnn_h = tf.nn.relu(tf.nn.bias_add(context_conv, context_bias), name="relu")
+                pooled = tf.nn.max_pool(cnn_h,ksize=[1,self._sentence_size - filter_size + 1, 1, 1],strides=[1, 1, 1, 1],padding='VALID',name="pool")
+
+                # pooled=tf.squeeze(pooled)
+                context_cnn.append(pooled)
+            # pdb.set_trace()
+            context_cnn_flat=tf.concat(context_cnn, 1)
+            context_cnn_flat=tf.squeeze(context_cnn_flat,[3])
+            context_cnn_output=context_cnn_flat
            #  weights_initializer = tf.truncated_normal_initializer(
            #      stddev=0.1)
            #  regularizer = tf.contrib.layers.l2_regularizer(0.1)
@@ -206,7 +207,7 @@ class MultiRolesModel():
             next_speaker = tf.expand_dims(next_speaker, 0)  # next_speaker.shape=[1,batch_size,roles_number]
             next_speaker = tf.expand_dims(next_speaker, -1)  # next_speaker.shape=[1,batch_size,roles_number,1]
 
-        def speaker_atten(encoder_state, attention_states, ans_emb,next_speaker_embedding, model_type='train'):
+        def speaker_atten(encoder_state, attention_states, ans_emb,next_speaker_embedding,context_cnn_output, model_type='train'):
             with tf.variable_scope('speaker'):
                 num_heads = 3
                 batch_size = ans_emb[0].get_shape()[0]
@@ -241,6 +242,42 @@ class MultiRolesModel():
                             ds.append(array_ops.reshape(d, [-1, attn_size]))
                             # pdb.set_trace()
                     return ds
+############### second cnn attention ############
+                attn_length_cnn = context_cnn_output.get_shape()[1].value
+                attn_size_cnn = context_cnn_output.get_shape()[2].value
+                hidden_cnn = array_ops.reshape(context_cnn_output, [-1, attn_length, 1, attn_size])
+                # (128,20,100)--> hidden= (128,20,1,100)
+                hidden_features_cnn = []
+                v_cnn = []
+                attention_vec_size_cnn = attn_size_cnn
+                for a in range(num_heads):
+                    k_cnn = tf.get_variable('AttnW_cnn_%d' % a, [1, 1, attn_size, attention_vec_size])
+                    hidden_features_cnn.append(
+                        nn_ops.conv2d(hidden_cnn, k_cnn, [1, 1, 1, 1], 'SAME'))  # hidden_features=(128,20,1,100)
+                    v_cnn.append(tf.get_variable('AttnV_cnn_%d' % a, [attention_vec_size_cnn]))  # [100]
+
+                # pdb.set_trace()
+                def attention_cnn(query):
+                    ds_cnn = []
+                    if nest.is_sequence(query):
+                        query_list = nest.flatten(query)
+                        for q in query_list:
+                            ndims = q.get_shape().ndims
+                            if ndims:
+                                assert ndims == 2
+                        query = array_ops.concat(query_list, 1)
+                    for a_cnn in range(num_heads):
+                        with tf.variable_scope('Attention_cnn_%d' % a_cnn):
+                            y_cnn = linear(query, attention_vec_size_cnn, True)
+                            y_cnn = array_ops.reshape(y_cnn, [-1, 1, 1, attention_vec_size_cnn])
+                            s_cnn = math_ops.reduce_sum(v_cnn[a_cnn] * math_ops.tanh(hidden_features_cnn[a_cnn] + y_cnn),
+                                                    [2, 3])  # shape=(128, 20)
+                            a_cnn = nn_ops.softmax(s_cnn)  # shape=(128, 20)
+                            d_cnn = math_ops.reduce_sum(array_ops.reshape(a_cnn, [-1, attn_length_cnn, 1, 1]) * hidden_cnn,
+                                                    [1, 2])  # (128,100)
+                            ds_cnn.append(array_ops.reshape(d_cnn, [-1, attn_size_cnn]))
+                            # pdb.set_trace()
+                    return ds_cnn
 
                 def extract_argmax_and_embed(prev, _):
                     """Loop_function that extracts the symbol from prev and embeds it."""
@@ -294,7 +331,8 @@ class MultiRolesModel():
                         inp = linear([inp] + attns, self._embedding_size, True)
                         output, state = cell_de(inp, state)
                         attns = attention(state)
-                        #  pdb.set_trace()
+                        attns=attention_cnn(attns)
+                        # pdb.set_trace()
                         with tf.variable_scope('AttnOutputProjecton'):
                             output = linear([output] + attns, self._vocab.vocab_size, True)
                         outputs.append(output)
@@ -492,7 +530,7 @@ class MultiRolesModel():
                                                 model_type=self.model_type)
             else:
                 if config.attention:
-                    response = speaker_atten(state_all_roles_speaker, attention_states_speaker, answer_emb,next_speaker_embedding,
+                    response = speaker_atten(state_all_roles_speaker, attention_states_speaker, answer_emb,next_speaker_embedding,context_cnn_output,
                                              self.model_type)
                 else:
                     response = speaker_noatten(state_all_roles_speaker, answer_emb, self.model_type)
