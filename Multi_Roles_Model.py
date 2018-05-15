@@ -210,6 +210,7 @@ class MultiRolesModel():
         def speaker_atten(encoder_state, attention_states, ans_emb,next_speaker_embedding,context_cnn_output, model_type='train'):
             with tf.variable_scope('speaker'):
                 num_heads = 3
+                num_heads_cnn = 3
                 batch_size = ans_emb[0].get_shape()[0]
                 attn_length = attention_states.get_shape()[1].value
                 attn_size = attention_states.get_shape()[2].value
@@ -250,7 +251,7 @@ class MultiRolesModel():
                 hidden_features_cnn = []
                 v_cnn = []
                 attention_vec_size_cnn = attn_size_cnn
-                for a in range(num_heads):
+                for a in range(num_heads_cnn):
                     k_cnn = tf.get_variable('AttnW_cnn_%d' % a, [1, 1, attn_size, attention_vec_size])
                     hidden_features_cnn.append(
                         nn_ops.conv2d(hidden_cnn, k_cnn, [1, 1, 1, 1], 'SAME'))  # hidden_features=(128,20,1,100)
@@ -266,7 +267,7 @@ class MultiRolesModel():
                             if ndims:
                                 assert ndims == 2
                         query = array_ops.concat(query_list, 1)
-                    for a_cnn in range(num_heads):
+                    for a_cnn in range(num_heads_cnn):
                         with tf.variable_scope('Attention_cnn_%d' % a_cnn):
                             y_cnn = linear(query, attention_vec_size_cnn, True)
                             y_cnn = array_ops.reshape(y_cnn, [-1, 1, 1, attention_vec_size_cnn])
@@ -292,7 +293,12 @@ class MultiRolesModel():
                 linear = rnn_cell_impl._linear
                 batch_attn_size = array_ops.stack([batch_size, attn_size])
                 attns = [array_ops.zeros(batch_attn_size, dtype=tf.float32) for _ in range(num_heads)]
+                # pdb.set_trace()
                 for a in attns:
+                    a.set_shape([None, attn_size])
+
+                attns_cnn=[array_ops.zeros(batch_attn_size, dtype=tf.float32) for _ in range(num_heads_cnn)]
+                for a in attns_cnn:
                     a.set_shape([None, attn_size])
 
                 with tf.variable_scope("rnn_decoder"):
@@ -328,13 +334,14 @@ class MultiRolesModel():
                         inp = tf.concat([inp, next_speaker_embedding], 1)
 
 
-                        inp = linear([inp] + attns, self._embedding_size, True)
+                        inp = linear([inp] + attns+attns_cnn, self._embedding_size, True)
                         output, state = cell_de(inp, state)
-                        attns = attention(state)
-                        attns=attention_cnn(attns)
                         # pdb.set_trace()
+                        attns = attention(state)
+                        attns_cnn=attention_cnn(state)
+
                         with tf.variable_scope('AttnOutputProjecton'):
-                            output = linear([output] + attns, self._vocab.vocab_size, True)
+                            output = linear([output] + attns+attns_cnn, self._vocab.vocab_size, True)
                         outputs.append(output)
                         if loop_function is not None:
                             prev = array_ops.stop_gradient(output)
