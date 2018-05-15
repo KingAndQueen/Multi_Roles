@@ -210,7 +210,6 @@ class MultiRolesModel():
         def speaker_atten(encoder_state, attention_states, ans_emb,next_speaker_embedding,context_cnn_output, model_type='train'):
             with tf.variable_scope('speaker'):
                 num_heads = 3
-                num_heads_cnn = 3
                 batch_size = ans_emb[0].get_shape()[0]
                 attn_length = attention_states.get_shape()[1].value
                 attn_size = attention_states.get_shape()[2].value
@@ -244,6 +243,7 @@ class MultiRolesModel():
                             # pdb.set_trace()
                     return ds
 ############### second cnn attention ############
+                num_heads_cnn = 1
                 attn_length_cnn = context_cnn_output.get_shape()[1].value
                 attn_size_cnn = context_cnn_output.get_shape()[2].value
                 hidden_cnn = array_ops.reshape(context_cnn_output, [-1, attn_length, 1, attn_size])
@@ -332,7 +332,6 @@ class MultiRolesModel():
                                                      initializer=tf.zeros_initializer)
                         inp = tf.nn.xw_plus_b(inp, weights_emb, biases_emb)
                         inp = tf.concat([inp, next_speaker_embedding], 1)
-
 
                         inp = linear([inp] + attns+attns_cnn, self._embedding_size, True)
                         output, state = cell_de(inp, state)
