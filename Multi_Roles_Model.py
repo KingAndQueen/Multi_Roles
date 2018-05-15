@@ -69,6 +69,8 @@ class MultiRolesModel():
             _name_list = tf.unstack(self._name_list, axis=1)
             # word_embedding may be too big for name
             name_list_emb = [tf.nn.embedding_lookup(self._name_embedding, word) for word in _name_list]
+            _question = tf.unstack(self._question, axis=1)
+            question_emb = [tf.nn.embedding_lookup(self._word_embedding, word) for word in _question]
 
         def _encoding_roles(person_emb, name='',GPU_id=0):
             # with tf.device('/device:GPU:%d' %GPU_id):
@@ -532,7 +534,7 @@ class MultiRolesModel():
 
             if config.beam:
 
-                response = speaker_beam(self._word_embedding, state_all_roles_speaker, answer_emb,next_speaker_embedding,
+                response = speaker_beam(self._word_embedding, state_all_roles_speaker, question_emb,next_speaker_embedding,
                                                 model_type=self.model_type)
             else:
                 if config.attention:
@@ -624,7 +626,7 @@ class MultiRolesModel():
         self._answers = tf.placeholder(tf.int32, [self._batch_size, self._sentence_size], name='answer')
         self._name_list = tf.placeholder(tf.int32, [self._batch_size, self._roles_number], name='name_list')
         self._speaker = tf.placeholder(tf.int32, [self._batch_size], name='true_speaker')
-
+        self._question=tf.placeholder(tf.int32,[self._batch_size, self._sentence_size], name='question')
     def _build_vars(self,config):
 
         self.rl_reward = tf.get_variable('rl_reward', [1], dtype=tf.float32, trainable=False)
@@ -647,7 +649,7 @@ class MultiRolesModel():
         for _ in range(0, len(data_raw), self._batch_size):
             if _ + self._batch_size > len(data_raw): continue
             data_batch = data_raw[_:_ + self._batch_size]
-            Monica, Joey, Chandler, Phoebe, Rachel, Ross, others, answer, weight, name_list, speaker = [], [], [], [], [], [], [], [], [], [], []
+            Monica, Joey, Chandler, Phoebe, Rachel, Ross, others, answer, weight, name_list, speaker, question= [], [], [], [], [], [], [], [], [], [], [],[]
             for i in data_batch:
                 if 'Monica' in i:
                     Monica.append(i.get('Monica'))
@@ -681,10 +683,10 @@ class MultiRolesModel():
                 answer.append(i.get('answer'))
                 weight.append(i.get('weight'))
                 speaker.append(i.get('speaker'))
-
+                question.append(i.get('question'))
             list_all_batch.append({'Monica': Monica, 'Joey': Joey, 'Chandler': Chandler, 'Phoebe': Phoebe,
                                    'Rachel': Rachel, 'Ross': Ross, 'others': others, 'answer': answer, 'weight': weight,
-                                   'name_list': name_list, 'speaker': speaker})
+                                   'name_list': name_list, 'speaker': speaker,'question':question})
             # pdb.set_trace()
         return list_all_batch
 
@@ -700,7 +702,8 @@ class MultiRolesModel():
                      self._answers: data_dict['answer'],
                      self._weight: data_dict['weight'],
                      self._name_list: data_dict['name_list'],
-                     self._speaker: data_dict['speaker']}
+                     self._speaker: data_dict['speaker'],
+                     self._question:data_dict['question']}
         if step_type == 'train':
             output_list = [self.loss, self.train_op, self.merged]
             # try:

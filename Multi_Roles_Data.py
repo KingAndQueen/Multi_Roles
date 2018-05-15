@@ -59,6 +59,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
     scene = {}
     scenes = []
     last_speaker = ''
+    questioner=''
     name_list_ = []
     for lines in f:
         # lines = lines.strip()[2:-5]
@@ -79,6 +80,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
             for i in range(padding_len):
                 sentence_id.append(vocabulary.word_to_index('<pad>'))
             scene[name] = sentence_id
+            questioner= last_speaker
             last_speaker = name
             name_list_.append(name)
         else:
@@ -111,6 +113,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
             scene['name_list'] = name_list
             scene[last_speaker] = sentence_size * [vocabulary.word_to_index('<pad>')]
             scene['speaker'] = NAME_MAP_ID[last_speaker]
+            scene['question']=scene[questioner]
             scenes.append(scene)
             scene = {}
             name_list_ = []
