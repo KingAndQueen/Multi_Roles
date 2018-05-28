@@ -213,7 +213,7 @@ class MultiRolesModel():
             # pool2
             pool2 = tf.nn.max_pool(norm2, ksize=[1, 4, 100, 1],
                                    strides=[1, 1, 3, 1], padding='SAME', name='pool2')
-            pdb.set_trace()
+            # pdb.set_trace()
             context_cnn_output=tf.reshape(pool2,[self._batch_size,self._sentence_size,-1])
             # context_cnn=[]
             # out_channel=1
