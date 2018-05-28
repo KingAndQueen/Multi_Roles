@@ -77,7 +77,7 @@ class MultiRolesModel():
             with tf.variable_scope('encoding_role_' + name):
                 encoding_single_layer = tf.nn.rnn_cell.GRUCell(config.neurons, reuse=tf.get_variable_scope().reuse)
                 encoding_cell = tf.nn.rnn_cell.MultiRNNCell([encoding_single_layer] * config.layers)
-                encoding_cell = tf.contrib.rnn.DropoutWrapper(encoding_cell, 0.5, 1, 0.5)
+                encoding_cell = tf.contrib.rnn.DropoutWrapper(encoding_cell, 0.8, 0.8, 0.8)
                 # for future test
                 output, state_fw, state_bw = rnn.static_bidirectional_rnn(cell_fw=encoding_cell, cell_bw=encoding_cell,
                                                                           inputs=person_emb, dtype=tf.float32)
@@ -137,29 +137,102 @@ class MultiRolesModel():
             # pdb.set_trace()
 
         with tf.variable_scope('cnn_encoding_context'):
-            # pdb.set_trace()
+            def _variable_on_cpu(name, shape, initializer):
+                """Helper to create a Variable stored on CPU memory.
+                Args:
+                  name: name of the variable
+                  shape: list of ints
+                  initializer: initializer for Variable
+                Returns:
+                  Variable Tensor
+                """
+                with tf.device('/cpu:0'):
+                    var = tf.get_variable(name, shape, initializer=initializer, dtype=tf.float32)
+                return var
+
+            def _variable_with_weight_decay(name, shape, stddev, wd):
+                """Helper to create an initialized Variable with weight decay.
+                Note that the Variable is initialized with a truncated normal distribution.
+                A weight decay is added only if one is specified.
+                Args:
+                  name: name of the variable
+                  shape: list of ints
+                  stddev: standard deviation of a truncated Gaussian
+                  wd: add L2Loss weight decay multiplied by this float. If None, weight
+                      decay is not added for this Variable.
+                Returns:
+                  Variable Tensor
+                """
+                var = _variable_on_cpu(
+                    name,
+                    shape,
+                    tf.truncated_normal_initializer(stddev=stddev, dtype=tf.float32))
+                if wd is not None:
+                    weight_decay = tf.multiply(tf.nn.l2_loss(var), wd, name='weight_loss')
+                    # tf.add_to_collection('losses', weight_decay)
+                return var
+
+
             context=tf.stack([tf.stack(Chandler_emb), tf.stack(Joey_emb), tf.stack(Monica_emb), tf.stack(Phoebe_emb), tf.stack(Rachel_emb), tf.stack(Ross_emb), tf.stack(others_emb)])
-            #context=encode_all_roles
+            context=tf.concat([context,encode_all_roles],3)
 
             context=tf.transpose(context,[2,1,3,0])
-            context_cnn=[]
-            out_channel=1
+            # conv1
+            with tf.variable_scope('conv1') as scope:
+                kernel = _variable_with_weight_decay('weights',
+                                                     shape=[3, 100, 7, 64],
+                                                     stddev=5e-2,
+                                                     wd=None)
+                # pdb.set_trace()
+                conv = tf.nn.conv2d(context, kernel, [1, 1, 1, 1], padding='SAME')
+                biases = _variable_on_cpu('biases', [64], tf.constant_initializer(0.0))
+                pre_activation = tf.nn.bias_add(conv, biases)
+                conv1 = tf.nn.relu(pre_activation, name=scope.name)
 
-            for filter_size in range(1,self._sentence_size+1):#[3,4,5]:
-                # filter_ = [filter_size, 100, 7, out_channel]
-                context_filter = tf.Variable(tf.random_normal([filter_size,1,7,out_channel]))#[filter_size, self._embedding_size, 7, out_channel]))
-                context_bias=tf.get_variable("cnn_b_%s" % filter_size, shape=[out_channel], initializer=tf.constant_initializer(value=0.1, dtype=tf.float32))
-                context_conv=tf.nn.conv2d(context,context_filter,strides=[1,1,1,1],padding='VALID')
-                # pdb.set_trace() #context_conv.shape=[batch,sentence_size-filter_x+1,2*embedding_size/filter_y,filter_channel_out]
-                cnn_h = tf.nn.relu(tf.nn.bias_add(context_conv, context_bias), name="relu")
-                pooled = tf.nn.max_pool(cnn_h,ksize=[1,self._sentence_size - filter_size + 1, 1, 1],strides=[1, 1, 1, 1],padding='VALID',name="pool")
+            # pool1
+            pool1 = tf.nn.max_pool(conv1, ksize=[1, 3, 100, 1], strides=[1, 1, 2, 1],
+                                   padding='SAME', name='pool1')
+            # norm1
+            norm1 = tf.nn.lrn(pool1, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75,
+                              name='norm1')
+            # conv2
+            with tf.variable_scope('conv2') as scope:
+                kernel = _variable_with_weight_decay('weights',
+                                                     shape=[4, 50, 64, 2],
+                                                     stddev=5e-2,
+                                                     wd=None)
+                conv = tf.nn.conv2d(norm1, kernel, [1, 1, 1, 1], padding='SAME')
+                biases = _variable_on_cpu('biases', [2], tf.constant_initializer(0.1))
+                pre_activation = tf.nn.bias_add(conv, biases)
+                conv2 = tf.nn.relu(pre_activation, name=scope.name)
 
-                # pooled=tf.squeeze(pooled)
-                context_cnn.append(pooled)
-            # pdb.set_trace()
-            context_cnn_flat=tf.concat(context_cnn, 1)
-            context_cnn_flat=tf.squeeze(context_cnn_flat,[3])
-            context_cnn_output=context_cnn_flat
+
+            # norm2
+            norm2 = tf.nn.lrn(conv2, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75,
+                              name='norm2')
+            # pool2
+            pool2 = tf.nn.max_pool(norm2, ksize=[1, 4, 100, 1],
+                                   strides=[1, 1, 3, 1], padding='SAME', name='pool2')
+            pdb.set_trace()
+            context_cnn_output=tf.reshape(pool2,[self._batch_size,self._sentence_size,-1])
+            # context_cnn=[]
+            # out_channel=1
+            #
+            # for filter_size in range(3):#[3,4,5]:
+            #     # filter_ = [filter_size, 100, 7, out_channel]
+            #     context_filter = tf.Variable(tf.random_normal([filter_size,1,7,out_channel]))#[filter_size, self._embedding_size, 7, out_channel]))
+            #     context_bias=tf.get_variable("cnn_b_%s" % filter_size, shape=[out_channel], initializer=tf.constant_initializer(value=0.1, dtype=tf.float32))
+            #     context_conv=tf.nn.conv2d(context,context_filter,strides=[1,1,1,1],padding='VALID')
+            #     # pdb.set_trace() #context_conv.shape=[batch,sentence_size-filter_x+1,2*embedding_size/filter_y,filter_channel_out]
+            #     cnn_h = tf.nn.relu(tf.nn.bias_add(context_conv, context_bias), name="relu")
+            #     pooled = tf.nn.max_pool(cnn_h,ksize=[1,self._sentence_size - filter_size + 1, 1, 1],strides=[1, 1, 1, 1],padding='VALID',name="pool")
+            #
+            #     # pooled=tf.squeeze(pooled)
+            #     context_cnn.append(pooled)
+            # # pdb.set_trace()
+            # context_cnn_flat=tf.concat(context_cnn, 1)
+            # context_cnn_flat=tf.squeeze(context_cnn_flat,[3])
+            # context_cnn_output=context_cnn_flat
            #  weights_initializer = tf.truncated_normal_initializer(
            #      stddev=0.1)
            #  regularizer = tf.contrib.layers.l2_regularizer(0.1)
