@@ -190,7 +190,7 @@ class MultiRolesModel():
                 conv1 = tf.nn.relu(pre_activation, name=scope.name)
 
             # pool1
-            pool1 = tf.nn.max_pool(conv1, ksize=[1, 3, 100, 1], strides=[1, 1, 2, 1],
+            pool1 = tf.nn.max_pool(conv1, ksize=[1, 3, 100, 1], strides=[1, 1, 3, 1],
                                    padding='SAME', name='pool1')
             # norm1
             norm1 = tf.nn.lrn(pool1, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75,
@@ -198,11 +198,11 @@ class MultiRolesModel():
             # conv2
             with tf.variable_scope('conv2') as scope:
                 kernel = _variable_with_weight_decay('weights',
-                                                     shape=[4, 50, 64, 2],
+                                                     shape=[4, 50, 64, 1],
                                                      stddev=5e-2,
                                                      wd=None)
                 conv = tf.nn.conv2d(norm1, kernel, [1, 1, 1, 1], padding='SAME')
-                biases = _variable_on_cpu('biases', [2], tf.constant_initializer(0.1))
+                biases = _variable_on_cpu('biases', [1], tf.constant_initializer(0.1))
                 pre_activation = tf.nn.bias_add(conv, biases)
                 conv2 = tf.nn.relu(pre_activation, name=scope.name)
 
@@ -212,9 +212,9 @@ class MultiRolesModel():
                               name='norm2')
             # pool2
             pool2 = tf.nn.max_pool(norm2, ksize=[1, 4, 100, 1],
-                                   strides=[1, 1, 3, 1], padding='SAME', name='pool2')
+                                   strides=[1, 1, 1, 1], padding='SAME', name='pool2')
             # pdb.set_trace()
-            context_cnn_output=tf.reshape(pool2,[self._batch_size,self._sentence_size,-1])
+            context_cnn_output=tf.squeeze(pool2)
             # context_cnn=[]
             # out_channel=1
             #
