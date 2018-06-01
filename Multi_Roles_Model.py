@@ -136,85 +136,87 @@ class MultiRolesModel():
             attention_states_speaker = tf.split(attention_states, [-1, len(Monica_emb)], axis=1)[-1]
             # pdb.set_trace()
 
-        with tf.variable_scope('cnn_encoding_context'):
-            def _variable_on_cpu(name, shape, initializer):
-                """Helper to create a Variable stored on CPU memory.
-                Args:
-                  name: name of the variable
-                  shape: list of ints
-                  initializer: initializer for Variable
-                Returns:
-                  Variable Tensor
-                """
-                with tf.device('/cpu:0'):
-                    var = tf.get_variable(name, shape, initializer=initializer, dtype=tf.float32)
-                return var
+        # with tf.variable_scope('cnn_encoding_context'):
+        #     def _variable_on_cpu(name, shape, initializer):
+        #         """Helper to create a Variable stored on CPU memory.
+        #         Args:
+        #           name: name of the variable
+        #           shape: list of ints
+        #           initializer: initializer for Variable
+        #         Returns:
+        #           Variable Tensor
+        #         """
+        #         with tf.device('/cpu:0'):
+        #             var = tf.get_variable(name, shape, initializer=initializer, dtype=tf.float32)
+        #         return var
+        #
+        #     def _variable_with_weight_decay(name, shape, stddev, wd):
+        #         """Helper to create an initialized Variable with weight decay.
+        #         Note that the Variable is initialized with a truncated normal distribution.
+        #         A weight decay is added only if one is specified.
+        #         Args:
+        #           name: name of the variable
+        #           shape: list of ints
+        #           stddev: standard deviation of a truncated Gaussian
+        #           wd: add L2Loss weight decay multiplied by this float. If None, weight
+        #               decay is not added for this Variable.
+        #         Returns:
+        #           Variable Tensor
+        #         """
+        #         var = _variable_on_cpu(
+        #             name,
+        #             shape,
+        #             tf.truncated_normal_initializer(stddev=stddev, dtype=tf.float32))
+        #         # if wd is not None:
+        #         #     weight_decay = tf.multiply(tf.nn.l2_loss(var), wd, name='weight_loss')
+        #             # tf.add_to_collection('losses', weight_decay)
+        #         return var
+        #
+        #
+        #     context=tf.stack([tf.stack(Chandler_emb), tf.stack(Joey_emb), tf.stack(Monica_emb), tf.stack(Phoebe_emb), tf.stack(Rachel_emb), tf.stack(Ross_emb), tf.stack(others_emb)])
+        #     context=tf.concat([context,encode_all_roles],3)
+        #
+        #     context=tf.transpose(context,[2,1,3,0])
+        #     # conv1
+        #     with tf.variable_scope('conv1') as scope:
+        #         kernel = _variable_with_weight_decay('weights',
+        #                                              shape=[3, 100, 7, 64],
+        #                                              stddev=5e-2,
+        #                                              wd=None)
+        #         # pdb.set_trace()
+        #         conv = tf.nn.conv2d(context, kernel, [1, 1, 1, 1], padding='SAME')
+        #         biases = _variable_on_cpu('biases', [64], tf.constant_initializer(0.0))
+        #         pre_activation = tf.nn.bias_add(conv, biases)
+        #         conv1 = tf.nn.relu(pre_activation, name=scope.name)
+        #
+        #     # pool1
+        #     pool1 = tf.nn.max_pool(conv1, ksize=[1, 3, 100, 1], strides=[1, 1, 3, 1],
+        #                            padding='SAME', name='pool1')
+        #     # norm1
+        #     norm1 = tf.nn.lrn(pool1, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75,
+        #                       name='norm1')
+        #     # conv2
+        #     with tf.variable_scope('conv2') as scope:
+        #         kernel = _variable_with_weight_decay('weights',
+        #                                              shape=[4, 50, 64, 1],
+        #                                              stddev=5e-2,
+        #                                              wd=None)
+        #         conv = tf.nn.conv2d(norm1, kernel, [1, 1, 1, 1], padding='SAME')
+        #         biases = _variable_on_cpu('biases', [1], tf.constant_initializer(0.1))
+        #         pre_activation = tf.nn.bias_add(conv, biases)
+        #         conv2 = tf.nn.relu(pre_activation, name=scope.name)
+        #
+        #
+        #     # norm2
+        #     norm2 = tf.nn.lrn(conv2, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75,
+        #                       name='norm2')
+        #     # pool2
+        #     pool2 = tf.nn.max_pool(norm2, ksize=[1, 4, 100, 1],
+        #                            strides=[1, 1, 1, 1], padding='SAME', name='pool2')
+        #     # pdb.set_trace()
+        #     context_cnn_output=tf.squeeze(pool2)
 
-            def _variable_with_weight_decay(name, shape, stddev, wd):
-                """Helper to create an initialized Variable with weight decay.
-                Note that the Variable is initialized with a truncated normal distribution.
-                A weight decay is added only if one is specified.
-                Args:
-                  name: name of the variable
-                  shape: list of ints
-                  stddev: standard deviation of a truncated Gaussian
-                  wd: add L2Loss weight decay multiplied by this float. If None, weight
-                      decay is not added for this Variable.
-                Returns:
-                  Variable Tensor
-                """
-                var = _variable_on_cpu(
-                    name,
-                    shape,
-                    tf.truncated_normal_initializer(stddev=stddev, dtype=tf.float32))
-                # if wd is not None:
-                #     weight_decay = tf.multiply(tf.nn.l2_loss(var), wd, name='weight_loss')
-                    # tf.add_to_collection('losses', weight_decay)
-                return var
 
-
-            context=tf.stack([tf.stack(Chandler_emb), tf.stack(Joey_emb), tf.stack(Monica_emb), tf.stack(Phoebe_emb), tf.stack(Rachel_emb), tf.stack(Ross_emb), tf.stack(others_emb)])
-            context=tf.concat([context,encode_all_roles],3)
-
-            context=tf.transpose(context,[2,1,3,0])
-            # conv1
-            with tf.variable_scope('conv1') as scope:
-                kernel = _variable_with_weight_decay('weights',
-                                                     shape=[3, 100, 7, 64],
-                                                     stddev=5e-2,
-                                                     wd=None)
-                # pdb.set_trace()
-                conv = tf.nn.conv2d(context, kernel, [1, 1, 1, 1], padding='SAME')
-                biases = _variable_on_cpu('biases', [64], tf.constant_initializer(0.0))
-                pre_activation = tf.nn.bias_add(conv, biases)
-                conv1 = tf.nn.relu(pre_activation, name=scope.name)
-
-            # pool1
-            pool1 = tf.nn.max_pool(conv1, ksize=[1, 3, 100, 1], strides=[1, 1, 3, 1],
-                                   padding='SAME', name='pool1')
-            # norm1
-            norm1 = tf.nn.lrn(pool1, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75,
-                              name='norm1')
-            # conv2
-            with tf.variable_scope('conv2') as scope:
-                kernel = _variable_with_weight_decay('weights',
-                                                     shape=[4, 50, 64, 1],
-                                                     stddev=5e-2,
-                                                     wd=None)
-                conv = tf.nn.conv2d(norm1, kernel, [1, 1, 1, 1], padding='SAME')
-                biases = _variable_on_cpu('biases', [1], tf.constant_initializer(0.1))
-                pre_activation = tf.nn.bias_add(conv, biases)
-                conv2 = tf.nn.relu(pre_activation, name=scope.name)
-
-
-            # norm2
-            norm2 = tf.nn.lrn(conv2, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75,
-                              name='norm2')
-            # pool2
-            pool2 = tf.nn.max_pool(norm2, ksize=[1, 4, 100, 1],
-                                   strides=[1, 1, 1, 1], padding='SAME', name='pool2')
-            # pdb.set_trace()
-            context_cnn_output=tf.squeeze(pool2)
             # context_cnn=[]
             # out_channel=1
             #
@@ -282,7 +284,7 @@ class MultiRolesModel():
             next_speaker = tf.expand_dims(next_speaker, 0)  # next_speaker.shape=[1,batch_size,roles_number]
             next_speaker = tf.expand_dims(next_speaker, -1)  # next_speaker.shape=[1,batch_size,roles_number,1]
 
-        def speaker_atten(encoder_state, attention_states, ans_emb,next_speaker_embedding,context_cnn_output, model_type='train'):
+        def speaker_atten(encoder_state, attention_states, ans_emb,next_speaker_embedding,context_cnn_output=None, model_type='train'):
             with tf.variable_scope('speaker'):
                 num_heads = 3
                 batch_size = ans_emb[0].get_shape()[0]
@@ -318,42 +320,42 @@ class MultiRolesModel():
                             # pdb.set_trace()
                     return ds
 ############### second cnn attention ############
-                num_heads_cnn = 1
-                attn_length_cnn = context_cnn_output.get_shape()[1].value
-                attn_size_cnn = context_cnn_output.get_shape()[2].value
-                hidden_cnn = array_ops.reshape(context_cnn_output, [-1, attn_length, 1, attn_size])
-                # (128,20,100)--> hidden= (128,20,1,100)
-                hidden_features_cnn = []
-                v_cnn = []
-                attention_vec_size_cnn = attn_size_cnn
-                for a in range(num_heads_cnn):
-                    k_cnn = tf.get_variable('AttnW_cnn_%d' % a, [1, 1, attn_size, attention_vec_size])
-                    hidden_features_cnn.append(
-                        nn_ops.conv2d(hidden_cnn, k_cnn, [1, 1, 1, 1], 'SAME'))  # hidden_features=(128,20,1,100)
-                    v_cnn.append(tf.get_variable('AttnV_cnn_%d' % a, [attention_vec_size_cnn]))  # [100]
-
-                # pdb.set_trace()
-                def attention_cnn(query):
-                    ds_cnn = []
-                    if nest.is_sequence(query):
-                        query_list = nest.flatten(query)
-                        for q in query_list:
-                            ndims = q.get_shape().ndims
-                            if ndims:
-                                assert ndims == 2
-                        query = array_ops.concat(query_list, 1)
-                    for a_cnn in range(num_heads_cnn):
-                        with tf.variable_scope('Attention_cnn_%d' % a_cnn):
-                            y_cnn = linear(query, attention_vec_size_cnn, True)
-                            y_cnn = array_ops.reshape(y_cnn, [-1, 1, 1, attention_vec_size_cnn])
-                            s_cnn = math_ops.reduce_sum(v_cnn[a_cnn] * math_ops.tanh(hidden_features_cnn[a_cnn] + y_cnn),
-                                                    [2, 3])  # shape=(128, 20)
-                            a_cnn = nn_ops.softmax(s_cnn)  # shape=(128, 20)
-                            d_cnn = math_ops.reduce_sum(array_ops.reshape(a_cnn, [-1, attn_length_cnn, 1, 1]) * hidden_cnn,
-                                                    [1, 2])  # (128,100)
-                            ds_cnn.append(array_ops.reshape(d_cnn, [-1, attn_size_cnn]))
-                            # pdb.set_trace()
-                    return ds_cnn
+                # num_heads_cnn = 1
+                # attn_length_cnn = context_cnn_output.get_shape()[1].value
+                # attn_size_cnn = context_cnn_output.get_shape()[2].value
+                # hidden_cnn = array_ops.reshape(context_cnn_output, [-1, attn_length, 1, attn_size])
+                # # (128,20,100)--> hidden= (128,20,1,100)
+                # hidden_features_cnn = []
+                # v_cnn = []
+                # attention_vec_size_cnn = attn_size_cnn
+                # for a in range(num_heads_cnn):
+                #     k_cnn = tf.get_variable('AttnW_cnn_%d' % a, [1, 1, attn_size, attention_vec_size])
+                #     hidden_features_cnn.append(
+                #         nn_ops.conv2d(hidden_cnn, k_cnn, [1, 1, 1, 1], 'SAME'))  # hidden_features=(128,20,1,100)
+                #     v_cnn.append(tf.get_variable('AttnV_cnn_%d' % a, [attention_vec_size_cnn]))  # [100]
+                #
+                # # pdb.set_trace()
+                # def attention_cnn(query):
+                #     ds_cnn = []
+                #     if nest.is_sequence(query):
+                #         query_list = nest.flatten(query)
+                #         for q in query_list:
+                #             ndims = q.get_shape().ndims
+                #             if ndims:
+                #                 assert ndims == 2
+                #         query = array_ops.concat(query_list, 1)
+                #     for a_cnn in range(num_heads_cnn):
+                #         with tf.variable_scope('Attention_cnn_%d' % a_cnn):
+                #             y_cnn = linear(query, attention_vec_size_cnn, True)
+                #             y_cnn = array_ops.reshape(y_cnn, [-1, 1, 1, attention_vec_size_cnn])
+                #             s_cnn = math_ops.reduce_sum(v_cnn[a_cnn] * math_ops.tanh(hidden_features_cnn[a_cnn] + y_cnn),
+                #                                     [2, 3])  # shape=(128, 20)
+                #             a_cnn = nn_ops.softmax(s_cnn)  # shape=(128, 20)
+                #             d_cnn = math_ops.reduce_sum(array_ops.reshape(a_cnn, [-1, attn_length_cnn, 1, 1]) * hidden_cnn,
+                #                                     [1, 2])  # (128,100)
+                #             ds_cnn.append(array_ops.reshape(d_cnn, [-1, attn_size_cnn]))
+                #             # pdb.set_trace()
+                #     return ds_cnn
 
                 def extract_argmax_and_embed(prev, _):
                     """Loop_function that extracts the symbol from prev and embeds it."""
@@ -372,9 +374,9 @@ class MultiRolesModel():
                 for a in attns:
                     a.set_shape([None, attn_size])
 
-                attns_cnn=[array_ops.zeros(batch_attn_size, dtype=tf.float32) for _ in range(num_heads_cnn)]
-                for a in attns_cnn:
-                    a.set_shape([None, attn_size])
+                # attns_cnn=[array_ops.zeros(batch_attn_size, dtype=tf.float32) for _ in range(num_heads_cnn)]
+                # for a in attns_cnn:
+                #     a.set_shape([None, attn_size])
 
                 with tf.variable_scope("rnn_decoder"):
                     single_cell_de = tf.nn.rnn_cell.GRUCell(self._embedding_size)
@@ -408,14 +410,14 @@ class MultiRolesModel():
                         inp = tf.nn.xw_plus_b(inp, weights_emb, biases_emb)
                         inp = tf.concat([inp, next_speaker_embedding], 1)
 
-                        inp = linear([inp] + attns+attns_cnn, self._embedding_size, True)
+                        inp = linear([inp] + attns, self._embedding_size, True)
                         output, state = cell_de(inp, state)
                         # pdb.set_trace()
                         attns = attention(state)
-                        attns_cnn=attention_cnn(state)
+                        # attns_cnn=attention_cnn(state)
 
                         with tf.variable_scope('AttnOutputProjecton'):
-                            output = linear([output] + attns+attns_cnn, self._vocab.vocab_size, True)
+                            output = linear([output] + attns, self._vocab.vocab_size, True)
                         outputs.append(output)
                         if loop_function is not None:
                             prev = array_ops.stop_gradient(output)
@@ -611,7 +613,7 @@ class MultiRolesModel():
                                                 model_type=self.model_type)
             else:
                 if config.attention:
-                    response = speaker_atten(state_all_roles_speaker, attention_states_speaker, answer_emb,next_speaker_embedding,context_cnn_output,
+                    response = speaker_atten(state_all_roles_speaker, attention_states_speaker, answer_emb,next_speaker_embedding,
                                              self.model_type)
                 else:
                     response = speaker_noatten(state_all_roles_speaker, answer_emb, self.model_type)
