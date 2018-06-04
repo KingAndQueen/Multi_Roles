@@ -157,6 +157,8 @@ def get_humorous_scene_rl(data_path, vocabulary, sentence_size):
         name_list_ = []
         scene = {}
         scenes = []
+        questioner = ''
+        last_speaker = ''
         for lines in f:
             #lines = lines.strip()[2:-5]
             # pdb.set_trace()
@@ -176,6 +178,7 @@ def get_humorous_scene_rl(data_path, vocabulary, sentence_size):
                 for i in range(padding_len):
                     sentence_id.append(vocabulary.word_to_index('<pad>'))
                 scene[name] = sentence_id
+                questioner = last_speaker
                 last_speaker = name
                 name_list_.append(name)
             else:
@@ -192,6 +195,7 @@ def get_humorous_scene_rl(data_path, vocabulary, sentence_size):
                         name_list.append(NAME_MAP_ID['pad'])
                 scene['name_list'] = name_list
                 scene['speaker'] =NAME_MAP_ID[last_speaker]
+                scene['question'] = scene[questioner]
                 scenes.append(scene)
                 scene = {}
                 name_list_ = []
