@@ -35,10 +35,10 @@ for i_episode in range(30):
     index=1
     while True:
         print('try:',index)
-        index+=1
         # if RENDER: env.render()
         pdb.set_trace()
-        scenes = RL_model.choose_scene(observation)
+        if index>1:
+            scenes = RL_model.choose_scene(observation)
         observation_, reward, done = env.step_scene(scenes,vocab,RL_model,humor_input_data)
         RL_model.store_transition(observation_,None,reward)
         # RL.store_transition(observation, sentence, reward)
@@ -61,5 +61,5 @@ for i_episode in range(30):
             print('------positive sentence!----')
             # if running_reward >0.0016:
             #     break
-
+        index += 1
         observation = observation_
