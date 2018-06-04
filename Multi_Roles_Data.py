@@ -163,6 +163,7 @@ def get_humorous_scene_rl(data_path, vocabulary, sentence_size):
             #lines = lines.strip()[2:-5]
             # pdb.set_trace()
             if len(lines) > 2:
+
                 name = lines[:lines.index(':')]
                 if name not in ['Chandler', 'Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross']:
                     name = 'others'

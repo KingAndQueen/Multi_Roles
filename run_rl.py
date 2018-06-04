@@ -37,6 +37,7 @@ for i_episode in range(30):
         print('try:',index)
         index+=1
         # if RENDER: env.render()
+        pdb.set_trace()
         scenes = RL_model.choose_scene(observation)
         observation_, reward, done = env.step_scene(scenes,vocab,RL_model,humor_input_data)
         RL_model.store_transition(observation_,None,reward)
@@ -48,8 +49,9 @@ for i_episode in range(30):
         # pdb.set_trace()
         if done:
             ep_rs_last = RL_model.ep_rs[-1]
+
             if 'running_reward' not in globals():
-                running_reward = running_reward-ep_rs_last
+                running_reward = ep_rs_last
             else:
                 running_reward = (running_reward-ep_rs_last) * 0.99 + ep_rs_last * 0.01
             # if running_reward > DISPLAY_REWARD_THRESHOLD: RENDER = True     # rendering
