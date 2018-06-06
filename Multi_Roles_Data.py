@@ -83,6 +83,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
             questioner= last_speaker
             last_speaker = name
             name_list_.append(name)
+            if len(name_list_)>=len(NAMELIST):pdb.set_trace()
         else:
 
             if last_speaker not in scene or last_speaker == '':
