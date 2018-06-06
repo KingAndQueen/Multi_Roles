@@ -113,7 +113,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
             for name_ in name_list_:
                 if name_ not in NAMELIST: pdb.set_trace()
                 name_list.append(NAME_MAP_ID[name_])
-            pad_numb=max(len(NAME_MAP_ID)-len(name_list),0)
+            pad_numb=max(len(NAMELIST)-len(name_list),0)
             for x in range(pad_numb):
                 name_list.append(NAME_MAP_ID['pad'])
 
