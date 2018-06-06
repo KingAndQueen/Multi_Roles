@@ -72,6 +72,8 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
             sentence = re.sub(unlegal, ' ', sentence)
             sentence = sentence.lower()
             sentence=nltk.word_tokenize(sentence)
+            if len(sentence)==0:
+                continue
             # sentence = sentence.split()
             sentence_id = [vocabulary.word_to_index(word) for word in sentence]
             sentence_id = sentence_id[:sentence_size - 1]
