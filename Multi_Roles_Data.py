@@ -101,12 +101,24 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
             scene['weight'] = weight
             # if not rl:
             #     name_list_.pop()  # pop the last speaker to hidden the true speaker for none-rl
-            name_list_.pop()  # pop out the last speaker
-            for name_ in NAMELIST:
-                if name_ in name_list_:
+            _last_speaker=name_list_.pop()  # pop out the last speaker
+            if not cmp(_last_speaker,last_speaker)==0:
+                pdb.set_trace()
+            # for name_ in NAMELIST:
+            #     if name_ in name_list_:
+            #         name_list.append(NAME_MAP_ID[name_])
+            #     else:
+            #         name_list.append(NAME_MAP_ID['pad'])
+
+            for name_ in name_list_:
+                if name_ in NAMELIST:
                     name_list.append(NAME_MAP_ID[name_])
                 else:
                     name_list.append(NAME_MAP_ID['pad'])
+            pad_numb=max(len(NAME_MAP_ID)-len(name_list),0)
+            for x in range(pad_numb):
+                name_list.append(NAME_MAP_ID['pad'])
+
             # name_pad = roles_number - len(name_list)
             if len(name_list) != roles_number: pdb.set_trace()
             # for i in range(name_pad): name_list.append(vocabulary.word_to_index('<pad>'))
