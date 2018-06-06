@@ -726,28 +726,28 @@ class MultiRolesModel():
             data_batch = data_raw[_:_ + self._batch_size]
             Monica, Joey, Chandler, Phoebe, Rachel, Ross, others, answer, weight, name_list, speaker, question= [], [], [], [], [], [], [], [], [], [], [],[]
             for i in data_batch:
-                if 'Monica' in i:
-                    Monica.append(i.get('Monica'))
+                if 'monica' in i:
+                    Monica.append(i.get('monica'))
                 else:
                     Monica.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
-                if 'Joey' in i:
-                    Joey.append(i.get('Joey'))
+                if 'joey' in i:
+                    Joey.append(i.get('joey'))
                 else:
                     Joey.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
-                if 'Chandler' in i:
-                    Chandler.append(i.get('Chandler'))
+                if 'chandler' in i:
+                    Chandler.append(i.get('chandler'))
                 else:
                     Chandler.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
-                if 'Phoebe' in i:
-                    Phoebe.append(i.get('Phoebe'))
+                if 'phoebe' in i:
+                    Phoebe.append(i.get('phoebe'))
                 else:
                     Phoebe.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
-                if 'Rachel' in i:
-                    Rachel.append(i.get('Rachel'))
+                if 'rachel' in i:
+                    Rachel.append(i.get('rachel'))
                 else:
                     Rachel.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
-                if 'Ross' in i:
-                    Ross.append(i.get('Ross'))
+                if 'ross' in i:
+                    Ross.append(i.get('ross'))
                 else:
                     Ross.append(self._sentence_size * [self._vocab.word_to_index('<pad>')])
                 if 'others' in i:

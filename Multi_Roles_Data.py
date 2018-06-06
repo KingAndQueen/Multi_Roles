@@ -6,9 +6,9 @@ import json
 import random
 import nltk
 import re
-NAMELIST = ['Chandler', 'Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross', 'others']
-NAME_MAP_ID = {'Chandler': 0, 'Joey': 1, 'Monica': 2, 'Phoebe': 3, 'Rachel': 4, 'Ross': 5, 'others': 6, 'pad': 7}
-ID_MAP_NAME={0:'Chandler',1:'Joey', 2:'Monica', 3:'Phoebe', 4:'Rachel', 5:'Ross',6:'others',7:'pad'}
+NAMELIST = ['chandler', 'joey', 'monica', 'phoebe', 'rachel', 'ross', 'others']
+NAME_MAP_ID = {'chandler': 0, 'joey': 1, 'monica': 2, 'phoebe': 3, 'rachel': 4, 'ross': 5, 'others': 6, 'pad': 7}
+ID_MAP_NAME={0:'chandler',1:'joey', 2:'monica', 3:'phoebe', 4:'rachel', 5:'ross',6:'others',7:'pad'}
 unlegal='[^A-Za-z0-9\ \']'
 class Vocab():
     def __init__(self, word2vec=None, embed_size=0):
@@ -64,8 +64,8 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
     for lines in f:
         # lines = lines.strip()[2:-5]
         if len(lines) > 2:
-            name = lines[:lines.index(':')]
-            if name not in ['Chandler', 'Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross']:
+            name = lines[:lines.index(':')].lower()
+            if name not in ['chandler', 'joey', 'monica', 'phoebe', 'rachel', 'ross']:
                 name = 'others'
             # name_id=vocabulary.word_to_index(name)#for word in name.split()]
             sentence = lines[lines.index(':') + 1:]
@@ -111,10 +111,8 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
             #         name_list.append(NAME_MAP_ID['pad'])
 
             for name_ in name_list_:
-                if name_ in NAMELIST:
-                    name_list.append(NAME_MAP_ID[name_])
-                else:
-                    name_list.append(NAME_MAP_ID['pad'])
+                if name_ not in NAMELIST: pdb.set_trace()
+                name_list.append(NAME_MAP_ID[name_])
             pad_numb=max(len(NAME_MAP_ID)-len(name_list),0)
             for x in range(pad_numb):
                 name_list.append(NAME_MAP_ID['pad'])
@@ -176,8 +174,8 @@ def get_humorous_scene_rl(data_path, vocabulary, sentence_size):
             # pdb.set_trace()
             if len(lines) > 2:
 
-                name = lines[:lines.index(':')]
-                if name not in ['Chandler', 'Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross']:
+                name = lines[:lines.index(':')].lower()
+                if name not in ['chandler', 'joey', 'monica', 'phoebe', 'rachel', 'ross']:
                     name = 'others'
                     # name_id=vocabulary.word_to_index(name)#for word in name.split()]
                 sentence = lines[lines.index(':') + 1:]
@@ -255,7 +253,7 @@ def read_tt_data(data_dir, vocabulary, sents_len):
             sents_a = structed(sents_a)
             sents_data.append(sents_a)
     scenes = []
-    scene_null = {'Chandler': '', 'Joey': '', 'Monica': '', 'Phoebe': '', 'Rachel': '', 'Ross': '', 'others': '',
+    scene_null = {'chandler': '', 'joey': '', 'monica': '', 'phoebe': '', 'rachel': '', 'ross': '', 'others': '',
                   }
     while len(sents_data) > 8:
         scene = scene_null
@@ -351,7 +349,7 @@ def read_twitter_data(data_dir, vocabulary, sents_len):
         f.close()
     # pdb.set_trace()
     scenes = []
-    scene_null = {'Chandler': '', 'Joey': '', 'Monica': '', 'Phoebe': '', 'Rachel': '', 'Ross': '', 'others': '',
+    scene_null = {'chandler': '', 'joey': '', 'monica': '', 'phoebe': '', 'rachel': '', 'ross': '', 'others': '',
                   }
     while len(sents_data) > 8:
         scene = scene_null
