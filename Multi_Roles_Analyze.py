@@ -103,7 +103,7 @@ class Multi_Roles_Analyze():
             print(vocab.idx_to_word(seq))
 
     def related_matrix(self, vectors_batch, datas_batch, data_type):
-        name_dir = {'Chandler': 0, 'Joey': 1, 'Monica': 2, 'Phoebe': 3, 'Rachel': 4, 'Ross': 5, 'others': 6}
+        name_dir = {'chandler': 0, 'joey': 1, 'monica': 2, 'phoebe': 3, 'rachel': 4, 'ross': 5, 'others': 6}
         # relation_matrix = np.zeros(
         #     # NAMELIST = ['Chandler', 'Joey', 'Monica', 'Phoebe', 'Rachel', 'Ross', 'others']
         #     shape=(config.roles_number, config.roles_number),
