@@ -73,7 +73,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
             sentence = sentence.lower()
             sentence=nltk.word_tokenize(sentence)
             if len(sentence)<=0 or cmp(sentence[0],'idt')==0:
-                print(lines)
+                # print(lines)
                 # pdb.set_trace()
                 continue
             # sentence = sentence.split()
@@ -134,7 +134,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
             scene['speaker'] = NAME_MAP_ID[last_speaker]
             scene['question']=scene[questioner]
             scenes.append(scene)
-            pdb.set_trace()
+            # pdb.set_trace()
             scene = {}
             name_list_ = []
     f.close()
