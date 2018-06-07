@@ -91,7 +91,8 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
                 if 'others'in name_list_:
                     name_list_.pop(name_list_.index('others'))
                 else:
-                    pdb.set_trace()
+                    name_list_.pop(0)
+                    # pdb.set_trace()
         else:
 
             if last_speaker not in scene or last_speaker == '':
