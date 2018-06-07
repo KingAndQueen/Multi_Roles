@@ -72,7 +72,9 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
             sentence = re.sub(unlegal, ' ', sentence)
             sentence = sentence.lower()
             sentence=nltk.word_tokenize(sentence)
-            if cmp(sentence[0],'idt')==1:
+            if len(sentence)<=0 or cmp(sentence[0],'idt')==0:
+                print(lines)
+                # pdb.set_trace()
                 continue
             # sentence = sentence.split()
             sentence_id = [vocabulary.word_to_index(word) for word in sentence]
@@ -85,7 +87,11 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
             questioner= last_speaker
             last_speaker = name
             name_list_.append(name)
-            if len(name_list_)>=len(NAMELIST):pdb.set_trace()
+            if len(name_list_)>len(NAMELIST):
+                if 'others'in name_list_:
+                    name_list_.pop(name_list_.index('others'))
+                else:
+                    pdb.set_trace()
         else:
 
             if last_speaker not in scene or last_speaker == '':
@@ -128,6 +134,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
             scene['speaker'] = NAME_MAP_ID[last_speaker]
             scene['question']=scene[questioner]
             scenes.append(scene)
+            pdb.set_trace()
             scene = {}
             name_list_ = []
     f.close()
