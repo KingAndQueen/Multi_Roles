@@ -112,18 +112,18 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
             if not cmp(_last_speaker,last_speaker)==0:
                 pdb.set_trace()
 
-            # for name_ in NAMELIST:
-            #     if name_ in name_list_:
-            #         name_list.append(NAME_MAP_ID[name_])
-            #     else:
-            #         name_list.append(NAME_MAP_ID['pad'])
+            for name_ in NAMELIST:
+                if name_ in name_list_:
+                    name_list.append(NAME_MAP_ID[name_])
+                else:
+                    name_list.append(NAME_MAP_ID['pad'])
 
-            for name_ in name_list_:
-                if name_ not in NAMELIST: pdb.set_trace()
-                name_list.append(NAME_MAP_ID[name_])
-            pad_numb=max(len(NAMELIST)-len(name_list),0)
-            for x in range(pad_numb):
-                name_list.append(NAME_MAP_ID['pad'])
+            # for name_ in name_list_:
+            #     if name_ not in NAMELIST: pdb.set_trace()
+            #     name_list.append(NAME_MAP_ID[name_])
+            # pad_numb=max(len(NAMELIST)-len(name_list),0)
+            # for x in range(pad_numb):
+            #     name_list.append(NAME_MAP_ID['pad'])
 
             # name_pad = roles_number - len(name_list)
             if len(name_list) != roles_number: pdb.set_trace()
