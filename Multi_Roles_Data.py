@@ -88,10 +88,7 @@ def read_file(data_path, vocabulary, sentence_size, roles_number, rl=False):
             last_speaker = name
             name_list_.append(name)
             if len(name_list_)>len(NAMELIST):
-                if 'others'in name_list_:
-                    name_list_.pop(name_list_.index('others'))
-                else:
-                    name_list_.pop(0)
+                name_list_.pop(0)
                     # pdb.set_trace()
         else:
 
