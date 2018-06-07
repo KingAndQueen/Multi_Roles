@@ -14,9 +14,9 @@ class Drama():
 
     def reset(self, data_input_test):
         self.script = []
-        # test_sample = random.choice(data_input_test)
+        test_sample = random.choice(data_input_test)
         # pdb.set_trace()
-        test_sample=data_input_test[0] #should give a good start
+        # test_sample=data_input_test[0] #should give a good start
         self.script.append(test_sample)
         return test_sample
 

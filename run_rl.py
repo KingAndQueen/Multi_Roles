@@ -37,8 +37,8 @@ for i_episode in range(30):
         print('try:',index)
         # if RENDER: env.render()
         pdb.set_trace()
-        if index>1:
-            scenes = RL_model.choose_scene(observation)
+        print('index:',index)
+        scenes = RL_model.choose_scene(observation)
         observation_, reward, done = env.step_scene(scenes,vocab,RL_model,humor_input_data)
         RL_model.store_transition(observation_,None,reward)
         # RL.store_transition(observation, sentence, reward)
