@@ -759,20 +759,20 @@ class MultiRolesModel():
                 weight.append(i.get('weight'))
                 speaker.append(i.get('speaker'))
                 question.append(i.get('question'))
-            list_all_batch.append({'Monica': Monica, 'Joey': Joey, 'Chandler': Chandler, 'Phoebe': Phoebe,
-                                   'Rachel': Rachel, 'Ross': Ross, 'others': others, 'answer': answer, 'weight': weight,
+            list_all_batch.append({'monica': Monica, 'joey': Joey, 'chandler': Chandler, 'phoebe': Phoebe,
+                                   'rachel': Rachel, 'ross': Ross, 'others': others, 'answer': answer, 'weight': weight,
                                    'name_list': name_list, 'speaker': speaker,'question':question})
             # pdb.set_trace()
         return list_all_batch
 
     def step(self, sess, data_dict, step_type='train'):
         self.model_type = step_type
-        feed_dict = {self._Ross: data_dict['Ross'],
-                     self._Rachel: data_dict['Rachel'],
-                     self._Phoebe: data_dict['Phoebe'],
-                     self._Chandler: data_dict['Chandler'],
-                     self._Monica: data_dict['Monica'],
-                     self._Joey: data_dict['Joey'],
+        feed_dict = {self._Ross: data_dict['ross'],
+                     self._Rachel: data_dict['rachel'],
+                     self._Phoebe: data_dict['phoebe'],
+                     self._Chandler: data_dict['chandler'],
+                     self._Monica: data_dict['monica'],
+                     self._Joey: data_dict['joey'],
                      self._others: data_dict['others'],
                      self._answers: data_dict['answer'],
                      self._weight: data_dict['weight'],
