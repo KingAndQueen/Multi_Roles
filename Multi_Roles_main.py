@@ -23,12 +23,12 @@ flags.DEFINE_boolean('rl', False, 'rl sign for model')
 flags.DEFINE_boolean('trained_emb',False,'whether to use trained embedding vector')
 flags.DEFINE_boolean('attention',True,'whether to use attention in decoder')
 flags.DEFINE_boolean('beam',False,'whether to use beam search in decoder')
-flags.DEFINE_integer('stop_limit', 5, 'number of evaluation loss is greater than train loss  ')
+flags.DEFINE_integer('stop_limit', 3, 'number of evaluation loss is greater than train loss  ')
 flags.DEFINE_integer('layers', 3, 'levels of rnn or cnn')
 flags.DEFINE_integer('neurons', 100, 'neuron number of one level')
 flags.DEFINE_integer('batch_size', 128, 'batch_size')
 flags.DEFINE_integer('roles_number', 7, 'number of roles in the data')
-flags.DEFINE_integer('epoch', 5000, 'training times')
+flags.DEFINE_integer('epoch', 1000, 'training times')
 flags.DEFINE_integer('check_epoch',20, 'evaluation times')
 flags.DEFINE_integer('sentence_size', 20, 'length of word in a sentence')
 flags.DEFINE_float('interpose', 0.5, 'value for gru gate to decide interpose')
@@ -117,9 +117,10 @@ def train_model(sess, model, analyze, train_data, valid_data, pretrain_epoch=0):
             #     print('decay learning rate....')
             #     sess.run(model.learning_rate_decay_op)
             #     model.saver.save(sess, checkpoint_path, global_step=current_step)
-            if len(eval_losses_all) > config.stop_limit and eval_loss > sum(eval_losses_all[-1 * config.stop_limit:])/float(config.stop_limit):
-                print('----End training for evaluation increase----')
-                break
+
+            # if len(eval_losses_all) > config.stop_limit and eval_loss > sum(eval_losses_all[-1 * config.stop_limit:])/float(config.stop_limit):
+            #     print('----End training for evaluation increase----')
+            #     break
             eval_losses_all.append(eval_loss)
         current_step += 1
     print('saving current step %d checkpoints....' % current_step)
